@@ -5,6 +5,8 @@ const START_HOUR = 6;
 const END_HOUR = 22;
 const ROW_HEIGHT = 120;
 const COL_WIDTH = 175;
+const TIME_WIDTH = 100;
+const HEADER_HEIGHT = 80;
 
 Page({
   data: {
@@ -87,8 +89,8 @@ Page({
         duration: r.duration, type: r.type, level: r.level || 0,
         court: r.court || '', notes: r.notes || '',
         typeLabel: info.label, color: info.color,
-        top: (sh - START_HOUR) * ROW_HEIGHT + 2,
-        left: di * COL_WIDTH + 4,
+        top: HEADER_HEIGHT + (sh - START_HOUR) * ROW_HEIGHT + 2,
+        left: TIME_WIDTH + di * COL_WIDTH + 4,
         width: COL_WIDTH - 8,
         height: (eh - sh) * ROW_HEIGHT - 4
       };

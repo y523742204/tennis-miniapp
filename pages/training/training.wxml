@@ -8,39 +8,36 @@
     </view>
   </view>
 
-  <view class="fixed-header">
-    <view class="corner-cell"></view>
-    <view wx:for="{{days}}" wx:key="date" class="day-cell {{item.isToday ? 'today' : ''}}">
-      <text class="day-name">{{item.label}}</text>
-      <text class="day-date">{{item.dateText}}</text>
-    </view>
-  </view>
+  <scroll-view class="grid-scroll" scroll-x scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="grid">
 
-  <view class="body-area">
-    <view class="time-col" catchtap="_clearSelection">
-      <view wx:for="{{hours}}" wx:key="*this" class="time-label">{{item}}</view>
-    </view>
-
-    <scroll-view class="grid-scroll" scroll-x scroll-y enhanced show-scrollbar="{{false}}">
-      <view class="grid">
-        <view wx:for="{{hours}}" wx:for-index="hi" wx:key="*this" class="grid-row">
-          <view wx:for="{{days}}" wx:for-index="di" wx:key="date"
-                class="cell {{selectedSet[di + '-' + hi] ? 'selected' : ''}} {{hasTrainingMap[di + '-' + hi] ? 'occupied' : ''}}"
-                data-day="{{di}}" data-hour="{{hi}}" catchtap="onCellTap">
-          </view>
-        </view>
-
-        <view wx:for="{{cards}}" wx:key="id" class="card"
-              style="left:{{item.left}}rpx;top:{{item.top}}rpx;width:{{item.width}}rpx;height:{{item.height}}rpx;background:{{item.color}};"
-              data-id="{{item.id}}" catchtap="onCardTap">
-          <text class="card-type">{{item.typeLabel}}</text>
-          <text wx:if="{{item.level > 0}}" class="card-lv">Lv{{item.level}}</text>
-          <text wx:if="{{item.court}}" class="card-info">{{item.court}}</text>
-          <text wx:if="{{item.notes}}" class="card-info">{{item.notes}}</text>
+      <view class="grid-row header-row">
+        <view class="corner"></view>
+        <view wx:for="{{days}}" wx:key="date" class="head-cell {{item.isToday ? 'today' : ''}}">
+          <text class="hd-week">{{item.label}}</text>
+          <text class="hd-date">{{item.dateText}}</text>
         </view>
       </view>
-    </scroll-view>
-  </view>
+
+      <view wx:for="{{hours}}" wx:for-index="hi" wx:key="*this" class="grid-row">
+        <view class="time-cell">{{item}}</view>
+        <view wx:for="{{days}}" wx:for-index="di" wx:key="date"
+              class="cell {{selectedSet[di + '-' + hi] ? 'selected' : ''}} {{hasTrainingMap[di + '-' + hi] ? 'occupied' : ''}}"
+              data-day="{{di}}" data-hour="{{hi}}" catchtap="onCellTap">
+        </view>
+      </view>
+
+      <view wx:for="{{cards}}" wx:key="id" class="card"
+            style="left:{{item.left}}rpx;top:{{item.top}}rpx;width:{{item.width}}rpx;height:{{item.height}}rpx;background:{{item.color}};"
+            data-id="{{item.id}}" catchtap="onCardTap">
+        <text class="card-type">{{item.typeLabel}}</text>
+        <text wx:if="{{item.level > 0}}" class="card-lv">Lv{{item.level}}</text>
+        <text wx:if="{{item.court}}" class="card-info">{{item.court}}</text>
+        <text wx:if="{{item.notes}}" class="card-info">{{item.notes}}</text>
+      </view>
+
+    </view>
+  </scroll-view>
 
   <view wx:if="{{selectedCells.length && !showForm && !showDetail}}" class="sel-bar">
     <text class="sel-text">已选 {{selectedCells.length}} 个时段</text>
