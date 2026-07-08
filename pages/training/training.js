@@ -2,7 +2,7 @@ const { TrainingStorage } = require('../../utils/storage');
 const { getWeekDates, getTrainingType, TRAINING_TYPES, LEVEL_OPTIONS } = require('../../utils/format');
 
 const START_HOUR = 6;
-const END_HOUR = 22;
+const END_HOUR = 24;
 const ROW_HEIGHT = 60;
 const COL_WIDTH = 175;
 const TIME_WIDTH = 100;
@@ -42,7 +42,7 @@ Page({
       slotList.push({ text: `${String(h).padStart(2, '0')}:00`, isHour: true });
       slotList.push({ text: `${String(h).padStart(2, '0')}:30`, isHour: false });
     }
-    slotList.push({ text: '22:00', isHour: true, isEnd: true });
+    slotList.push({ text: '24:00', isHour: true, isEnd: true });
     for (let h = START_HOUR; h <= END_HOUR; h++) {
       items.push(`${String(h).padStart(2, '0')}:00`);
       if (h < END_HOUR) items.push(`${String(h).padStart(2, '0')}:30`);

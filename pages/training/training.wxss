@@ -137,12 +137,12 @@
 }
 
 .time-cell.half {
-  border-top: 1rpx solid #f5f5f5;
+  border-top: 1rpx solid #eee;
 }
 
 .time-cell.half text {
-  font-size: 18rpx;
-  color: #ccc;
+  font-size: 22rpx;
+  color: #999;
 }
 
 .time-cell.end {
