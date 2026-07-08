@@ -65,50 +65,55 @@
   </view>
 
   <view wx:if="{{showForm}}" class="overlay" data-close="1" bindtap="closeForm">
-    <view class="sheet form-sheet">
-      <view class="form-title">{{formMode === 'add' ? '新增训练' : '编辑训练'}}</view>
-      <view class="form-body">
-        <view class="form-group">
-          <text class="fl">日期</text>
-          <view class="fv-box"><text class="fv">{{formData.date}}</text></view>
+    <view class="sheet">
+      <view class="sheet-title" style="border-left:8rpx solid #07c160;">
+        <text class="sheet-name">{{formMode === 'add' ? '新增训练' : '编辑训练'}}</text>
+        <text class="sheet-date">{{formData.date}} {{formData.startTime}}-{{formData.endTime}}</text>
+      </view>
+      <view class="sheet-body">
+        <view class="sheet-row">
+          <text class="sl">日期</text>
+          <text class="sv">{{formData.date}}</text>
         </view>
-        <view wx:if="{{formMode === 'add'}}" class="form-group">
-          <view class="fh"><text class="fl">开始</text><view class="fv-box"><text class="fv">{{formData.startTime}}</text></view></view>
-          <view class="fh"><text class="fl">结束</text><view class="fv-box"><text class="fv">{{formData.endTime}}</text></view></view>
+        <view wx:if="{{formMode === 'add'}}" class="sheet-row">
+          <text class="sl">开始</text>
+          <text class="sv">{{formData.startTime}}</text>
         </view>
-        <view wx:if="{{formMode === 'edit'}}" class="form-group">
-          <view class="fh">
-            <text class="fl">开始</text>
-            <picker mode="selector" range="{{hours}}" value="{{startTimeIndex}}" bindchange="pickStartTime">
-              <view class="fv-box"><text class="fp">{{formData.startTime}}</text></view>
-            </picker>
-          </view>
-          <view class="fh">
-            <text class="fl">结束</text>
-            <picker mode="selector" range="{{hours}}" value="{{endTimeIndex}}" bindchange="pickEndTime">
-              <view class="fv-box"><text class="fp">{{formData.endTime}}</text></view>
-            </picker>
-          </view>
+        <view wx:if="{{formMode === 'add'}}" class="sheet-row">
+          <text class="sl">结束</text>
+          <text class="sv">{{formData.endTime}}</text>
         </view>
-        <view class="form-group">
-          <text class="fl">训练类型</text>
+        <view wx:if="{{formMode === 'edit'}}" class="sheet-row">
+          <text class="sl">开始</text>
+          <picker mode="selector" range="{{hours}}" value="{{startTimeIndex}}" bindchange="pickStartTime">
+            <text class="sv">{{formData.startTime}}</text>
+          </picker>
+        </view>
+        <view wx:if="{{formMode === 'edit'}}" class="sheet-row">
+          <text class="sl">结束</text>
+          <picker mode="selector" range="{{hours}}" value="{{endTimeIndex}}" bindchange="pickEndTime">
+            <text class="sv">{{formData.endTime}}</text>
+          </picker>
+        </view>
+        <view class="sheet-row">
+          <text class="sl">训练类型</text>
           <picker mode="selector" range="{{trainingTypes}}" range-key="label" value="{{formTypeIndex}}" bindchange="formSelectType">
-            <view class="fv-box"><text class="fp">{{formTypeLabel}}</text></view>
+            <text class="sv">{{formTypeLabel}}</text>
           </picker>
         </view>
-        <view class="form-group">
-          <text class="fl">训练等级</text>
+        <view class="sheet-row">
+          <text class="sl">训练等级</text>
           <picker mode="selector" range="{{levelOptions}}" value="{{levelIndex}}" bindchange="formSelectLevel">
-            <view class="fv-box"><text class="fp">Lv {{formData.level}}</text></view>
+            <text class="sv">Lv {{formData.level}}</text>
           </picker>
         </view>
-        <view class="form-group">
-          <text class="fl">场地</text>
-          <input class="fi" placeholder="可选" value="{{formData.court}}" data-field="court" bindinput="formInput"/>
+        <view class="sheet-row">
+          <text class="sl">场地</text>
+          <input class="sv" placeholder="可选" value="{{formData.court}}" data-field="court" bindinput="formInput"/>
         </view>
-        <view class="form-group">
-          <text class="fl">备注</text>
-          <input class="fi" placeholder="可选" value="{{formData.notes}}" data-field="notes" bindinput="formInput"/>
+        <view class="sheet-row">
+          <text class="sl">备注</text>
+          <input class="sv" placeholder="可选" value="{{formData.notes}}" data-field="notes" bindinput="formInput"/>
         </view>
       </view>
       <view class="sheet-actions">
