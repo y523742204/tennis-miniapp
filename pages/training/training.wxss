@@ -116,7 +116,7 @@
 
 .time-cell {
   width: 100rpx;
-  height: 120rpx;
+  height: 60rpx;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -132,9 +132,14 @@
   box-sizing: border-box;
 }
 
+.time-cell.half {
+  font-size: 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
 .cell {
   width: 175rpx;
-  height: 120rpx;
+  height: 60rpx;
   flex-shrink: 0;
   border-right: 1rpx solid #f0f0f0;
   border-bottom: 1rpx solid #f0f0f0;

@@ -3,7 +3,7 @@ const { getWeekDates, getTrainingType, TRAINING_TYPES, LEVEL_OPTIONS } = require
 
 const START_HOUR = 6;
 const END_HOUR = 22;
-const ROW_HEIGHT = 120;
+const ROW_HEIGHT = 60;
 const COL_WIDTH = 175;
 const TIME_WIDTH = 100;
 const HEADER_HEIGHT = 80;
@@ -13,7 +13,8 @@ Page({
     weekStartDate: '',
     weekLabel: '',
     days: [],
-    hours: [],
+    slots: [],
+    pickerItems: [],
     cards: [],
     hasTrainingMap: {},
     selectedCells: [],
@@ -35,9 +36,17 @@ Page({
   },
 
   onLoad() {
-    const h = [];
-    for (let i = START_HOUR; i <= END_HOUR; i++) h.push(String(i).padStart(2, '0') + ':00');
-    this.setData({ hours: h });
+    const slotList = [];
+    const items = [];
+    for (let h = START_HOUR; h < END_HOUR; h++) {
+      slotList.push({ text: `${String(h).padStart(2, '0')}:00`, isHour: true });
+      slotList.push({ text: `${String(h).padStart(2, '0')}:30`, isHour: false });
+    }
+    for (let h = START_HOUR; h <= END_HOUR; h++) {
+      items.push(`${String(h).padStart(2, '0')}:00`);
+      if (h < END_HOUR) items.push(`${String(h).padStart(2, '0')}:30`);
+    }
+    this.setData({ slots: slotList, pickerItems: items });
     this.goThisWeek();
   },
 
@@ -50,6 +59,11 @@ Page({
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
+  },
+
+  _slotIndex(timeStr) {
+    const [h, m] = timeStr.split(':').map(Number);
+    return ((h - START_HOUR) * 60 + m) / 30;
   },
 
   _loadWeek(dateStr) {
@@ -74,19 +88,19 @@ Page({
     records.forEach(r => {
       const di = days.findIndex(d => d.date === r.date);
       if (di < 0) return;
-      const [sh] = r.startTime.split(':').map(Number);
-      const [eh] = r.endTime.split(':').map(Number);
-      for (let h = sh - START_HOUR; h < eh - START_HOUR; h++) hasTrainingMap[di + '-' + h] = true;
+      const si = this._slotIndex(r.startTime);
+      const ei = this._slotIndex(r.endTime);
+      for (let s = si; s < ei; s++) hasTrainingMap[di + '-' + s] = true;
     });
     const cards = records.map(r => {
       const di = days.findIndex(d => d.date === r.date);
       if (di < 0) return null;
-      const [sh] = r.startTime.split(':').map(Number);
-      const [eh] = r.endTime.split(':').map(Number);
+      const si = this._slotIndex(r.startTime);
+      const ei = this._slotIndex(r.endTime);
       const info = getTrainingType(r.type);
       const infoLines = [r.level, r.court, r.notes].filter(Boolean).length;
       const totalLines = 1 + infoLines;
-      const cardH = (eh - sh) * ROW_HEIGHT - 4;
+      const cardH = (ei - si) * ROW_HEIGHT - 4;
       let fontSize = Math.min(26, Math.floor((cardH - 4) / (totalLines * 1.3)));
       if (fontSize < 18) fontSize = 18;
       return {
@@ -94,7 +108,7 @@ Page({
         duration: r.duration, type: r.type, level: r.level || 0,
         court: r.court || '', notes: r.notes || '',
         typeLabel: info.label, color: info.color, fontSize,
-        top: HEADER_HEIGHT + (sh - START_HOUR) * ROW_HEIGHT + 2,
+        top: HEADER_HEIGHT + si * ROW_HEIGHT + 2,
         left: TIME_WIDTH + di * COL_WIDTH + 4,
         width: COL_WIDTH - 8,
         height: cardH
@@ -128,18 +142,18 @@ Page({
 
   onCellTap(e) {
     if (this.data.showForm || this.data.showDetail) return;
-    const { day, hour } = e.currentTarget.dataset;
-    const key = day + '-' + hour;
+    const { day, slot } = e.currentTarget.dataset;
+    const key = day + '-' + slot;
     if (this.data.hasTrainingMap[key]) {
       this._clearSelection();
       return;
     }
     const selected = [...this.data.selectedCells];
-    const idx = selected.findIndex(c => c.day === day && c.hour === hour);
+    const idx = selected.findIndex(c => c.day === day && c.slot === slot);
     if (idx > -1) selected.splice(idx, 1);
-    else selected.push({ day: Number(day), hour: Number(hour) });
+    else selected.push({ day: Number(day), slot: Number(slot) });
     const selectedSet = {};
-    selected.forEach(c => { selectedSet[c.day + '-' + c.hour] = true; });
+    selected.forEach(c => { selectedSet[c.day + '-' + c.slot] = true; });
     this.setData({ selectedCells: selected, selectedSet });
   },
 
@@ -152,19 +166,21 @@ Page({
       return;
     }
     const dayData = this.data.days[days[0]];
-    const hours = cells.map(c => c.hour + START_HOUR).sort((a, b) => a - b);
-    const sh = hours[0];
-    const eh = hours[hours.length - 1] + 1;
+    const slotVals = cells.map(c => c.slot).sort((a, b) => a - b);
+    const startIdx = slotVals[0];
+    const endIdx = slotVals[slotVals.length - 1] + 1;
+    const startMin = START_HOUR * 60 + startIdx * 30;
+    const endMin = START_HOUR * 60 + endIdx * 30;
     this.setData({
       formMode: 'add', showForm: true,
       formData: {
         date: dayData.date,
-        startTime: String(sh).padStart(2, '0') + ':00',
-        endTime: String(eh).padStart(2, '0') + ':00',
+        startTime: `${String(Math.floor(startMin / 60)).padStart(2, '0')}:${String(startMin % 60).padStart(2, '0')}`,
+        endTime: `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`,
         type: 'rally', level: 2.5, court: '', notes: ''
       },
       formTypeIndex: 0, formTypeLabel: '拉球', levelIndex: 5,
-      startTimeIndex: sh - START_HOUR, endTimeIndex: eh - START_HOUR
+      startTimeIndex: startIdx, endTimeIndex: endIdx
     });
   },
 
@@ -200,8 +216,8 @@ Page({
       formTypeIndex: typeIdx > -1 ? typeIdx : 0,
       formTypeLabel: typeIdx > -1 ? TRAINING_TYPES[typeIdx].label : '拉球',
       levelIndex: levIdx > -1 ? levIdx : 5,
-      startTimeIndex: r.startTime ? parseInt(r.startTime.split(':')[0]) - START_HOUR : 0,
-      endTimeIndex: r.endTime ? parseInt(r.endTime.split(':')[0]) - START_HOUR : 0
+      startTimeIndex: this._slotIndex(r.startTime),
+      endTimeIndex: this._slotIndex(r.endTime)
     });
   },
 
@@ -247,11 +263,11 @@ Page({
 
   pickStartTime(e) {
     const idx = Number(e.detail.value);
-    const st = this.data.hours[idx] || '06:00';
+    const st = this.data.pickerItems[idx] || '06:00';
     const ei = Math.max(idx + 1, this.data.endTimeIndex);
     this.setData({
       'formData.startTime': st,
-      'formData.endTime': this.data.hours[ei],
+      'formData.endTime': this.data.pickerItems[ei],
       startTimeIndex: idx, endTimeIndex: ei
     });
   },
@@ -262,7 +278,7 @@ Page({
       wx.showToast({ title: '结束需晚于开始', icon: 'none' });
       return;
     }
-    this.setData({ 'formData.endTime': this.data.hours[idx], endTimeIndex: idx });
+    this.setData({ 'formData.endTime': this.data.pickerItems[idx], endTimeIndex: idx });
   },
 
   submitForm() {

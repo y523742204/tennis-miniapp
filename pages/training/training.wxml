@@ -19,11 +19,13 @@
         </view>
       </view>
 
-      <view wx:for="{{hours}}" wx:for-index="hi" wx:key="*this" class="grid-row">
-        <view class="time-cell">{{item}}</view>
+      <view wx:for="{{slots}}" wx:for-index="si" wx:key="text" class="grid-row">
+        <view class="time-cell {{item.isHour ? '' : 'half'}}">
+          <text wx:if="{{item.isHour}}">{{item.text}}</text>
+        </view>
         <view wx:for="{{days}}" wx:for-index="di" wx:key="date"
-              class="cell {{selectedSet[di + '-' + hi] ? 'selected' : ''}} {{hasTrainingMap[di + '-' + hi] ? 'occupied' : ''}}"
-              data-day="{{di}}" data-hour="{{hi}}" catchtap="onCellTap">
+              class="cell {{selectedSet[di + '-' + si] ? 'selected' : ''}} {{hasTrainingMap[di + '-' + si] ? 'occupied' : ''}}"
+              data-day="{{di}}" data-slot="{{si}}" catchtap="onCellTap">
         </view>
       </view>
 
@@ -86,13 +88,13 @@
         </view>
         <view wx:if="{{formMode === 'edit'}}" class="sheet-row">
           <text class="sl">开始</text>
-          <picker mode="selector" range="{{hours}}" value="{{startTimeIndex}}" bindchange="pickStartTime">
+          <picker mode="selector" range="{{pickerItems}}" value="{{startTimeIndex}}" bindchange="pickStartTime">
             <text class="sv">{{formData.startTime}}</text>
           </picker>
         </view>
         <view wx:if="{{formMode === 'edit'}}" class="sheet-row">
           <text class="sl">结束</text>
-          <picker mode="selector" range="{{hours}}" value="{{endTimeIndex}}" bindchange="pickEndTime">
+          <picker mode="selector" range="{{pickerItems}}" value="{{endTimeIndex}}" bindchange="pickEndTime">
             <text class="sv">{{formData.endTime}}</text>
           </picker>
         </view>
