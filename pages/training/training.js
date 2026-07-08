@@ -84,15 +84,20 @@ Page({
       const [sh] = r.startTime.split(':').map(Number);
       const [eh] = r.endTime.split(':').map(Number);
       const info = getTrainingType(r.type);
+      const infoLines = [r.level, r.court, r.notes].filter(Boolean).length;
+      const totalLines = 1 + infoLines;
+      const cardH = (eh - sh) * ROW_HEIGHT - 4;
+      let fontSize = Math.min(26, Math.floor((cardH - 4) / (totalLines * 1.3)));
+      if (fontSize < 18) fontSize = 18;
       return {
         id: r.id, date: r.date, startTime: r.startTime, endTime: r.endTime,
         duration: r.duration, type: r.type, level: r.level || 0,
         court: r.court || '', notes: r.notes || '',
-        typeLabel: info.label, color: info.color,
+        typeLabel: info.label, color: info.color, fontSize,
         top: HEADER_HEIGHT + (sh - START_HOUR) * ROW_HEIGHT + 2,
         left: TIME_WIDTH + di * COL_WIDTH + 4,
         width: COL_WIDTH - 8,
-        height: (eh - sh) * ROW_HEIGHT - 4
+        height: cardH
       };
     }).filter(Boolean);
     this.setData({ cards, hasTrainingMap });

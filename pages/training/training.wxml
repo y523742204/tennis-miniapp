@@ -28,7 +28,7 @@
       </view>
 
       <view wx:for="{{cards}}" wx:key="id" class="card"
-            style="left:{{item.left}}rpx;top:{{item.top}}rpx;width:{{item.width}}rpx;height:{{item.height}}rpx;background:{{item.color}};"
+            style="left:{{item.left}}rpx;top:{{item.top}}rpx;width:{{item.width}}rpx;height:{{item.height}}rpx;background:{{item.color}};font-size:{{item.fontSize}}rpx;"
             data-id="{{item.id}}" catchtap="onCardTap">
         <text class="card-type">{{item.typeLabel}}</text>
         <text wx:if="{{item.level > 0}}" class="card-info">{{item.level}}</text>
