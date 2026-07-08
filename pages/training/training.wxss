@@ -180,6 +180,7 @@
 
 .card-info {
   font-size: 26rpx;
+  font-weight: 600;
   color: rgba(255,255,255,0.9);
   text-align: center;
   width: 100%;
