@@ -126,27 +126,13 @@
   left: 0;
   z-index: 5;
   border-right: 1rpx solid #e0e0e0;
-  border-top: 1rpx solid #eee;
   box-sizing: border-box;
 }
 
 .time-cell text {
   margin-top: -0.55em;
-  font-size: 22rpx;
+  font-size: 26rpx;
   color: #999;
-}
-
-.time-cell.half {
-  border-top: 1rpx solid #eee;
-}
-
-.time-cell.half text {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.time-cell.end {
-  border-top: 1rpx solid #d0d0d0;
 }
 
 .time-cell.end text {
