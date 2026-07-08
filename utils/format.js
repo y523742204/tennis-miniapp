@@ -65,12 +65,12 @@ function formatHourMin(m) {
 }
 
 const TRAINING_TYPES = [
-  { value: 'serve', label: '发球', color: '#3b82f6' },
-  { value: 'baseline', label: '底线', color: '#07c160' },
-  { value: 'volley', label: '截击', color: '#f59e0b' },
-  { value: 'comprehensive', label: '综合', color: '#8b5cf6' },
-  { value: 'match_sim', label: '比赛模拟', color: '#ef4444' },
-  { value: 'fitness', label: '体能', color: '#ec4899' }
+  { value: 'rally', label: '拉球', color: '#3b82f6' },
+  { value: 'singles', label: '单打', color: '#07c160' },
+  { value: 'doubles', label: '双打', color: '#f59e0b' },
+  { value: 'serve', label: '发球', color: '#8b5cf6' },
+  { value: 'lesson', label: '上课', color: '#ef4444' },
+  { value: 'practice', label: '陪练', color: '#ec4899' }
 ];
 
 function getTrainingType(value) {

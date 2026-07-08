@@ -26,7 +26,7 @@ Page({
     formMode: 'add',
     formData: {},
     formTypeIndex: 0,
-    formTypeLabel: '底线',
+    formTypeLabel: '拉球',
     levelOptions: LEVEL_OPTIONS,
     levelIndex: 5,
     startTimeIndex: 0,
@@ -156,9 +156,9 @@ Page({
         date: dayData.date,
         startTime: String(sh).padStart(2, '0') + ':00',
         endTime: String(eh).padStart(2, '0') + ':00',
-        type: 'baseline', level: 2.5, court: '', notes: ''
+        type: 'rally', level: 2.5, court: '', notes: ''
       },
-      formTypeIndex: 0, formTypeLabel: '底线', levelIndex: 5,
+      formTypeIndex: 0, formTypeLabel: '拉球', levelIndex: 5,
       startTimeIndex: sh - START_HOUR, endTimeIndex: eh - START_HOUR
     });
   },
@@ -171,7 +171,7 @@ Page({
       showDetail: true,
       detailRecord: {
         ...record, typeLabel: info.label, color: info.color,
-        levelText: record.level ? 'Lv ' + record.level : '未设置',
+        levelText: record.level != null ? String(record.level) : '未设置',
         durationText: record.duration + '分钟'
       }
     });
@@ -193,7 +193,7 @@ Page({
         type: r.type, level: r.level || 0, court: r.court || '', notes: r.notes || ''
       },
       formTypeIndex: typeIdx > -1 ? typeIdx : 0,
-      formTypeLabel: typeIdx > -1 ? TRAINING_TYPES[typeIdx].label : '底线',
+      formTypeLabel: typeIdx > -1 ? TRAINING_TYPES[typeIdx].label : '拉球',
       levelIndex: levIdx > -1 ? levIdx : 5,
       startTimeIndex: r.startTime ? parseInt(r.startTime.split(':')[0]) - START_HOUR : 0,
       endTimeIndex: r.endTime ? parseInt(r.endTime.split(':')[0]) - START_HOUR : 0
@@ -267,6 +267,19 @@ Page({
     const duration = (eh * 60 + em) - (sh * 60 + sm);
     if (duration <= 0) {
       wx.showToast({ title: '结束需晚于开始', icon: 'none' });
+      return;
+    }
+    const newStart = sh * 60 + sm;
+    const newEnd = eh * 60 + em;
+    const overlap = TrainingStorage.getAll().some(r => {
+      if (r.date !== fd.date) return false;
+      if (fd.id && r.id === fd.id) return false;
+      const [rh, rm] = r.startTime.split(':').map(Number);
+      const [r2h, r2m] = r.endTime.split(':').map(Number);
+      return newStart < (r2h * 60 + r2m) && newEnd > (rh * 60 + rm);
+    });
+    if (overlap) {
+      wx.showToast({ title: '该时段已有训练记录', icon: 'none' });
       return;
     }
     const record = {

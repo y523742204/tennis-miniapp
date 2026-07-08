@@ -31,7 +31,7 @@
             style="left:{{item.left}}rpx;top:{{item.top}}rpx;width:{{item.width}}rpx;height:{{item.height}}rpx;background:{{item.color}};"
             data-id="{{item.id}}" catchtap="onCardTap">
         <text class="card-type">{{item.typeLabel}}</text>
-        <text wx:if="{{item.level > 0}}" class="card-lv">Lv{{item.level}}</text>
+        <text wx:if="{{item.level > 0}}" class="card-info">{{item.level}}</text>
         <text wx:if="{{item.court}}" class="card-info">{{item.court}}</text>
         <text wx:if="{{item.notes}}" class="card-info">{{item.notes}}</text>
       </view>
@@ -53,6 +53,7 @@
       </view>
       <view class="sheet-body">
         <view class="sheet-row"><text class="sl">时长</text><text class="sv">{{detailRecord.durationText}}</text></view>
+        <view class="sheet-row"><text class="sl">类型</text><text class="sv">{{detailRecord.typeLabel}}</text></view>
         <view class="sheet-row"><text class="sl">等级</text><text class="sv">{{detailRecord.levelText}}</text></view>
         <view wx:if="{{detailRecord.court}}" class="sheet-row"><text class="sl">场地</text><text class="sv">{{detailRecord.court}}</text></view>
         <view wx:if="{{detailRecord.notes}}" class="sheet-row"><text class="sl">备注</text><text class="sv">{{detailRecord.notes}}</text></view>
@@ -104,7 +105,7 @@
         <view class="sheet-row">
           <text class="sl">训练等级</text>
           <picker mode="selector" range="{{levelOptions}}" value="{{levelIndex}}" bindchange="formSelectLevel">
-            <text class="sv">Lv {{formData.level}}</text>
+            <text class="sv">{{formData.level}}</text>
           </picker>
         </view>
         <view class="sheet-row">
