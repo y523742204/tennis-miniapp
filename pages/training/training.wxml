@@ -20,13 +20,20 @@
       </view>
 
       <view wx:for="{{slots}}" wx:for-index="si" wx:key="text" class="grid-row">
-        <view class="time-cell {{item.isHour ? '' : 'half'}}">
+        <view class="time-cell {{item.isHour ? '' : 'half'}} {{item.isEnd ? 'end' : ''}}">
           <text>{{item.text}}</text>
         </view>
-        <view wx:for="{{days}}" wx:for-index="di" wx:key="date"
-              class="cell {{selectedSet[di + '-' + si] ? 'selected' : ''}} {{hasTrainingMap[di + '-' + si] ? 'occupied' : ''}}"
-              data-day="{{di}}" data-slot="{{si}}" catchtap="onCellTap">
-        </view>
+        <block wx:if="{{!item.isEnd}}">
+          <view wx:for="{{days}}" wx:for-index="di" wx:key="date"
+                class="cell {{selectedSet[di + '-' + si] ? 'selected' : ''}} {{hasTrainingMap[di + '-' + si] ? 'occupied' : ''}}"
+                data-day="{{di}}" data-slot="{{si}}" catchtap="onCellTap">
+          </view>
+        </block>
+        <block wx:else>
+          <view wx:for="{{days}}" wx:for-index="di" wx:key="date"
+                class="cell end-cell">
+          </view>
+        </block>
       </view>
 
       <view wx:for="{{cards}}" wx:key="id" class="card"

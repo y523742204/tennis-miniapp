@@ -42,6 +42,7 @@ Page({
       slotList.push({ text: `${String(h).padStart(2, '0')}:00`, isHour: true });
       slotList.push({ text: `${String(h).padStart(2, '0')}:30`, isHour: false });
     }
+    slotList.push({ text: '22:00', isHour: true, isEnd: true });
     for (let h = START_HOUR; h <= END_HOUR; h++) {
       items.push(`${String(h).padStart(2, '0')}:00`);
       if (h < END_HOUR) items.push(`${String(h).padStart(2, '0')}:30`);
