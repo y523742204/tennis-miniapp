@@ -1,0 +1,9 @@
+{
+  "desc": "网球训练助手",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

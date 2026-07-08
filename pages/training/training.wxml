@@ -1,0 +1,123 @@
+<view class="container">
+  <view class="top-bar">
+    <view class="week-nav">
+      <view class="nav-btn" bindtap="prevWeek">‹</view>
+      <text class="week-label">{{weekLabel}}</text>
+      <view class="nav-btn" bindtap="nextWeek">›</view>
+      <view class="today-btn" bindtap="goThisWeek">本周</view>
+    </view>
+  </view>
+
+  <view class="fixed-header">
+    <view class="corner-cell"></view>
+    <view wx:for="{{days}}" wx:key="date" class="day-cell {{item.isToday ? 'today' : ''}}">
+      <text class="day-name">{{item.label}}</text>
+      <text class="day-date">{{item.dateText}}</text>
+    </view>
+  </view>
+
+  <view class="body-area">
+    <view class="time-col" catchtap="_clearSelection">
+      <view wx:for="{{hours}}" wx:key="*this" class="time-label">{{item}}</view>
+    </view>
+
+    <scroll-view class="grid-scroll" scroll-x scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="grid">
+        <view wx:for="{{hours}}" wx:for-index="hi" wx:key="*this" class="grid-row">
+          <view wx:for="{{days}}" wx:for-index="di" wx:key="date"
+                class="cell {{selectedSet[di + '-' + hi] ? 'selected' : ''}} {{hasTrainingMap[di + '-' + hi] ? 'occupied' : ''}}"
+                data-day="{{di}}" data-hour="{{hi}}" catchtap="onCellTap">
+          </view>
+        </view>
+
+        <view wx:for="{{cards}}" wx:key="id" class="card"
+              style="left:{{item.left}}rpx;top:{{item.top}}rpx;width:{{item.width}}rpx;height:{{item.height}}rpx;background:{{item.color}};"
+              data-id="{{item.id}}" catchtap="onCardTap">
+          <text class="card-type">{{item.typeLabel}}</text>
+          <text wx:if="{{item.level > 0}}" class="card-lv">Lv{{item.level}}</text>
+          <text wx:if="{{item.court}}" class="card-info">{{item.court}}</text>
+          <text wx:if="{{item.notes}}" class="card-info">{{item.notes}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view wx:if="{{selectedCells.length && !showForm && !showDetail}}" class="sel-bar">
+    <text class="sel-text">已选 {{selectedCells.length}} 个时段</text>
+    <view class="sel-btn sel-clear" catchtap="_clearSelection">清除</view>
+    <view class="sel-btn sel-add" catchtap="showAddForm">+ 新增训练</view>
+  </view>
+
+  <view wx:if="{{showDetail}}" class="overlay" data-close="1" bindtap="closeDetail">
+    <view class="sheet">
+      <view class="sheet-title" style="border-left:8rpx solid {{detailRecord.color}};">
+        <text class="sheet-name">{{detailRecord.typeLabel}}</text>
+        <text class="sheet-date">{{detailRecord.date}} {{detailRecord.startTime}}-{{detailRecord.endTime}}</text>
+      </view>
+      <view class="sheet-body">
+        <view class="sheet-row"><text class="sl">时长</text><text class="sv">{{detailRecord.durationText}}</text></view>
+        <view class="sheet-row"><text class="sl">等级</text><text class="sv">{{detailRecord.levelText}}</text></view>
+        <view wx:if="{{detailRecord.court}}" class="sheet-row"><text class="sl">场地</text><text class="sv">{{detailRecord.court}}</text></view>
+        <view wx:if="{{detailRecord.notes}}" class="sheet-row"><text class="sl">备注</text><text class="sv">{{detailRecord.notes}}</text></view>
+      </view>
+      <view class="sheet-actions">
+        <view class="sa sa-edit" bindtap="editFromDetail">编辑</view>
+        <view class="sa sa-del" bindtap="deleteFromDetail">删除</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showForm}}" class="overlay" data-close="1" bindtap="closeForm">
+    <view class="sheet form-sheet">
+      <view class="form-title">{{formMode === 'add' ? '新增训练' : '编辑训练'}}</view>
+      <view class="form-body">
+        <view class="form-group">
+          <text class="fl">日期</text>
+          <text class="fv">{{formData.date}}</text>
+        </view>
+        <view wx:if="{{formMode === 'add'}}" class="form-group">
+          <view class="fh"><text class="fl">开始</text><text class="fv">{{formData.startTime}}</text></view>
+          <view class="fh"><text class="fl">结束</text><text class="fv">{{formData.endTime}}</text></view>
+        </view>
+        <view wx:if="{{formMode === 'edit'}}" class="form-group">
+          <view class="fh">
+            <text class="fl">开始</text>
+            <picker mode="selector" range="{{hours}}" value="{{startTimeIndex}}" bindchange="pickStartTime">
+              <view class="fp">{{formData.startTime}}</view>
+            </picker>
+          </view>
+          <view class="fh">
+            <text class="fl">结束</text>
+            <picker mode="selector" range="{{hours}}" value="{{endTimeIndex}}" bindchange="pickEndTime">
+              <view class="fp">{{formData.endTime}}</view>
+            </picker>
+          </view>
+        </view>
+        <view class="form-group">
+          <text class="fl">训练类型</text>
+          <picker mode="selector" range="{{trainingTypes}}" range-key="label" value="{{formTypeIndex}}" bindchange="formSelectType">
+            <view class="fp">{{formTypeLabel}}</view>
+          </picker>
+        </view>
+        <view class="form-group">
+          <text class="fl">训练等级</text>
+          <picker mode="selector" range="{{levelOptions}}" value="{{levelIndex}}" bindchange="formSelectLevel">
+            <view class="fp">Lv {{formData.level}}</view>
+          </picker>
+        </view>
+        <view class="form-group">
+          <text class="fl">场地</text>
+          <input class="fi" placeholder="可选" value="{{formData.court}}" data-field="court" bindinput="formInput"/>
+        </view>
+        <view class="form-group">
+          <text class="fl">备注</text>
+          <input class="fi" placeholder="可选" value="{{formData.notes}}" data-field="notes" bindinput="formInput"/>
+        </view>
+      </view>
+      <view class="sheet-actions">
+        <view class="sa sa-cancel" catchtap="cancelForm">取消</view>
+        <view class="sa sa-save" catchtap="submitForm">保存</view>
+      </view>
+    </view>
+  </view>
+</view>

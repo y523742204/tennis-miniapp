@@ -1,0 +1,70 @@
+<view class="container">
+  <view class="mode-tabs">
+    <view class="mode-tab {{mode === 'list' ? 'active' : ''}}" data-mode="list" bindtap="switchMode">列表</view>
+    <view class="mode-tab {{mode === 'map' ? 'active' : ''}}" data-mode="map" bindtap="switchMode">地图</view>
+  </view>
+
+  <view wx:if="{{mode === 'list'}}">
+    <view wx:if="{{courts.length === 0}}" class="empty-state">
+      <text>🎾</text>
+      <text>还没有添加球场</text>
+      <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">点击下方按钮添加球场</text>
+    </view>
+
+    <view wx:for="{{courts}}" wx:key="id" class="court-card" data-id="{{item.id}}" bindtap="onCourtTap">
+      <view class="cc-top">
+        <text class="cc-name">{{item.name}}</text>
+        <view class="cc-rating">
+          <text wx:for="{{[1,2,3,4,5]}}" wx:key="s" class="c-star {{item.rating >= s ? 'on' : ''}}">★</text>
+        </view>
+      </view>
+      <text wx:if="{{item.address}}" class="cc-addr">📍 {{item.address}}</text>
+      <view wx:if="{{item.phone}}" class="cc-phone" data-phone="{{item.phone}}" bindtap="callCourt">
+        📞 {{item.phone}}
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{mode === 'map'}}" class="map-wrap">
+    <map class="map" longitude="{{mapLongitude}}" latitude="{{mapLatitude}}" scale="14"
+         markers="{{markers}}"
+         bindmarkertap="onMapMarkerTap">
+    </map>
+    <view class="map-hint">点击地图标记可查看球场</view>
+  </view>
+
+  <view class="fab" bindtap="showAddForm">
+    <text>+</text>
+  </view>
+
+  <view wx:if="{{showForm}}" class="overlay" bindtap="closeForm">
+    <view class="form-sheet" catchtap="">
+      <view class="form-title">{{formMode === 'add' ? '添加球场' : '编辑球场'}}</view>
+      <view class="form-body">
+        <view class="form-group">
+          <text class="form-label">球场名称</text>
+          <input class="form-input" placeholder="如：中央网球场" value="{{formData.name}}" data-field="name" bindinput="formInput"/>
+        </view>
+        <view class="form-group">
+          <text class="form-label">地址</text>
+          <input class="form-input" placeholder="球场地址" value="{{formData.address}}" data-field="address" bindinput="formInput"/>
+        </view>
+        <view class="form-group">
+          <text class="form-label">联系电话</text>
+          <input class="form-input" placeholder="电话" type="number" value="{{formData.phone}}" data-field="phone" bindinput="formInput"/>
+        </view>
+        <view class="form-group">
+          <text class="form-label">评分</text>
+          <view class="star-row">
+            <text wx:for="{{[1,2,3,4,5]}}" wx:key="s" class="star {{formData.rating >= s ? 'on' : ''}}"
+                  data-star="{{item}}" bindtap="formRating">★</text>
+          </view>
+        </view>
+      </view>
+      <view class="form-actions">
+        <view class="f-btn f-cancel" bindtap="closeForm">取消</view>
+        <view class="f-btn f-submit" bindtap="submitForm">保存</view>
+      </view>
+    </view>
+  </view>
+</view>

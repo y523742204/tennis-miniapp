@@ -1,0 +1,94 @@
+<view class="container">
+  <view wx:if="{{records.length === 0}}" class="empty-state">
+    <text>🏆</text>
+    <text>还没有比赛记录</text>
+    <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">点击下方按钮添加第一场比赛</text>
+  </view>
+
+  <view wx:for="{{records}}" wx:key="id" class="match-card" data-id="{{item.id}}" bindtap="onCardTap">
+    <view class="mc-top">
+      <text class="mc-opponent">{{item.opponent}}</text>
+      <text class="mc-result {{item.winClass}}">{{item.winText}}</text>
+    </view>
+    <view class="mc-score">{{item.scoreStr}}</view>
+    <view class="mc-bottom">
+      <text class="mc-date">{{item.dateCN}}</text>
+      <text wx:if="{{item.notes}}" class="mc-note">{{item.notes}}</text>
+    </view>
+  </view>
+
+  <view class="fab" bindtap="showAddForm">
+    <text>+</text>
+  </view>
+
+  <view wx:if="{{showDetail}}" class="overlay" bindtap="closeDetail">
+    <view class="detail-sheet" catchtap="">
+      <view class="match-detail-header {{detailRecord.winClass}}">
+        <view class="md-vs">
+          <text class="md-opponent">{{detailRecord.opponent}}</text>
+          <text class="md-result-text">{{detailRecord.winText}}</text>
+        </view>
+        <text class="md-score">{{detailRecord.scoreStr}}</text>
+      </view>
+      <view class="detail-body">
+        <view class="detail-row">
+          <text class="dl">日期</text>
+          <text class="dv">{{detailRecord.dateCN}}</text>
+        </view>
+        <view wx:if="{{detailRecord.notes}}" class="detail-row">
+          <text class="dl">备注</text>
+          <text class="dv">{{detailRecord.notes}}</text>
+        </view>
+      </view>
+      <view class="detail-actions">
+        <view class="d-btn d-edit" bindtap="editFromDetail">编辑</view>
+        <view class="d-btn d-del" bindtap="deleteFromDetail">删除</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showForm}}" class="overlay" bindtap="closeForm">
+    <view class="form-sheet" catchtap="">
+      <view class="form-title">{{formMode === 'add' ? '新增比赛' : '编辑比赛'}}</view>
+      <view class="form-body">
+        <view class="form-group">
+          <text class="form-label">日期</text>
+          <picker mode="date" value="{{formData.date}}" bindchange="formDateChange">
+            <view class="form-picker">{{formData.date}}</view>
+          </picker>
+        </view>
+        <view class="form-group">
+          <text class="form-label">对手</text>
+          <input class="form-input" placeholder="输入对手名称" value="{{formData.opponent}}" data-field="opponent" bindinput="formInput"/>
+        </view>
+        <view class="form-group">
+          <text class="form-label">比分（每盘）</text>
+          <view wx:for="{{formData.sets}}" wx:for-index="idx" wx:key="idx" class="set-row">
+            <text class="set-label">第{{idx+1}}盘</text>
+            <input class="set-input" type="number" placeholder="我" value="{{item.myGames}}" data-idx="{{idx}}" data-side="myGames" bindinput="setInput"/>
+            <text class="set-colon">:</text>
+            <input class="set-input" type="number" placeholder="对手" value="{{item.oppGames}}" data-idx="{{idx}}" data-side="oppGames" bindinput="setInput"/>
+          </view>
+          <view class="set-actions">
+            <view class="set-btn" bindtap="addSet">+ 添加盘分</view>
+            <view wx:if="{{formData.sets.length > 1}}" class="set-btn set-rm" bindtap="removeSet">- 移除</view>
+          </view>
+        </view>
+        <view class="form-group">
+          <text class="form-label">结果</text>
+          <picker mode="selector" range="{{['胜', '负']}}" value="{{formData.win ? 0 : 1}}" bindchange="formWinChange">
+            <view class="form-picker">{{formData.win ? '胜' : '负'}}</view>
+          </picker>
+        </view>
+        <view class="form-group">
+          <text class="form-label">备注（可选）</text>
+          <input class="form-input" placeholder="比赛感受、亮点..." value="{{formData.notes}}" data-field="notes" bindinput="formInput"/>
+        </view>
+      </view>
+      <view class="form-actions">
+        <view class="f-btn f-cancel" bindtap="closeForm">取消</view>
+        <view class="f-btn f-submit" bindtap="submitForm">保存</view>
+      </view>
+    </view>
+  </view>
+</view>

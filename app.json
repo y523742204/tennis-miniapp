@@ -1,0 +1,53 @@
+{
+  "pages": [
+    "pages/training/training",
+    "pages/match/match",
+    "pages/court/court",
+    "pages/career/career"
+  ],
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#2ecc71",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/training/training",
+        "text": "训练",
+        "iconPath": "images/training.png",
+        "selectedIconPath": "images/training_hl.png"
+      },
+      {
+        "pagePath": "pages/match/match",
+        "text": "比赛",
+        "iconPath": "images/match.png",
+        "selectedIconPath": "images/match_hl.png"
+      },
+      {
+        "pagePath": "pages/court/court",
+        "text": "球场",
+        "iconPath": "images/court.png",
+        "selectedIconPath": "images/court_hl.png"
+      },
+      {
+        "pagePath": "pages/career/career",
+        "text": "生涯",
+        "iconPath": "images/career.png",
+        "selectedIconPath": "images/career_hl.png"
+      }
+    ]
+  },
+  "window": {
+    "navigationBarTitleText": "网球训练助手",
+    "navigationBarBackgroundColor": "#2ecc71",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f5f5"
+  },
+  "requiredPrivateInfos": ["getLocation"],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于显示附近球场位置"
+    }
+  },
+  "sitemapLocation": "sitemap.json"
+}

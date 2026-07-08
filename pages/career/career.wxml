@@ -1,0 +1,7 @@
+<view class="container">
+  <view class="empty-state">
+    <text>📊</text>
+    <text style="font-size: 32rpx; font-weight: 600; color: #333; margin-top: 20rpx;">生涯统计</text>
+    <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">功能开发中，敬请期待</text>
+  </view>
+</view>
