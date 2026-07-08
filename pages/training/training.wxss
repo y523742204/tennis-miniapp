@@ -156,7 +156,7 @@
 .card {
   position: absolute;
   border-radius: 8rpx;
-  padding: 4rpx 4rpx;
+  padding: 2rpx 2rpx;
   box-sizing: border-box;
   overflow: hidden;
   z-index: 2;
@@ -164,7 +164,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2rpx;
 }
 
 .card:active {
@@ -172,7 +171,7 @@
 }
 
 .card-type {
-  font-size: 24rpx;
+  font-size: 26rpx;
   font-weight: 600;
   color: #fff;
   text-align: center;
@@ -180,7 +179,7 @@
 }
 
 .card-info {
-  font-size: 20rpx;
+  font-size: 26rpx;
   color: rgba(255,255,255,0.9);
   text-align: center;
   width: 100%;
