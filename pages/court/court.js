@@ -37,20 +37,9 @@ Page({
   },
 
   _loadMap() {
-    wx.getLocation({
-      type: 'gcj02',
-      success: (loc) => {
-        this.setData({
-          mapLongitude: loc.longitude,
-          mapLatitude: loc.latitude
-        });
-      },
-      fail: () => {
-        this.setData({
-          mapLongitude: 116.4,
-          mapLatitude: 39.9
-        });
-      }
+    this.setData({
+      mapLongitude: 116.4,
+      mapLatitude: 39.9
     });
   },
 
