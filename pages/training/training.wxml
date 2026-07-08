@@ -21,7 +21,7 @@
 
       <view wx:for="{{slots}}" wx:for-index="si" wx:key="text" class="grid-row">
         <view class="time-cell {{item.isHour ? '' : 'half'}}">
-          <text wx:if="{{item.isHour}}">{{item.text}}</text>
+          <text>{{item.text}}</text>
         </view>
         <view wx:for="{{days}}" wx:for-index="di" wx:key="date"
               class="cell {{selectedSet[di + '-' + si] ? 'selected' : ''}} {{hasTrainingMap[di + '-' + si] ? 'occupied' : ''}}"

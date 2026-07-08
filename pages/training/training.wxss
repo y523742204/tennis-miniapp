@@ -133,8 +133,8 @@
 }
 
 .time-cell.half {
-  font-size: 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  font-size: 18rpx;
+  color: #ccc;
 }
 
 .cell {
