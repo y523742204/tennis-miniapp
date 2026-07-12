@@ -14,11 +14,35 @@ function getMonthRange() {
   return months;
 }
 
+const TYPE_GROUPS = {
+  '拉球': '训练',
+  '发球': '训练',
+  '单打': '单打',
+  '双打': '双打',
+  '上课': '上课',
+  '陪练': '陪练'
+};
+
 function calcCareerStats() {
   const trainings = TrainingStorage.getAll();
 
   const totalTrainings = trainings.length;
   const totalDuration = trainings.reduce((s, r) => s + (r.duration || 0), 0);
+
+  const byGroup = {};
+  trainings.forEach(t => {
+    const group = TYPE_GROUPS[t.type] || '其他';
+    if (!byGroup[group]) byGroup[group] = { count: 0, duration: 0 };
+    byGroup[group].count += 1;
+    byGroup[group].duration += (t.duration || 0);
+  });
+
+  const groupStats = Object.entries(byGroup).map(([key, v]) => ({
+    label: key,
+    count: v.count,
+    duration: v.duration
+  }));
+  groupStats.sort((a, b) => b.duration - a.duration);
 
   const typeDist = {};
   trainings.forEach(t => {
@@ -37,7 +61,7 @@ function calcCareerStats() {
     return { ...m, duration: monthlyDuration[key] || 0 };
   });
 
-  return { totalTrainings, totalDuration, typeDist, monthlyTrend };
+  return { totalTrainings, totalDuration, groupStats, typeDist, monthlyTrend };
 }
 
 module.exports = { calcCareerStats, getMonthRange };

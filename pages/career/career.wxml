@@ -1,7 +1,35 @@
 <view class="container">
-  <view class="empty-state">
+  <view wx:if="{{!hasData}}" class="empty-state">
     <text>📊</text>
     <text style="font-size: 32rpx; font-weight: 600; color: #333; margin-top: 20rpx;">生涯统计</text>
-    <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">功能开发中，敬请期待</text>
+    <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">暂无训练数据</text>
+  </view>
+
+  <view wx:else class="content">
+    <view class="total-card">
+      <text class="total-num">{{stats.totalText}}</text>
+      <text class="total-label">总训练时长</text>
+    </view>
+
+    <view class="stat-section">
+      <view class="sec-title">时长分布</view>
+      <view wx:for="{{stats.groupStats}}" wx:key="label" class="stat-row">
+        <text class="stat-label">{{item.label}}</text>
+        <view class="stat-bar-bg">
+          <view class="stat-bar-fill" style="width: {{(item.duration / stats.totalDuration * 100).toFixed(1) + '%'}}"></view>
+        </view>
+        <text class="stat-val">{{item.text}}</text>
+      </view>
+    </view>
+
+    <view class="stat-section">
+      <view class="sec-title">训练场次</view>
+      <view class="count-grid">
+        <view wx:for="{{stats.groupStats}}" wx:key="label" class="count-item">
+          <text class="count-num">{{item.count}}</text>
+          <text class="count-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
   </view>
 </view>
