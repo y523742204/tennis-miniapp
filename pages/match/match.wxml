@@ -124,21 +124,23 @@
         </view>
       </view>
 
-      <view wx:if="{{scheduleForm.mode === 'doubles'}}" class="sch-name-section">
-        <view class="sch-name-title">各轮类型</view>
-        <view wx:for="{{scheduleForm.roundTypes}}" wx:for-index="ri" wx:key="ri" class="sch-name-row">
-          <text class="sch-round-label">第{{ri+1}}轮</text>
-          <picker mode="selector" range="{{['男双/女双', '混双']}}" value="{{item === 'normal' ? 0 : 1}}" data-idx="{{ri}}" bindchange="roundTypeChange">
-            <view class="sch-picker">{{item === 'normal' ? '男双/女双' : '混双'}}</view>
-          </picker>
-        </view>
-      </view>
       <view class="sch-name-section">
-        <view class="sch-name-title">场地号（可修改）</view>
-        <view class="sch-name-two-col">
-          <view wx:for="{{scheduleForm.courtLabels}}" wx:for-index="ci" wx:key="ci" class="sch-name-row">
-            <text class="sch-round-label">第{{ci+1}}片</text>
-            <input class="sch-name-input" value="{{item}}" data-idx="{{ci}}" bindinput="courtLabelInput" placeholder="{{ci+1}}号场"/>
+        <view class="sch-name-title">{{scheduleForm.mode === 'doubles' ? '各轮类型 / 场地号' : '场地号（可修改）'}}</view>
+        <view class="sch-two-col-section">
+          <view wx:if="{{scheduleForm.mode === 'doubles'}}" class="sch-col">
+            <view wx:for="{{scheduleForm.roundTypes}}" wx:for-index="ri" wx:key="ri" class="sch-name-row">
+              <text class="sch-round-label">第{{ri+1}}轮</text>
+              <picker mode="selector" range="{{['男双/女双', '混双']}}" value="{{item === 'normal' ? 0 : 1}}" data-idx="{{ri}}" bindchange="roundTypeChange">
+                <view class="sch-picker">{{item === 'normal' ? '男双/女双' : '混双'}}</view>
+              </picker>
+            </view>
+          </view>
+          <view wx:if="{{scheduleForm.mode === 'doubles'}}" class="sch-col-divider"></view>
+          <view class="sch-col">
+            <view wx:for="{{scheduleForm.courtLabels}}" wx:for-index="ci" wx:key="ci" class="sch-name-row">
+              <text class="sch-round-label">第{{ci+1}}片</text>
+              <input class="sch-name-input" value="{{item}}" data-idx="{{ci}}" bindinput="courtLabelInput" placeholder="{{ci+1}}号场"/>
+            </view>
           </view>
         </view>
       </view>
