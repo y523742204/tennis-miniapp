@@ -16,7 +16,7 @@
       <view wx:for="{{stats.groupStats}}" wx:key="label" class="stat-row">
         <text class="stat-label">{{item.label}}</text>
         <view class="stat-bar-bg">
-          <view class="stat-bar-fill" style="width: {{(item.duration / stats.totalDuration * 100).toFixed(1) + '%'}}"></view>
+          <view class="stat-bar-fill" style="width: {{item.pct + '%'}}"></view>
         </view>
         <text class="stat-val">{{item.text}}</text>
       </view>

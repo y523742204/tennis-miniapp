@@ -18,7 +18,7 @@ Page({
     const stats = {
       ...raw,
       totalText: fmt(raw.totalDuration),
-      groupStats: raw.groupStats.map(g => ({ ...g, text: fmt(g.duration) }))
+      groupStats: raw.groupStats.map(g => ({ ...g, text: fmt(g.duration), pct: (g.duration / raw.totalDuration * 100).toFixed(1) }))
     };
     this.setData({ stats, hasData: stats.totalTrainings > 0 });
   }
