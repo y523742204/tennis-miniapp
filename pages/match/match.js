@@ -18,7 +18,7 @@ Page({
       playerNames: defaultNames(4, 4),
       maleNames: defaultNames(4, 4).slice(0, 4),
       femaleNames: defaultNames(4, 4).slice(4),
-      rounds: 3,
+      rounds: 5,
       courts: 2,
       roundTypes: ['normal', 'mixed', 'mixed']
     },
