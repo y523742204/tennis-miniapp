@@ -21,7 +21,7 @@ function generateSinglesRound(players, round) {
   for (let i = 0; i < Math.floor(n / 2); i++) {
     const j = n - 1 - i;
     matches.push({
-      players: [players[indices[i]].label, players[indices[j]].label]
+      teams: [[players[indices[i]].label], [players[indices[j]].label]]
     });
   }
   if (n % 2 === 1) {
@@ -69,10 +69,10 @@ function generateSchedule(mode, maleCount, femaleCount, rounds, numCourts) {
       let retry = 0;
       while (retry < 50) {
         const currentKey = result.matches.map(m =>
-          JSON.stringify(mode === 'doubles' ? m.teams : m.players)
+          JSON.stringify(m.teams)
         ).sort().join('|');
         const prevKey = prevMatches.map(m =>
-          JSON.stringify(mode === 'doubles' ? m.teams : m.players)
+          JSON.stringify(m.teams)
         ).sort().join('|');
         if (currentKey !== prevKey) break;
         const last = result.matches.pop();
