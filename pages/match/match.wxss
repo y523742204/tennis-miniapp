@@ -285,6 +285,23 @@
   background: #07c160;
 }
 
+/* ─── 编辑提示 ─── */
+.edit-toolbar {
+  margin: 12rpx 20rpx 0;
+  padding: 12rpx 20rpx;
+  font-size: 24rpx;
+  color: #07c160;
+  background: #edfff4;
+  border-radius: 10rpx;
+  text-align: center;
+}
+.edit-tip {
+  margin: 6rpx 20rpx 0;
+  font-size: 22rpx;
+  color: #bbb;
+  text-align: center;
+}
+
 /* ─── 等位区 ─── */
 .waiting-area {
   margin: 16rpx 20rpx;
@@ -311,17 +328,10 @@
   color: #ccc;
   line-height: 64rpx;
 }
-.waiting-hint {
-  width: 100%;
-  font-size: 24rpx;
-  color: #b8860b;
-  padding: 10rpx;
-  text-align: center;
-  background: #e8d595;
-  border-radius: 8rpx;
-}
 .waiting-empty.hint {
   color: #b8860b;
+  width: 100%;
+  text-align: center;
 }
 
 /* ─── 编辑模式卡片 ─── */

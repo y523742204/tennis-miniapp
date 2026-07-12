@@ -12,13 +12,15 @@
       <text>{{currentSchedule.courts}}场地</text>
     </view>
 
+    <view wx:if="{{editMode}}" class="edit-toolbar">
+      <text wx:if="{{!editData.selected}}">点击选手交换位置，或点击等位区移入选手</text>
+      <text wx:else>点击「{{editData.selected.player}}」移入等位区，或点击其他选手交换位置</text>
+    </view>
+    <view wx:if="{{editMode}}" class="edit-tip">长按选手卡片可以更改姓名</view>
+
     <view wx:if="{{editMode}}" class="waiting-area">
       <view class="waiting-header">等位区（{{editData.waitingPlayers.length}}人）</view>
       <view class="waiting-body" catchtap="moveToWaiting">
-        <view class="waiting-hint">
-          <text wx:if="{{!editData.selected}}">点击选手 → 移入等位区 / 交换位置</text>
-          <text wx:else>点击「{{editData.selected.player}}」移入等位区，或点击其他选手交换位置</text>
-        </view>
         <view wx:if="{{editData.waitingPlayers.length === 0 && !editData.selected}}" class="waiting-empty">暂无选手</view>
         <view wx:if="{{editData.waitingPlayers.length === 0 && editData.selected}}" class="waiting-empty hint">点击此处移入</view>
         <view wx:for="{{editData.waitingPlayers}}" wx:for-index="wi" wx:key="*this"
