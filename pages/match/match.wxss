@@ -359,8 +359,8 @@
   font-size: 24rpx;
   font-weight: 600;
   color: #333;
-  background: #fff9e6;
-  border: 2rpx solid #e8d595;
+  background: #f0fdf4;
+  border: 2rpx solid #c6e9c6;
   border-radius: 10rpx;
   line-height: 1.4;
   transition: all 0.15s;
