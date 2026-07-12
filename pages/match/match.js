@@ -82,7 +82,14 @@ Page({
 
   viewSchedule(e) {
     const s = ScheduleStorage.get(e.currentTarget.dataset.id);
-    if (s) this.setData({ currentSchedule: s });
+    if (s) {
+      for (const round of s.schedule || []) {
+        for (const m of round.matches || []) {
+          if (!m.display) m.display = (m.teams || []).map(t => (t || []).join('')).join(' vs ');
+        }
+      }
+      this.setData({ currentSchedule: s });
+    }
   },
 
   deleteSchedule(e) {

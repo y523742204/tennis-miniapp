@@ -1,5 +1,9 @@
 function assignCourts(matches, numCourts) {
-  return matches.map((m, i) => ({ ...m, court: (i % numCourts) + 1 }));
+  return matches.map((m, i) => ({
+    ...m,
+    court: (i % numCourts) + 1,
+    display: m.teams.map(t => t.join('')).join(' vs ')
+  }));
 }
 
 function generateSinglesRound(players, round) {
