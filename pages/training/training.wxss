@@ -33,9 +33,12 @@
   background: #ddd;
 }
 
-.week-label {
+.week-label-pick {
   flex: 1;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+.week-label-text {
   font-size: 30rpx;
   font-weight: 600;
   color: #333;

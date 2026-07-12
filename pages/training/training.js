@@ -12,6 +12,7 @@ Page({
   data: {
     weekStartDate: '',
     weekLabel: '',
+    currentDate: '',
     days: [],
     slots: [],
     pickerItems: [],
@@ -47,7 +48,7 @@ Page({
       items.push(`${String(h).padStart(2, '0')}:00`);
       if (h < END_HOUR) items.push(`${String(h).padStart(2, '0')}:30`);
     }
-    this.setData({ slots: slotList, pickerItems: items });
+    this.setData({ slots: slotList, pickerItems: items, currentDate: this._fmtDate(new Date()) });
     this.goThisWeek();
   },
 
@@ -77,7 +78,8 @@ Page({
     const days = dates.map(d => ({
       date: d, label: weekdays[new Date(d).getDay()], dateText: String(new Date(d).getDate()), isToday: d === todayStr
     }));
-    this.setData({ weekStartDate: dates[0], weekLabel, days });
+    const today = this._fmtDate(new Date());
+    this.setData({ weekStartDate: dates[0], weekLabel, days, currentDate: today >= dates[0] && today <= dates[6] ? today : dates[0] });
     this._refreshGrid();
   },
 
@@ -135,6 +137,11 @@ Page({
   goThisWeek() {
     this._clearSelection();
     this._loadWeek(this._fmtDate(new Date()));
+  },
+
+  onDatePick(e) {
+    this._clearSelection();
+    this._loadWeek(e.detail.value);
   },
 
   _clearSelection() {

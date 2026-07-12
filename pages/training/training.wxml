@@ -2,7 +2,9 @@
   <view class="top-bar">
     <view class="week-nav">
       <view class="nav-btn" bindtap="prevWeek">‹</view>
-      <text class="week-label">{{weekLabel}}</text>
+      <picker mode="date" value="{{currentDate}}" bindchange="onDatePick" class="week-label-pick">
+        <text class="week-label-text">{{weekLabel}}</text>
+      </picker>
       <view class="nav-btn" bindtap="nextWeek">›</view>
       <view class="today-btn" bindtap="goThisWeek">本周</view>
     </view>
