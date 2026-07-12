@@ -15,12 +15,12 @@ function getMonthRange() {
 }
 
 const TYPE_GROUPS = {
-  '拉球': '训练',
-  '发球': '训练',
-  '单打': '单打',
-  '双打': '双打',
-  '上课': '上课',
-  '陪练': '陪练'
+  rally: '训练',
+  serve: '训练',
+  singles: '单打',
+  doubles: '双打',
+  lesson: '上课',
+  practice: '陪练'
 };
 
 function calcCareerStats() {
