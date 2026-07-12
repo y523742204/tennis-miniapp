@@ -7,6 +7,11 @@ function defaultNames(maleCount, femaleCount) {
   for (let i = 1; i <= femaleCount; i++) names.push('女' + i);
   return names;
 }
+function defaultCourts(mode, maleCount, femaleCount, firstRoundType) {
+  const n = maleCount + femaleCount;
+  if (mode === 'singles' || firstRoundType === 'single') return Math.floor(n / 2) || 1;
+  return Math.floor(n / 4) || 1;
+}
 
 Page({
   data: {
@@ -19,8 +24,8 @@ Page({
       maleNames: defaultNames(4, 4).slice(0, 4),
       femaleNames: defaultNames(4, 4).slice(4),
       rounds: 5,
-      courts: 2,
-      roundTypes: ['normal', 'mixed', 'mixed']
+      courts: defaultCourts('doubles', 4, 4, 'normal'),
+      roundTypes: ['normal', 'mixed', 'mixed', 'mixed', 'mixed']
     },
     currentSchedule: null
   },
@@ -44,6 +49,8 @@ Page({
       patch['scheduleForm.playerNames'] = names;
       patch['scheduleForm.maleNames'] = names.slice(0, mc);
       patch['scheduleForm.femaleNames'] = names.slice(mc);
+      const firstType = this.data.scheduleForm.roundTypes[0];
+      patch['scheduleForm.courts'] = defaultCourts(this.data.scheduleForm.mode, mc, fc, firstType);
     }
     if (field === 'rounds') {
       const cur = this.data.scheduleForm.roundTypes;
@@ -55,7 +62,12 @@ Page({
   },
 
   scheduleModeChange(e) {
-    this.setData({ 'scheduleForm.mode': e.detail.value === 0 ? 'singles' : 'doubles' });
+    const mode = e.detail.value === 0 ? 'singles' : 'doubles';
+    const { maleCount, femaleCount, roundTypes } = this.data.scheduleForm;
+    this.setData({
+      'scheduleForm.mode': mode,
+      'scheduleForm.courts': defaultCourts(mode, maleCount, femaleCount, roundTypes[0])
+    });
   },
 
   roundTypeChange(e) {
