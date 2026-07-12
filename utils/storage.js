@@ -1,6 +1,5 @@
 const STORAGE_KEYS = {
   TRAINING: 'tennis_training',
-  MATCH: 'tennis_match',
   COURT: 'tennis_court',
   SCHEDULE: 'tennis_schedule'
 };
@@ -47,32 +46,6 @@ const TrainingStorage = {
   },
   remove(id) {
     setData(STORAGE_KEYS.TRAINING, getData(STORAGE_KEYS.TRAINING).filter(r => r.id !== id));
-  }
-};
-
-// 比赛记录
-const MatchStorage = {
-  getAll() {
-    return getData(STORAGE_KEYS.MATCH);
-  },
-  get(id) {
-    return getData(STORAGE_KEYS.MATCH).find(r => r.id === id);
-  },
-  save(record) {
-    const records = getData(STORAGE_KEYS.MATCH);
-    if (record.id) {
-      const i = records.findIndex(r => r.id === record.id);
-      if (i > -1) records[i] = record;
-    } else {
-      record.id = genId();
-      record.createdAt = Date.now();
-      records.unshift(record);
-    }
-    setData(STORAGE_KEYS.MATCH, records);
-    return record;
-  },
-  remove(id) {
-    setData(STORAGE_KEYS.MATCH, getData(STORAGE_KEYS.MATCH).filter(r => r.id !== id));
   }
 };
 
@@ -128,4 +101,4 @@ const ScheduleStorage = {
   }
 };
 
-module.exports = { TrainingStorage, MatchStorage, CourtStorage, ScheduleStorage };
+module.exports = { TrainingStorage, CourtStorage, ScheduleStorage };

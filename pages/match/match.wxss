@@ -1,70 +1,5 @@
 .container { padding: 0 0 160rpx; min-height: 100vh; background: #f5f5f5; }
 
-.tab-bar {
-  display: flex;
-  background: #fff;
-  border-bottom: 1rpx solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.tab {
-  flex: 1;
-  text-align: center;
-  padding: 24rpx 0;
-  font-size: 28rpx;
-  color: #999;
-  border-bottom: 3rpx solid transparent;
-}
-
-.tab.active {
-  color: #07c160;
-  border-bottom-color: #07c160;
-  font-weight: 600;
-}
-
-.empty-state { padding: 160rpx 0; text-align: center; font-size: 28rpx; color: #ccc; }
-.fab-label { font-size: 24rpx; color: #bbb; margin-top: 12rpx; }
-
-/* ─── 记录卡片 ─── */
-.match-card {
-  background: #fff;
-  margin: 16rpx 20rpx;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
-}
-.match-card:active { transform: scale(0.98); }
-.mc-top { display: flex; align-items: center; margin-bottom: 8rpx; }
-.mc-opponent { font-size: 32rpx; font-weight: 600; color: #222; flex: 1; }
-.mc-result { padding: 4rpx 20rpx; border-radius: 20rpx; font-size: 24rpx; font-weight: 600; }
-.mc-result.win { background: #d1fae5; color: #059669; }
-.mc-result.lose { background: #fee2e2; color: #dc2626; }
-.mc-score { font-size: 36rpx; font-weight: 700; color: #333; margin-bottom: 8rpx; }
-.mc-bottom { display: flex; align-items: center; gap: 16rpx; }
-.mc-date { font-size: 24rpx; color: #999; }
-.mc-note { font-size: 24rpx; color: #bbb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-
-.fab {
-  position: fixed;
-  right: 32rpx;
-  bottom: 140rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 56rpx;
-  font-weight: 300;
-  box-shadow: 0 4rpx 20rpx rgba(46,204,113,0.4);
-  z-index: 20;
-}
-.fab:active { transform: scale(0.92); }
-
 /* ─── 排赛表单 ─── */
 .sch-create-form {
   background: #fff;
@@ -82,7 +17,7 @@
 }
 
 .sch-label {
-  width: 120rpx;
+  width: 100rpx;
   font-size: 28rpx;
   color: #666;
   flex-shrink: 0;
@@ -102,6 +37,43 @@
 
 .sch-half {
   flex: 1;
+}
+
+/* ─── 选手姓名 ─── */
+.sch-name-section {
+  margin: 16rpx 0;
+  padding: 20rpx 0;
+  border-top: 2rpx solid #f0f0f0;
+}
+
+.sch-name-title {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+.sch-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 10rpx;
+}
+
+.sch-name-tag {
+  width: 36rpx;
+  font-size: 24rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sch-name-input {
+  flex: 1;
+  height: 64rpx;
+  border: 2rpx solid #e5e7eb;
+  border-radius: 10rpx;
+  padding: 0 16rpx;
+  font-size: 28rpx;
+  background: #fafafa;
 }
 
 .sch-generate {
@@ -135,6 +107,7 @@
 
 .sch-item-info {
   flex: 1;
+  min-width: 0;
 }
 
 .sch-item-mode {
@@ -151,10 +124,21 @@
   display: block;
 }
 
+.sch-item-players {
+  font-size: 22rpx;
+  color: #bbb;
+  margin-top: 2rpx;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sch-item-del {
   font-size: 26rpx;
   color: #e53935;
   padding: 10rpx 16rpx;
+  flex-shrink: 0;
 }
 
 /* ─── 排赛对阵表 ─── */
@@ -259,69 +243,3 @@
 }
 
 .sch-save-btn:active { opacity: 0.8; }
-
-/* ─── overlay / sheet ─── */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 100;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.detail-sheet, .form-sheet {
-  background: #fff;
-  border-radius: 24rpx 24rpx 0 0;
-  width: 100%;
-  max-height: 75vh;
-  overflow-y: auto;
-  animation: slideUp .25s ease;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-.match-detail-header {
-  padding: 32rpx;
-  text-align: center;
-}
-.match-detail-header.win { background: #d1fae5; }
-.match-detail-header.lose { background: #fee2e2; }
-.md-vs { display: flex; align-items: center; justify-content: center; gap: 20rpx; margin-bottom: 8rpx; }
-.md-opponent { font-size: 36rpx; font-weight: 700; color: #222; }
-.md-result-text { font-size: 28rpx; padding: 4rpx 20rpx; border-radius: 20rpx; font-weight: 600; }
-.win .md-result-text { background: #059669; color: #fff; }
-.lose .md-result-text { background: #dc2626; color: #fff; }
-.md-score { font-size: 48rpx; font-weight: 800; color: #333; }
-.detail-body { padding: 24rpx 32rpx; }
-.detail-row { display: flex; padding: 12rpx 0; border-bottom: 2rpx solid #f5f5f5; }
-.dl { width: 100rpx; font-size: 28rpx; color: #999; flex-shrink: 0; }
-.dv { font-size: 28rpx; color: #333; }
-.detail-actions { display: flex; border-top: 2rpx solid #eee; }
-.d-btn { flex: 1; height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: 30rpx; }
-.d-btn:active { opacity: 0.7; }
-.d-edit { color: #2ecc71; }
-.d-del { color: #ef4444; border-left: 2rpx solid #eee; }
-
-.form-title { font-size: 34rpx; font-weight: 600; padding: 28rpx 32rpx 16rpx; color: #222; text-align: center; }
-.form-body { padding: 0 32rpx; }
-.form-group { margin-bottom: 24rpx; }
-.form-label { font-size: 26rpx; color: #666; margin-bottom: 8rpx; display: block; }
-.form-picker { width: 100%; height: 72rpx; border: 2rpx solid #e5e7eb; border-radius: 12rpx; padding: 0 20rpx; font-size: 28rpx; background: #fafafa; display: flex; align-items: center; color: #333; }
-.form-input { width: 100%; height: 72rpx; border: 2rpx solid #e5e7eb; border-radius: 12rpx; padding: 0 20rpx; font-size: 28rpx; background: #fafafa; }
-.set-row { display: flex; align-items: center; gap: 12rpx; margin-bottom: 12rpx; }
-.set-label { width: 80rpx; font-size: 26rpx; color: #666; }
-.set-input { flex: 1; height: 64rpx; border: 2rpx solid #e5e7eb; border-radius: 10rpx; padding: 0 16rpx; font-size: 28rpx; text-align: center; background: #fafafa; }
-.set-colon { font-size: 32rpx; font-weight: 700; color: #333; }
-.set-actions { display: flex; gap: 16rpx; }
-.set-btn { padding: 10rpx 24rpx; font-size: 24rpx; color: #2ecc71; border: 2rpx solid #2ecc71; border-radius: 20rpx; }
-.set-rm { color: #ef4444; border-color: #ef4444; }
-.form-actions { display: flex; padding: 20rpx 32rpx; gap: 20rpx; border-top: 2rpx solid #eee; margin-top: 8rpx; }
-.f-btn { flex: 1; height: 80rpx; display: flex; align-items: center; justify-content: center; border-radius: 40rpx; font-size: 30rpx; font-weight: 500; }
-.f-cancel { background: #f5f5f5; color: #666; }
-.f-submit { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff; }
-.f-cancel:active, .f-submit:active { opacity: 0.8; }

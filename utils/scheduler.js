@@ -1,10 +1,3 @@
-function generatePlayerList(maleCount, femaleCount) {
-  const players = [];
-  for (let i = 1; i <= maleCount; i++) players.push({ label: '男' + i, gender: 'male' });
-  for (let i = 1; i <= femaleCount; i++) players.push({ label: '女' + i, gender: 'female' });
-  return players;
-}
-
 function assignCourts(matches, numCourts) {
   return matches.map((m, i) => ({ ...m, court: (i % numCourts) + 1 }));
 }
@@ -56,9 +49,8 @@ function generateDoublesRound(players, round) {
   return { matches, byes };
 }
 
-function generateSchedule(mode, maleCount, femaleCount, rounds, numCourts) {
-  const players = generatePlayerList(maleCount, femaleCount);
-  const total = maleCount + femaleCount;
+function generateSchedule(mode, playerNames, rounds, numCourts) {
+  const players = playerNames.map(n => ({ label: n }));
   const schedule = [];
   for (let r = 0; r < rounds; r++) {
     const result = mode === 'doubles'
@@ -87,8 +79,8 @@ function generateSchedule(mode, maleCount, femaleCount, rounds, numCourts) {
     });
   }
   return {
-    mode, maleCount, femaleCount, rounds: schedule.length,
-    courts: numCourts, players, schedule, createdAt: Date.now()
+    mode, playerNames, rounds: schedule.length,
+    courts: numCourts, schedule, createdAt: Date.now()
   };
 }
 
