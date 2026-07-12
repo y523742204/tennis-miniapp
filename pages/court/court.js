@@ -1,4 +1,5 @@
 const { CourtStorage } = require('../../utils/storage');
+const { searchNearbyPOI, AMAP_KEY } = require('../../utils/map');
 
 Page({
   data: {
@@ -7,7 +8,14 @@ Page({
     mode: 'list',
     showForm: false,
     formMode: 'add',
-    formData: {}
+    formData: {},
+    searchRadius: 2000,
+    radiusIndex: 2,
+    searching: false,
+    nearbyCourts: [],
+    mapLongitude: 116.4,
+    mapLatitude: 39.9,
+    hasKey: !!AMAP_KEY
   },
 
   onShow() {
@@ -25,7 +33,7 @@ Page({
       width: 40,
       height: 40
     }));
-    this.setData({ courts, markers });
+    this.setData({ courts, markers, nearbyCourts: [] });
   },
 
   switchMode(e) {
@@ -37,9 +45,112 @@ Page({
   },
 
   _loadMap() {
-    this.setData({
-      mapLongitude: 116.4,
-      mapLatitude: 39.9
+    wx.getLocation({
+      type: 'gcj02',
+      success: (res) => {
+        this.setData({
+          mapLatitude: res.latitude,
+          mapLongitude: res.longitude
+        });
+      },
+      fail: () => {
+        wx.showToast({ title: '获取位置失败，使用默认位置', icon: 'none' });
+      }
+    });
+  },
+
+  radiusChange(e) {
+    const idx = Number(e.detail.value);
+    const radii = [500, 1000, 2000, 5000];
+    this.setData({ radiusIndex: idx, searchRadius: radii[idx] });
+  },
+
+  searchNearby() {
+    if (!this.data.hasKey) {
+      wx.showModal({
+        title: '需要配置API Key',
+        content: '请前往 utils/map.js 填入您的高德地图 Web API Key（免费申请）',
+        showCancel: false
+      });
+      return;
+    }
+    this.setData({ searching: true });
+    wx.getLocation({
+      type: 'gcj02',
+      success: (loc) => {
+        this.setData({ mapLatitude: loc.latitude, mapLongitude: loc.longitude });
+        searchNearbyPOI(loc.latitude, loc.longitude, this.data.searchRadius, '网球场')
+          .then((pois) => {
+            const nx = pois.map(p => ({
+              id: 'poi_' + p.id,
+              latitude: p.latitude,
+              longitude: p.longitude,
+              title: p.name,
+              iconPath: '/images/marker.png',
+              width: 40,
+              height: 40
+            }));
+            const saved = CourtStorage.getAll().filter(c => c.latitude).map(c => ({
+              id: c.id,
+              latitude: c.latitude,
+              longitude: c.longitude,
+              title: c.name,
+              iconPath: '/images/marker.png',
+              width: 40,
+              height: 40
+            }));
+            this.setData({
+              markers: [...saved, ...nx],
+              nearbyCourts: pois,
+              searching: false
+            });
+            if (pois.length === 0) {
+              wx.showToast({ title: '未找到附近网球场', icon: 'none' });
+            } else {
+              wx.showToast({ title: '找到 ' + pois.length + ' 个网球场', icon: 'success' });
+            }
+          })
+          .catch((err) => {
+            wx.showToast({ title: '搜索失败: ' + err.message, icon: 'none' });
+            this.setData({ searching: false });
+          });
+      },
+      fail: () => {
+        wx.showToast({ title: '获取位置失败', icon: 'none' });
+        this.setData({ searching: false });
+      }
+    });
+  },
+
+  onNearbyTap(e) {
+    const idx = e.currentTarget.dataset.idx;
+    const court = this.data.nearbyCourts[idx];
+    if (!court) return;
+    wx.showActionSheet({
+      itemList: ['地图导航', '保存到本地球场', '复制地址'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          wx.openLocation({
+            latitude: court.latitude,
+            longitude: court.longitude,
+            name: court.name,
+            address: court.address
+          });
+        } else if (res.tapIndex === 1) {
+          CourtStorage.save({
+            name: court.name,
+            address: court.address || '',
+            phone: court.phone || '',
+            rating: 3,
+            latitude: court.latitude,
+            longitude: court.longitude
+          });
+          wx.showToast({ title: '已保存', icon: 'success' });
+          this._loadCourts();
+        } else if (res.tapIndex === 2) {
+          wx.setClipboardData({ data: court.address || court.name });
+        }
+      }
     });
   },
 
@@ -161,6 +272,33 @@ Page({
               longitude: court.longitude,
               name: court.name
             });
+          }
+        }
+      });
+      return;
+    }
+    const poi = this.data.nearbyCourts.find(p => 'poi_' + p.id === id);
+    if (poi) {
+      wx.showActionSheet({
+        itemList: ['地图导航', '保存到本地球场'],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            wx.openLocation({
+              latitude: poi.latitude,
+              longitude: poi.longitude,
+              name: poi.name
+            });
+          } else if (res.tapIndex === 1) {
+            CourtStorage.save({
+              name: poi.name,
+              address: poi.address || '',
+              phone: poi.phone || '',
+              rating: 3,
+              latitude: poi.latitude,
+              longitude: poi.longitude
+            });
+            wx.showToast({ title: '已保存', icon: 'success' });
+            this._loadCourts();
           }
         }
       });

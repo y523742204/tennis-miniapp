@@ -5,12 +5,23 @@
   </view>
 
   <view wx:if="{{mode === 'list'}}">
-    <view wx:if="{{courts.length === 0}}" class="empty-state">
+    <view wx:if="{{courts.length === 0 && nearbyCourts.length === 0}}" class="empty-state">
       <text>🎾</text>
       <text>还没有添加球场</text>
-      <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">点击下方按钮添加球场</text>
+      <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">切换到地图模式搜索附近网球场</text>
     </view>
 
+    <view wx:if="{{nearbyCourts.length}}" class="section-title">附近网球场（{{nearbyCourts.length}}）</view>
+    <view wx:for="{{nearbyCourts}}" wx:for-index="ni" wx:key="id" class="court-card" data-idx="{{ni}}" bindtap="onNearbyTap">
+      <view class="cc-top">
+        <text class="cc-name">{{item.name}}</text>
+        <text class="cc-dist">{{item.distance}}m</text>
+      </view>
+      <text wx:if="{{item.address}}" class="cc-addr">📍 {{item.address}}</text>
+      <text wx:if="{{item.phone}}" class="cc-phone">📞 {{item.phone}}</text>
+    </view>
+
+    <view wx:if="{{courts.length}}" class="section-title">我的球场</view>
     <view wx:for="{{courts}}" wx:key="id" class="court-card" data-id="{{item.id}}" bindtap="onCourtTap">
       <view class="cc-top">
         <text class="cc-name">{{item.name}}</text>
@@ -26,11 +37,18 @@
   </view>
 
   <view wx:if="{{mode === 'map'}}" class="map-wrap">
+    <view class="map-toolbar">
+      <picker mode="selector" range="{{['500m', '1km', '2km', '5km']}}" value="{{radiusIndex}}" bindchange="radiusChange">
+        <view class="map-radius-btn">{{['500m', '1km', '2km', '5km'][radiusIndex]}} ▼</view>
+      </picker>
+      <view class="map-search-btn {{searching ? 'loading' : ''}}" bindtap="searchNearby">{{searching ? '搜索中...' : '搜附近网球场'}}</view>
+    </view>
     <map class="map" longitude="{{mapLongitude}}" latitude="{{mapLatitude}}" scale="14"
          markers="{{markers}}"
+         show-location
          bindmarkertap="onMapMarkerTap">
     </map>
-    <view class="map-hint">点击地图标记可查看球场</view>
+    <view wx:if="{{!hasKey}}" class="map-hint">需在 utils/map.js 配置高德地图 Key</view>
   </view>
 
   <view class="fab" bindtap="showAddForm">
