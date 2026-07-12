@@ -15,8 +15,8 @@ function getMonthRange() {
 }
 
 const TYPE_GROUPS = {
-  rally: '训练',
-  serve: '训练',
+  rally: '拉球',
+  serve: '发球',
   singles: '单打',
   doubles: '双打',
   lesson: '上课',
