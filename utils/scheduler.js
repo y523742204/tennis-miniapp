@@ -28,33 +28,43 @@ function generateSinglesRound(players, round) {
 }
 
 function generateDoublesRound(players, round) {
-  const n = players.length;
+  let males = players.filter(p => p.gender === 'male');
+  let females = players.filter(p => p.gender === 'female');
+
+  for (let r = 0; r < round; r++) {
+    if (males.length >= 2) { const last = males.pop(); males.splice(1, 0, last); }
+    if (females.length >= 2) { const last = females.pop(); females.splice(1, 0, last); }
+  }
+
+  const teams = [];
+  const indivByes = [];
+  let mi = 0;
+  while (mi + 1 < males.length) { teams.push({ members: [males[mi].label, males[mi+1].label] }); mi += 2; }
+  if (mi < males.length) indivByes.push(males[mi].label);
+  let fi = 0;
+  while (fi + 1 < females.length) { teams.push({ members: [females[fi].label, females[fi+1].label] }); fi += 2; }
+  if (fi < females.length) indivByes.push(females[fi].label);
+  if (indivByes.length === 2) { teams.push({ members: [indivByes[0], indivByes[1]] }); indivByes.length = 0; }
+
+  const n = teams.length;
+  if (n < 2) return { matches: [], byes: indivByes.concat(teams.map(t => t.members.join(''))) };
+
+  const indices = [0];
+  for (let i = 1; i < n; i++) indices.push(1 + (i - 1 + round) % (n - 1));
+
   const matches = [];
-  const byes = [];
-  if (n < 4) return { matches: [], byes: players.map(p => p.label) };
-  const rotated = [...players];
-  for (let i = 0; i < round * 2; i++) {
-    const last = rotated.pop();
-    rotated.splice(1, 0, last);
+  const byes = [...indivByes];
+  for (let i = 0; i < Math.floor(n / 2); i++) {
+    const j = n - 1 - i;
+    matches.push({ teams: [teams[indices[i]].members, teams[indices[j]].members] });
   }
-  for (let i = 0; i < Math.floor(n / 4); i++) {
-    const group = rotated.slice(i * 4, i * 4 + 4);
-    matches.push({
-      teams: [
-        [group[0].label, group[1].label],
-        [group[2].label, group[3].label]
-      ]
-    });
-  }
-  const remaining = n - Math.floor(n / 4) * 4;
-  for (let i = 0; i < remaining; i++) {
-    byes.push(rotated[Math.floor(n / 4) * 4 + i].label);
-  }
+  if (n % 2 === 1) byes.push(teams[indices[Math.floor(n / 2)]].members.join(''));
+
   return { matches, byes };
 }
 
-function generateSchedule(mode, playerNames, rounds, numCourts) {
-  const players = playerNames.map(n => ({ label: n }));
+function generateSchedule(mode, players, rounds, numCourts) {
+  const playerNames = players.map(p => p.label);
   const schedule = [];
   for (let r = 0; r < rounds; r++) {
     const result = mode === 'doubles'

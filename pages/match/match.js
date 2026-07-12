@@ -67,7 +67,8 @@ Page({
       return;
     }
     const names = f.playerNames.map(n => n.trim() || '选手' + (f.playerNames.indexOf(n) + 1));
-    const result = generateSchedule(f.mode, names, f.rounds, f.courts);
+    const players = names.map((n, i) => ({ label: n, gender: i < f.maleCount ? 'male' : 'female' }));
+    const result = generateSchedule(f.mode, players, f.rounds, f.courts);
     this.setData({ currentSchedule: result });
   },
 
