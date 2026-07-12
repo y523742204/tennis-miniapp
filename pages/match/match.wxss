@@ -66,6 +66,13 @@
   flex-shrink: 0;
 }
 
+.sch-round-label {
+  width: 96rpx;
+  font-size: 26rpx;
+  color: #666;
+  flex-shrink: 0;
+}
+
 .sch-name-input {
   flex: 1;
   height: 64rpx;

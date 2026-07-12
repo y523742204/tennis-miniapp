@@ -18,7 +18,7 @@ Page({
       playerNames: defaultNames(4, 0),
       rounds: 3,
       courts: 2,
-      roundTypes: ['male', 'male', 'male']
+      roundTypes: ['normal', 'normal', 'normal']
     },
     currentSchedule: null
   },
@@ -45,7 +45,7 @@ Page({
     if (field === 'rounds') {
       const cur = this.data.scheduleForm.roundTypes;
       patch['scheduleForm.roundTypes'] = val > cur.length
-        ? [...cur, ...Array(val - cur.length).fill('male')]
+        ? [...cur, ...Array(val - cur.length).fill('normal')]
         : cur.slice(0, val);
     }
     this.setData(patch);
@@ -58,7 +58,7 @@ Page({
   roundTypeChange(e) {
     const idx = Number(e.currentTarget.dataset.idx);
     const types = [...this.data.scheduleForm.roundTypes];
-    types[idx] = ['male', 'female', 'mixed'][Number(e.detail.value)];
+    types[idx] = Number(e.detail.value) === 0 ? 'normal' : 'mixed';
     this.setData({ 'scheduleForm.roundTypes': types });
   },
 
