@@ -12,13 +12,15 @@ Page({
   data: {
     schedules: [],
     scheduleForm: {
-      mode: 'singles',
+      mode: 'doubles',
       maleCount: 4,
-      femaleCount: 0,
-      playerNames: defaultNames(4, 0),
+      femaleCount: 4,
+      playerNames: defaultNames(4, 4),
+      maleNames: defaultNames(4, 4).slice(0, 4),
+      femaleNames: defaultNames(4, 4).slice(4),
       rounds: 3,
       courts: 2,
-      roundTypes: ['normal', 'normal', 'normal']
+      roundTypes: ['normal', 'mixed', 'mixed']
     },
     currentSchedule: null
   },
@@ -26,8 +28,6 @@ Page({
   onShow() {
     this._loadSchedules();
   },
-
-  // ─── 排赛 ───────────────────────
 
   _loadSchedules() {
     this.setData({ schedules: ScheduleStorage.getAll() });
@@ -40,12 +40,15 @@ Page({
     if (field === 'maleCount' || field === 'femaleCount') {
       const mc = field === 'maleCount' ? val : this.data.scheduleForm.maleCount;
       const fc = field === 'femaleCount' ? val : this.data.scheduleForm.femaleCount;
-      patch['scheduleForm.playerNames'] = defaultNames(mc, fc);
+      const names = defaultNames(mc, fc);
+      patch['scheduleForm.playerNames'] = names;
+      patch['scheduleForm.maleNames'] = names.slice(0, mc);
+      patch['scheduleForm.femaleNames'] = names.slice(mc);
     }
     if (field === 'rounds') {
       const cur = this.data.scheduleForm.roundTypes;
       patch['scheduleForm.roundTypes'] = val > cur.length
-        ? [...cur, ...Array(val - cur.length).fill('normal')]
+        ? [...cur, ...Array(val - cur.length).fill('mixed')]
         : cur.slice(0, val);
     }
     this.setData(patch);
@@ -66,7 +69,12 @@ Page({
     const idx = Number(e.currentTarget.dataset.idx);
     const names = [...this.data.scheduleForm.playerNames];
     names[idx] = e.detail.value;
-    this.setData({ 'scheduleForm.playerNames': names });
+    const mc = this.data.scheduleForm.maleCount;
+    this.setData({
+      'scheduleForm.playerNames': names,
+      'scheduleForm.maleNames': names.slice(0, mc),
+      'scheduleForm.femaleNames': names.slice(mc)
+    });
   },
 
   generateSchedule() {

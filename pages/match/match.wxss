@@ -73,6 +73,16 @@
   flex-shrink: 0;
 }
 
+.sch-name-two-col {
+  display: flex;
+  gap: 20rpx;
+}
+
+.sch-name-col {
+  flex: 1;
+  min-width: 0;
+}
+
 .sch-name-input {
   flex: 1;
   height: 64rpx;
