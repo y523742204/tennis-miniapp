@@ -1,26 +1,118 @@
 <view class="container">
-  <view wx:if="{{records.length === 0}}" class="empty-state">
-    <text>🏆</text>
-    <text>还没有比赛记录</text>
-    <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">点击下方按钮添加第一场比赛</text>
+  <view class="tab-bar">
+    <view class="tab {{tab === 'record' ? 'active' : ''}}" data-tab="record" bindtap="switchTab">📋 记录</view>
+    <view class="tab {{tab === 'schedule' ? 'active' : ''}}" data-tab="schedule" bindtap="switchTab">📊 排赛</view>
   </view>
 
-  <view wx:for="{{records}}" wx:key="id" class="match-card" data-id="{{item.id}}" bindtap="onCardTap">
-    <view class="mc-top">
-      <text class="mc-opponent">{{item.opponent}}</text>
-      <text class="mc-result {{item.winClass}}">{{item.winText}}</text>
+  <!-- ═══ 比赛记录 ═══ -->
+  <view wx:if="{{tab === 'record'}}">
+    <view wx:if="{{records.length === 0}}" class="empty-state">
+      <text>🏆</text>
+      <text>还没有比赛记录</text>
+      <view class="fab-label" bindtap="showAddForm">点击下方 + 添加第一场比赛</view>
     </view>
-    <view class="mc-score">{{item.scoreStr}}</view>
-    <view class="mc-bottom">
-      <text class="mc-date">{{item.dateCN}}</text>
-      <text wx:if="{{item.notes}}" class="mc-note">{{item.notes}}</text>
+
+    <view wx:for="{{records}}" wx:key="id" class="match-card" data-id="{{item.id}}" bindtap="onCardTap">
+      <view class="mc-top">
+        <text class="mc-opponent">{{item.opponent}}</text>
+        <text class="mc-result {{item.winClass}}">{{item.winText}}</text>
+      </view>
+      <view class="mc-score">{{item.scoreStr}}</view>
+      <view class="mc-bottom">
+        <text class="mc-date">{{item.dateCN}}</text>
+        <text wx:if="{{item.notes}}" class="mc-note">{{item.notes}}</text>
+      </view>
+    </view>
+
+    <view class="fab" bindtap="showAddForm"><text>+</text></view>
+  </view>
+
+  <!-- ═══ 排赛 ═══ -->
+  <view wx:if="{{tab === 'schedule'}}">
+    <view wx:if="{{currentSchedule}}">
+      <view class="sch-header">
+        <view class="sch-back" bindtap="goBackToList">‹ 返回</view>
+        <view class="sch-title">排赛 #{{currentSchedule.createdAt ? currentSchedule.createdAt.toString().slice(-4) : ''}}</view>
+      </view>
+      <view class="sch-meta">
+        <text>{{currentSchedule.mode === 'doubles' ? '双打' : '单打'}}</text>
+        <text>{{currentSchedule.maleCount + currentSchedule.femaleCount}}人</text>
+        <text>{{currentSchedule.rounds}}轮</text>
+        <text>{{currentSchedule.courts}}场地</text>
+      </view>
+
+      <view wx:for="{{currentSchedule.schedule}}" wx:for-index="ri" wx:key="round" class="round-card">
+        <view class="round-title">第{{item.round}}轮 <text wx:if="{{item.byes.length}}" class="round-bye">（轮空：{{item.byes.join('、')}}）</text></view>
+        <view wx:for="{{item.matches}}" wx:for-index="mi" wx:key="court" class="match-row">
+          <view wx:if="{{currentSchedule.mode === 'doubles'}}">
+            <text class="match-court">🎾 场地{{item.court}}</text>
+            <text class="match-players">{{item.teams[0].join('+')}} <text class="vs">vs</text> {{item.teams[1].join('+')}}</text>
+          </view>
+          <view wx:if="{{currentSchedule.mode === 'singles'}}">
+            <text class="match-court">🎾 场地{{item.court}}</text>
+            <text class="match-players">{{item.players[0]}} <text class="vs">vs</text> {{item.players[1]}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{!currentSchedule.id}}" class="sch-save-bar">
+        <view class="sch-save-btn" bindtap="saveSchedule">保存排赛</view>
+      </view>
+    </view>
+
+    <view wx:if="{{!currentSchedule}}">
+      <view class="sch-create-form">
+        <view class="sch-field">
+          <text class="sch-label">模式</text>
+          <picker mode="selector" range="{{['单打', '双打']}}" value="{{scheduleForm.mode === 'singles' ? 0 : 1}}" bindchange="scheduleModeChange">
+            <view class="sch-picker">{{scheduleForm.mode === 'singles' ? '单打' : '双打'}}</view>
+          </picker>
+        </view>
+        <view class="sch-row">
+          <view class="sch-field sch-half">
+            <text class="sch-label">男生</text>
+            <picker mode="selector" range="{{[0,1,2,3,4,5,6,7,8,9,10]}}" value="{{scheduleForm.maleCount}}" data-field="maleCount" bindchange="scheduleFormChange">
+              <view class="sch-picker">{{scheduleForm.maleCount}}人</view>
+            </picker>
+          </view>
+          <view class="sch-field sch-half">
+            <text class="sch-label">女生</text>
+            <picker mode="selector" range="{{[0,1,2,3,4,5,6,7,8,9,10]}}" value="{{scheduleForm.femaleCount}}" data-field="femaleCount" bindchange="scheduleFormChange">
+              <view class="sch-picker">{{scheduleForm.femaleCount}}人</view>
+            </picker>
+          </view>
+        </view>
+        <view class="sch-row">
+          <view class="sch-field sch-half">
+            <text class="sch-label">轮数</text>
+            <picker mode="selector" range="{{[1,2,3,4,5,6,7,8,9,10]}}" value="{{scheduleForm.rounds - 1}}" data-field="rounds" bindchange="scheduleFormChange">
+              <view class="sch-picker">{{scheduleForm.rounds}}轮</view>
+            </picker>
+          </view>
+          <view class="sch-field sch-half">
+            <text class="sch-label">场地数</text>
+            <picker mode="selector" range="{{[1,2,3,4,5,6]}}" value="{{scheduleForm.courts - 1}}" data-field="courts" bindchange="scheduleFormChange">
+              <view class="sch-picker">{{scheduleForm.courts}}片</view>
+            </picker>
+          </view>
+        </view>
+        <view class="sch-generate" bindtap="generateSchedule">生成排赛</view>
+      </view>
+
+      <view wx:if="{{schedules.length}}" class="sch-list">
+        <view class="sch-list-title">已保存排赛</view>
+        <view wx:for="{{schedules}}" wx:key="id" class="sch-item">
+          <view class="sch-item-info" data-id="{{item.id}}" bindtap="viewSchedule">
+            <text class="sch-item-mode">{{item.mode === 'doubles' ? '双打' : '单打'}}</text>
+            <text class="sch-item-detail">{{item.maleCount + item.femaleCount}}人 · {{item.rounds}}轮 · {{item.courts}}场地</text>
+          </view>
+          <view class="sch-item-del" data-id="{{item.id}}" bindtap="deleteSchedule">删除</view>
+        </view>
+      </view>
     </view>
   </view>
 
-  <view class="fab" bindtap="showAddForm">
-    <text>+</text>
-  </view>
-
+  <!-- ═══ 记录详情 ═══ -->
   <view wx:if="{{showDetail}}" class="overlay" bindtap="closeDetail">
     <view class="detail-sheet" catchtap="">
       <view class="match-detail-header {{detailRecord.winClass}}">
@@ -31,14 +123,8 @@
         <text class="md-score">{{detailRecord.scoreStr}}</text>
       </view>
       <view class="detail-body">
-        <view class="detail-row">
-          <text class="dl">日期</text>
-          <text class="dv">{{detailRecord.dateCN}}</text>
-        </view>
-        <view wx:if="{{detailRecord.notes}}" class="detail-row">
-          <text class="dl">备注</text>
-          <text class="dv">{{detailRecord.notes}}</text>
-        </view>
+        <view class="detail-row"><text class="dl">日期</text><text class="dv">{{detailRecord.dateCN}}</text></view>
+        <view wx:if="{{detailRecord.notes}}" class="detail-row"><text class="dl">备注</text><text class="dv">{{detailRecord.notes}}</text></view>
       </view>
       <view class="detail-actions">
         <view class="d-btn d-edit" bindtap="editFromDetail">编辑</view>
@@ -47,6 +133,7 @@
     </view>
   </view>
 
+  <!-- ═══ 记录表单 ═══ -->
   <view wx:if="{{showForm}}" class="overlay" bindtap="closeForm">
     <view class="form-sheet" catchtap="">
       <view class="form-title">{{formMode === 'add' ? '新增比赛' : '编辑比赛'}}</view>

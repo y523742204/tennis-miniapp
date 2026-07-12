@@ -109,9 +109,9 @@ Page({
         duration: r.duration, type: r.type, level: r.level || 0,
         court: r.court || '', notes: r.notes || '',
         typeLabel: info.label, color: info.color, fontSize,
-        top: HEADER_HEIGHT + si * ROW_HEIGHT + 2,
-        left: TIME_WIDTH + di * COL_WIDTH + 4,
-        width: COL_WIDTH - 8,
+        top: HEADER_HEIGHT + si * ROW_HEIGHT - 15,
+        left: TIME_WIDTH + di * COL_WIDTH - 10,
+        width: COL_WIDTH - 10,
         height: cardH
       };
     }).filter(Boolean);

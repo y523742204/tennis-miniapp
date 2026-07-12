@@ -1,7 +1,8 @@
 const STORAGE_KEYS = {
   TRAINING: 'tennis_training',
   MATCH: 'tennis_match',
-  COURT: 'tennis_court'
+  COURT: 'tennis_court',
+  SCHEDULE: 'tennis_schedule'
 };
 
 function genId() {
@@ -101,4 +102,30 @@ const CourtStorage = {
   }
 };
 
-module.exports = { TrainingStorage, MatchStorage, CourtStorage };
+// 排赛记录
+const ScheduleStorage = {
+  getAll() {
+    return getData(STORAGE_KEYS.SCHEDULE);
+  },
+  get(id) {
+    return getData(STORAGE_KEYS.SCHEDULE).find(r => r.id === id);
+  },
+  save(record) {
+    const records = getData(STORAGE_KEYS.SCHEDULE);
+    if (record.id) {
+      const i = records.findIndex(r => r.id === record.id);
+      if (i > -1) records[i] = record;
+    } else {
+      record.id = genId();
+      record.createdAt = Date.now();
+      records.unshift(record);
+    }
+    setData(STORAGE_KEYS.SCHEDULE, records);
+    return record;
+  },
+  remove(id) {
+    setData(STORAGE_KEYS.SCHEDULE, getData(STORAGE_KEYS.SCHEDULE).filter(r => r.id !== id));
+  }
+};
+
+module.exports = { TrainingStorage, MatchStorage, CourtStorage, ScheduleStorage };
