@@ -17,7 +17,8 @@ Page({
       femaleCount: 0,
       playerNames: defaultNames(4, 0),
       rounds: 3,
-      courts: 2
+      courts: 2,
+      roundTypes: ['male', 'male', 'male']
     },
     currentSchedule: null
   },
@@ -41,11 +42,24 @@ Page({
       const fc = field === 'femaleCount' ? val : this.data.scheduleForm.femaleCount;
       patch['scheduleForm.playerNames'] = defaultNames(mc, fc);
     }
+    if (field === 'rounds') {
+      const cur = this.data.scheduleForm.roundTypes;
+      patch['scheduleForm.roundTypes'] = val > cur.length
+        ? [...cur, ...Array(val - cur.length).fill('male')]
+        : cur.slice(0, val);
+    }
     this.setData(patch);
   },
 
   scheduleModeChange(e) {
     this.setData({ 'scheduleForm.mode': e.detail.value === 0 ? 'singles' : 'doubles' });
+  },
+
+  roundTypeChange(e) {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const types = [...this.data.scheduleForm.roundTypes];
+    types[idx] = ['male', 'female', 'mixed'][Number(e.detail.value)];
+    this.setData({ 'scheduleForm.roundTypes': types });
   },
 
   playerNameInput(e) {
@@ -68,7 +82,7 @@ Page({
     }
     const names = f.playerNames.map(n => n.trim() || '选手' + (f.playerNames.indexOf(n) + 1));
     const players = names.map((n, i) => ({ label: n, gender: i < f.maleCount ? 'male' : 'female' }));
-    const result = generateSchedule(f.mode, players, f.rounds, f.courts);
+    const result = generateSchedule(f.mode, players, f.rounds, f.courts, f.roundTypes);
     this.setData({ currentSchedule: result });
   },
 

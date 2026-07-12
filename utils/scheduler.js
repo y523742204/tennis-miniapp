@@ -42,55 +42,56 @@ function pairTeams(teamList, round) {
   return { matches, byes };
 }
 
-function generateDoublesRound(players, round) {
+function generateDoublesRound(players, round, type) {
   let males = players.filter(p => p.gender === 'male');
   let females = players.filter(p => p.gender === 'female');
 
+  if (type === 'male') {
+    for (let r = 0; r < round; r++) { if (males.length >= 2) { const last = males.pop(); males.splice(1, 0, last); } }
+    const teams = [];
+    let mi = 0;
+    while (mi + 1 < males.length) { teams.push([males[mi].label, males[mi+1].label]); mi += 2; }
+    const extra = mi < males.length ? [males[mi].label] : [];
+    extra.push(...females.map(f => f.label));
+    const result = pairTeams(teams, round);
+    result.byes.push(...extra);
+    return result;
+  }
+
+  if (type === 'female') {
+    for (let r = 0; r < round; r++) { if (females.length >= 2) { const last = females.pop(); females.splice(1, 0, last); } }
+    const teams = [];
+    let fi = 0;
+    while (fi + 1 < females.length) { teams.push([females[fi].label, females[fi+1].label]); fi += 2; }
+    const extra = fi < females.length ? [females[fi].label] : [];
+    extra.push(...males.map(m => m.label));
+    const result = pairTeams(teams, round);
+    result.byes.push(...extra);
+    return result;
+  }
+
+  // mixed
   for (let r = 0; r < round; r++) {
     if (males.length >= 2) { const last = males.pop(); males.splice(1, 0, last); }
     if (females.length >= 2) { const last = females.pop(); females.splice(1, 0, last); }
   }
-
-  const maleTeams = [];
-  const femaleTeams = [];
-  const mixedTeams = [];
-  const indivByes = [];
-  let mi = 0;
-  while (mi + 1 < males.length) { maleTeams.push([males[mi].label, males[mi+1].label]); mi += 2; }
-  if (mi < males.length) indivByes.push(males[mi].label);
-  let fi = 0;
-  while (fi + 1 < females.length) { femaleTeams.push([females[fi].label, females[fi+1].label]); fi += 2; }
-  if (fi < females.length) indivByes.push(females[fi].label);
-  if (indivByes.length === 2) { mixedTeams.push([indivByes[0], indivByes[1]]); indivByes.length = 0; }
-
-  if (maleTeams.length === 1 && femaleTeams.length === 1) {
-    const allM = maleTeams[0].concat(indivByes.filter(b => males.some(p => p.label === b)));
-    const allF = femaleTeams[0].concat(indivByes.filter(b => females.some(p => p.label === b)));
-    if (Math.min(allM.length, allF.length) >= 2) {
-      const mc = Math.min(allM.length, allF.length);
-      maleTeams.length = 0; femaleTeams.length = 0; mixedTeams.length = 0; indivByes.length = 0;
-      for (let i = 0; i < mc; i++) mixedTeams.push([allM[i], allF[i]]);
-      if (allM.length > mc) indivByes.push(allM[mc]);
-      if (allF.length > mc) indivByes.push(allF[mc]);
-    }
-  }
-
-  const matches = [];
-  const byes = [...indivByes];
-  for (const tlist of [maleTeams, femaleTeams, mixedTeams]) {
-    const r = pairTeams(tlist, round);
-    matches.push(...r.matches);
-    byes.push(...r.byes);
-  }
-  return { matches, byes };
+  const mc = Math.min(males.length, females.length);
+  const teams = [];
+  for (let i = 0; i < mc; i++) teams.push([males[i].label, females[i].label]);
+  const extra = [];
+  if (males.length > mc) extra.push(males[mc].label);
+  if (females.length > mc) extra.push(females[mc].label);
+  const result = pairTeams(teams, round);
+  result.byes.push(...extra);
+  return result;
 }
 
-function generateSchedule(mode, players, rounds, numCourts) {
+function generateSchedule(mode, players, rounds, numCourts, roundTypes) {
   const playerNames = players.map(p => p.label);
   const schedule = [];
   for (let r = 0; r < rounds; r++) {
     const result = mode === 'doubles'
-      ? generateDoublesRound(players, r)
+      ? generateDoublesRound(players, r, roundTypes[r])
       : generateSinglesRound(players, r);
     if (schedule.length > 0) {
       let prevMatches = schedule[schedule.length - 1].matches;
@@ -115,7 +116,7 @@ function generateSchedule(mode, players, rounds, numCourts) {
     });
   }
   return {
-    mode, playerNames, rounds: schedule.length,
+    mode, playerNames, rounds: schedule.length, roundTypes,
     courts: numCourts, schedule, createdAt: Date.now()
   };
 }

@@ -12,7 +12,7 @@
     </view>
 
     <view wx:for="{{currentSchedule.schedule}}" wx:for-index="ri" wx:key="round" class="round-card">
-      <view class="round-title">第{{item.round}}轮 <text wx:if="{{item.byes.length}}" class="round-bye">（轮空：{{item.byes.join('、')}}）</text></view>
+      <view class="round-title">第{{item.round}}轮<text wx:if="{{currentSchedule.roundTypes}}" class="round-type">（{{currentSchedule.roundTypes[ri] === 'male' ? '男双' : currentSchedule.roundTypes[ri] === 'female' ? '女双' : '混双'}}）</text> <text wx:if="{{item.byes.length}}" class="round-bye">轮空：{{item.byes.join('、')}}</text></view>
       <view wx:for="{{item.matches}}" wx:for-index="mi" wx:key="court" class="match-row">
         <text class="match-court">🎾 场地{{item.court}}</text>
         <text class="match-players">{{item.display}}</text>
@@ -52,6 +52,16 @@
         <view wx:for="{{scheduleForm.playerNames}}" wx:for-index="ni" wx:key="ni" class="sch-name-row">
           <text class="sch-name-tag">{{ni < scheduleForm.maleCount ? '♂' : '♀'}}</text>
           <input class="sch-name-input" value="{{item}}" data-idx="{{ni}}" bindinput="playerNameInput" placeholder="选手{{ni+1}}"/>
+        </view>
+      </view>
+
+      <view wx:if="{{scheduleForm.mode === 'doubles'}}" class="sch-name-section">
+        <view class="sch-name-title">各轮类型</view>
+        <view wx:for="{{scheduleForm.roundTypes}}" wx:for-index="ri" wx:key="ri" class="sch-name-row">
+          <text class="sch-name-tag">第{{ri+1}}轮</text>
+          <picker mode="selector" range="{{['男双', '女双', '混双']}}" value="{{item === 'male' ? 0 : item === 'female' ? 1 : 2}}" data-idx="{{ri}}" bindchange="roundTypeChange">
+            <view class="sch-picker">{{item === 'male' ? '男双' : item === 'female' ? '女双' : '混双'}}</view>
+          </picker>
         </view>
       </view>
 
