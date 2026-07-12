@@ -1,4 +1,4 @@
-const AMAP_KEY = ''; // 用户自行填入高德地图 Web API Key（免费，https://lbs.amap.com）
+const AMAP_KEY = 'cb68b4954095ef328540269843d27e6b';
 
 function searchNearbyPOI(latitude, longitude, radius, keywords) {
   return new Promise((resolve, reject) => {
