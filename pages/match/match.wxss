@@ -288,17 +288,19 @@
 /* ─── 编辑提示 ─── */
 .edit-toolbar {
   margin: 12rpx 20rpx 0;
-  padding: 12rpx 20rpx;
+  padding: 14rpx 20rpx;
   font-size: 24rpx;
-  color: #07c160;
-  background: #edfff4;
+  color: #b8860b;
+  background: #fff9e6;
+  border: 2rpx dashed #f0c040;
   border-radius: 10rpx;
   text-align: center;
 }
 .edit-tip {
   margin: 6rpx 20rpx 0;
+  padding: 8rpx 20rpx;
   font-size: 22rpx;
-  color: #bbb;
+  color: #b8860b;
   text-align: center;
 }
 
@@ -357,8 +359,8 @@
   font-size: 24rpx;
   font-weight: 600;
   color: #333;
-  background: #f0fdf4;
-  border: 2rpx solid #c6e9c6;
+  background: #fff9e6;
+  border: 2rpx solid #e8d595;
   border-radius: 10rpx;
   line-height: 1.4;
   transition: all 0.15s;
