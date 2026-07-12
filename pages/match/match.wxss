@@ -260,3 +260,114 @@
 }
 
 .sch-save-btn:active { opacity: 0.8; }
+
+/* ─── 编辑按钮 ─── */
+.sch-edit-btn {
+  font-size: 26rpx;
+  color: #07c160;
+  padding: 8rpx 20rpx;
+  border: 2rpx solid #07c160;
+  border-radius: 24rpx;
+  flex-shrink: 0;
+}
+.sch-edit-btn.active {
+  color: #fff;
+  background: #07c160;
+}
+
+/* ─── 等位区 ─── */
+.waiting-area {
+  margin: 16rpx 20rpx;
+  background: #fff9e6;
+  border-radius: 14rpx;
+  padding: 16rpx 20rpx;
+  border: 2rpx dashed #f0c040;
+}
+.waiting-header {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #b8860b;
+  margin-bottom: 10rpx;
+}
+.waiting-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  min-height: 64rpx;
+}
+.waiting-empty {
+  font-size: 24rpx;
+  color: #ccc;
+  line-height: 64rpx;
+}
+.waiting-hint {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #b8860b;
+  padding: 10rpx;
+  text-align: center;
+  background: #fff3cc;
+  border-radius: 8rpx;
+}
+
+/* ─── 编辑模式卡片 ─── */
+.match-teams-edit {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 8rpx;
+}
+.match-team {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+.player-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+.player-card {
+  display: inline-block;
+  padding: 6rpx 14rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #333;
+  background: #f0fdf4;
+  border: 2rpx solid #c6e9c6;
+  border-radius: 10rpx;
+  line-height: 1.4;
+  transition: all 0.15s;
+}
+.player-card.sel {
+  background: #07c160;
+  color: #fff;
+  border-color: #07c160;
+  box-shadow: 0 0 0 4rpx rgba(7,193,96,0.3);
+}
+.player-card:active {
+  opacity: 0.7;
+}
+.player-slot {
+  display: inline-block;
+  padding: 6rpx 14rpx;
+  font-size: 22rpx;
+  color: #ccc;
+  border: 2rpx dashed #ddd;
+  border-radius: 10rpx;
+  line-height: 1.4;
+  min-width: 48rpx;
+  text-align: center;
+}
+.card-plus {
+  font-size: 20rpx;
+  color: #bbb;
+  font-weight: 400;
+}
+.vs-text {
+  font-size: 20rpx;
+  color: #bbb;
+  font-weight: 600;
+  margin: 0 6rpx;
+  flex-shrink: 0;
+}

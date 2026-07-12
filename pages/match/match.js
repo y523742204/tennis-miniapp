@@ -27,7 +27,13 @@ Page({
       courts: defaultCourts('doubles', 4, 4, 'normal'),
       roundTypes: ['normal', 'mixed', 'mixed', 'mixed', 'mixed']
     },
-    currentSchedule: null
+    currentSchedule: null,
+    editMode: false,
+    editData: {
+      waitingPlayers: [],
+      selected: null,
+      selKey: null
+    }
   },
 
   onShow() {
@@ -138,6 +144,140 @@ Page({
   },
 
   goBackToList() {
-    this.setData({ currentSchedule: null });
+    this.setData({ currentSchedule: null, editMode: false, editData: { waitingPlayers: [], selected: null, selKey: null } });
+  },
+
+  toggleEdit() {
+    const s = this.data.currentSchedule;
+    if (this.data.editMode) {
+      const saved = JSON.parse(JSON.stringify(s));
+      saved.waitingPlayers = this.data.editData.waitingPlayers;
+      ScheduleStorage.save(saved);
+      this._syncDisplay(saved);
+      this.setData({
+        editMode: false,
+        currentSchedule: saved,
+        editData: { waitingPlayers: [], selected: null, selKey: null }
+      });
+      wx.showToast({ title: '已保存调整', icon: 'success' });
+    } else {
+      this.setData({
+        editMode: true,
+        'editData.waitingPlayers': s.waitingPlayers || []
+      });
+    }
+  },
+
+  tapCard(e) {
+    const d = e.currentTarget.dataset;
+    const sel = this.data.editData.selected;
+    const cur = { player: d.p, source: 'court', ri: d.ri, ci: d.ci, ti: d.ti, si: d.si };
+    if (!sel) {
+      this.setData({
+        'editData.selected': cur,
+        'editData.selKey': 'c_' + d.ri + '_' + d.ci + '_' + d.ti + '_' + d.si
+      });
+      return;
+    }
+    if (sel.source === 'court' && sel.ri === d.ri && sel.ci === d.ci && sel.ti === d.ti && sel.si === d.si) {
+      this.setData({ 'editData.selected': null, 'editData.selKey': null });
+      return;
+    }
+    this._doSwap(sel, cur);
+  },
+
+  tapWaiting(e) {
+    const d = e.currentTarget.dataset;
+    const sel = this.data.editData.selected;
+    const cur = { player: d.p, source: 'waiting', wi: d.wi };
+    if (!sel) {
+      this.setData({
+        'editData.selected': cur,
+        'editData.selKey': 'w_' + d.wi
+      });
+      return;
+    }
+    if (sel.source === 'waiting' && sel.wi === d.wi) {
+      this.setData({ 'editData.selected': null, 'editData.selKey': null });
+      return;
+    }
+    this._doSwap(sel, cur);
+  },
+
+  tapSlot(e) {
+    const d = e.currentTarget.dataset;
+    const sel = this.data.editData.selected;
+    if (!sel) return;
+    const s = JSON.parse(JSON.stringify(this.data.currentSchedule));
+    const wp = [...this.data.editData.waitingPlayers];
+    if (sel.source === 'waiting') {
+      const player = wp.splice(sel.wi, 1)[0];
+      s.schedule[d.ri].matches[d.ci].teams[d.ti][d.si] = player;
+    } else {
+      s.schedule[d.ri].matches[d.ci].teams[d.ti][d.si] = sel.player;
+      s.schedule[sel.ri].matches[sel.ci].teams[sel.ti][sel.si] = null;
+    }
+    this._syncDisplay(s);
+    this.setData({
+      currentSchedule: s,
+      'editData.selected': null,
+      'editData.selKey': null,
+      'editData.waitingPlayers': wp
+    });
+  },
+
+  moveToWaiting() {
+    const sel = this.data.editData.selected;
+    if (!sel || sel.source !== 'court') return;
+    const s = JSON.parse(JSON.stringify(this.data.currentSchedule));
+    const wp = [...this.data.editData.waitingPlayers];
+    s.schedule[sel.ri].matches[sel.ci].teams[sel.ti][sel.si] = null;
+    wp.push(sel.player);
+    this._syncDisplay(s);
+    this.setData({
+      currentSchedule: s,
+      'editData.selected': null,
+      'editData.selKey': null,
+      'editData.waitingPlayers': wp
+    });
+  },
+
+  _doSwap(a, b) {
+    const s = JSON.parse(JSON.stringify(this.data.currentSchedule));
+    let wp = [...this.data.editData.waitingPlayers];
+    if (a.source === 'court' && b.source === 'court') {
+      const old = s.schedule[a.ri].matches[a.ci].teams[a.ti][a.si];
+      s.schedule[a.ri].matches[a.ci].teams[a.ti][a.si] = s.schedule[b.ri].matches[b.ci].teams[b.ti][b.si];
+      s.schedule[b.ri].matches[b.ci].teams[b.ti][b.si] = old;
+    } else if (a.source === 'court' && b.source === 'waiting') {
+      const old = s.schedule[a.ri].matches[a.ci].teams[a.ti][a.si];
+      s.schedule[a.ri].matches[a.ci].teams[a.ti][a.si] = b.player;
+      wp = wp.filter(p => p !== b.player);
+      wp.push(old);
+    } else if (a.source === 'waiting' && b.source === 'court') {
+      const old = s.schedule[b.ri].matches[b.ci].teams[b.ti][b.si];
+      s.schedule[b.ri].matches[b.ci].teams[b.ti][b.si] = a.player;
+      wp = wp.filter(p => p !== a.player);
+      wp.push(old);
+    } else {
+      const ia = wp.indexOf(a.player);
+      const ib = wp.indexOf(b.player);
+      if (ia !== -1 && ib !== -1) { [wp[ia], wp[ib]] = [wp[ib], wp[ia]]; }
+    }
+    this._syncDisplay(s);
+    this.setData({
+      currentSchedule: s,
+      'editData.selected': null,
+      'editData.selKey': null,
+      'editData.waitingPlayers': wp
+    });
+  },
+
+  _syncDisplay(s) {
+    for (const round of s.schedule) {
+      for (const m of round.matches) {
+        m.display = m.teams.map(t => t.map(p => p || '___').join('')).join(' vs ');
+      }
+    }
   }
 });
