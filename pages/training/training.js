@@ -12,7 +12,6 @@ Page({
   data: {
     weekStartDate: '',
     weekLabel: '',
-    currentDate: '',
     days: [],
     slots: [],
     pickerItems: [],
@@ -78,8 +77,7 @@ Page({
     const days = dates.map(d => ({
       date: d, label: weekdays[new Date(d).getDay()], dateText: String(new Date(d).getDate()), isToday: d === todayStr
     }));
-    const today = this._fmtDate(new Date());
-    this.setData({ weekStartDate: dates[0], weekLabel, days, currentDate: today >= dates[0] && today <= dates[6] ? today : dates[0] });
+    this.setData({ weekStartDate: dates[0], weekLabel, days });
     this._refreshGrid();
   },
 
@@ -137,12 +135,6 @@ Page({
   goThisWeek() {
     this._clearSelection();
     this._loadWeek(this._fmtDate(new Date()));
-  },
-
-  onDatePick(e) {
-    const d = e.detail.value;
-    this._clearSelection();
-    this._loadWeek(d);
   },
 
   _clearSelection() {
