@@ -293,7 +293,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10rpx;
-  min-height: 64rpx;
+  min-height: 80rpx;
+  align-content: flex-start;
 }
 .waiting-empty {
   font-size: 24rpx;
@@ -373,5 +374,5 @@
   font-weight: 600;
   margin: 0 6rpx;
   flex-shrink: 0;
-  align-self: center;
+  padding: 10rpx 0;
 }
