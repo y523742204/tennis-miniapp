@@ -47,16 +47,14 @@ function generateDoublesRound(players, round, type) {
   let females = players.filter(p => p.gender === 'female');
 
   if (type === 'mixed') {
-    for (let r = 0; r < round; r++) {
-      if (males.length >= 2) { const last = males.pop(); males.splice(1, 0, last); }
-      if (females.length >= 2) { const last = females.pop(); females.splice(1, 0, last); }
-    }
-    const mc = Math.min(males.length, females.length);
+    const allMales = players.filter(p => p.gender === 'male');
+    const allFemales = players.filter(p => p.gender === 'female');
+    const mc = Math.min(allMales.length, allFemales.length);
     const teams = [];
-    for (let i = 0; i < mc; i++) teams.push([males[i].label, females[i].label]);
+    for (let i = 0; i < mc; i++) teams.push([allMales[i].label, allFemales[i].label]);
     const extra = [];
-    if (males.length > mc) extra.push(males[mc].label);
-    if (females.length > mc) extra.push(females[mc].label);
+    if (allMales.length > mc) extra.push(allMales[mc].label);
+    if (allFemales.length > mc) extra.push(allFemales[mc].label);
     const result = pairTeams(teams, round);
     result.byes.push(...extra);
     return result;
