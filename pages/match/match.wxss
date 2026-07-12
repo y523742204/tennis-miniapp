@@ -233,6 +233,11 @@
   display: flex;
   align-items: center;
 }
+.match-row::after {
+  content: '';
+  width: 120rpx;
+  flex-shrink: 0;
+}
 
 .match-court {
   font-size: 24rpx;
