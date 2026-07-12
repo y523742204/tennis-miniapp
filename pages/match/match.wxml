@@ -23,7 +23,7 @@
         <view wx:if="{{editData.waitingPlayers.length === 0 && editData.selected}}" class="waiting-empty hint">点击此处移入</view>
         <view wx:for="{{editData.waitingPlayers}}" wx:for-index="wi" wx:key="*this"
               class="player-card {{editData.selKey == 'w_'+wi ? 'sel' : ''}}"
-              data-p="{{item}}" data-wi="{{wi}}" catchtap="tapWaiting">{{item}}</view>
+              data-p="{{item}}" data-wi="{{wi}}" catchtap="tapWaiting" bindlongpress="renameWaiting">{{item}}</view>
       </view>
     </view>
 
@@ -39,7 +39,7 @@
                   <view wx:if="{{editMode}}" class="player-slot droppable" bindtap="tapSlot" data-ri="{{ri}}" data-ci="{{mi}}" data-ti="0" data-si="{{si}}">___</view>
                   <view wx:else class="player-slot">___</view>
                 </block>
-                <view wx:elif="{{editMode}}" class="player-card {{editData.selKey == 'c_'+ri+'_'+mi+'_0_'+si ? 'sel' : ''}}" bindtap="tapCard" data-p="{{item}}" data-ri="{{ri}}" data-ci="{{mi}}" data-ti="0" data-si="{{si}}">{{item}}</view>
+                <view wx:elif="{{editMode}}" class="player-card {{editData.selKey == 'c_'+ri+'_'+mi+'_0_'+si ? 'sel' : ''}}" bindtap="tapCard" bindlongpress="renameCard" data-p="{{item}}" data-ri="{{ri}}" data-ci="{{mi}}" data-ti="0" data-si="{{si}}">{{item}}</view>
                 <view wx:else class="player-card">{{item}}</view>
                 <text wx:if="{{si < item.teams[0].length - 1}}" class="card-plus">+</text>
               </view>
@@ -53,7 +53,7 @@
                   <view wx:if="{{editMode}}" class="player-slot droppable" bindtap="tapSlot" data-ri="{{ri}}" data-ci="{{mi}}" data-ti="1" data-si="{{si}}">___</view>
                   <view wx:else class="player-slot">___</view>
                 </block>
-                <view wx:elif="{{editMode}}" class="player-card {{editData.selKey == 'c_'+ri+'_'+mi+'_1_'+si ? 'sel' : ''}}" bindtap="tapCard" data-p="{{item}}" data-ri="{{ri}}" data-ci="{{mi}}" data-ti="1" data-si="{{si}}">{{item}}</view>
+                <view wx:elif="{{editMode}}" class="player-card {{editData.selKey == 'c_'+ri+'_'+mi+'_1_'+si ? 'sel' : ''}}" bindtap="tapCard" bindlongpress="renameCard" data-p="{{item}}" data-ri="{{ri}}" data-ci="{{mi}}" data-ti="1" data-si="{{si}}">{{item}}</view>
                 <view wx:else class="player-card">{{item}}</view>
                 <text wx:if="{{si < item.teams[1].length - 1}}" class="card-plus">+</text>
               </view>

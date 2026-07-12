@@ -294,6 +294,65 @@ Page({
     });
   },
 
+  renameCard(e) {
+    const d = e.currentTarget.dataset;
+    wx.showModal({
+      title: '修改选手名称',
+      editable: true,
+      content: d.p,
+      placeholderText: '输入新名称',
+      success: (res) => {
+        if (res.confirm && res.content && res.content.trim() !== d.p) {
+          this._renamePlayer(d.p, res.content.trim());
+        }
+      }
+    });
+  },
+
+  renameWaiting(e) {
+    const d = e.currentTarget.dataset;
+    wx.showModal({
+      title: '修改选手名称',
+      editable: true,
+      content: d.p,
+      placeholderText: '输入新名称',
+      success: (res) => {
+        if (res.confirm && res.content && res.content.trim() !== d.p) {
+          this._renamePlayer(d.p, res.content.trim());
+        }
+      }
+    });
+  },
+
+  _renamePlayer(oldName, newName) {
+    const s = JSON.parse(JSON.stringify(this.data.currentSchedule));
+    let wp = [...this.data.editData.waitingPlayers];
+    for (const round of s.schedule) {
+      for (const m of round.matches) {
+        for (const team of m.teams) {
+          for (let i = 0; i < team.length; i++) {
+            if (team[i] === oldName) team[i] = newName;
+          }
+        }
+      }
+    }
+    if (s.playerNames) s.playerNames = s.playerNames.map(n => n === oldName ? newName : n);
+    wp = wp.map(n => n === oldName ? newName : n);
+    let selKey = this.data.editData.selKey;
+    const sel = this.data.editData.selected;
+    if (sel && sel.player === oldName) {
+      sel.player = newName;
+      if (sel.source === 'court') selKey = 'c_' + sel.ri + '_' + sel.ci + '_' + sel.ti + '_' + sel.si;
+    }
+    this._syncDisplay(s);
+    this.setData({
+      currentSchedule: s,
+      'editData.waitingPlayers': wp,
+      'editData.selected': sel,
+      'editData.selKey': selKey
+    });
+  },
+
   _syncDisplay(s) {
     for (const round of s.schedule) {
       for (const m of round.matches) {
