@@ -301,13 +301,16 @@
   line-height: 64rpx;
 }
 .waiting-hint {
-  margin-top: 10rpx;
+  width: 100%;
   font-size: 24rpx;
   color: #b8860b;
   padding: 10rpx;
   text-align: center;
-  background: #fff3cc;
+  background: #e8d595;
   border-radius: 8rpx;
+}
+.waiting-empty.hint {
+  color: #b8860b;
 }
 
 /* ─── 编辑模式卡片 ─── */
@@ -370,4 +373,5 @@
   font-weight: 600;
   margin: 0 6rpx;
   flex-shrink: 0;
+  align-self: center;
 }
