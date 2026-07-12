@@ -27,6 +27,21 @@ function generateSinglesRound(players, round) {
   return { matches, byes };
 }
 
+function pairTeams(teamList, round) {
+  const n = teamList.length;
+  if (n < 2) return { matches: [], byes: teamList.map(t => t.join('')) };
+  const indices = [0];
+  for (let i = 1; i < n; i++) indices.push(1 + (i - 1 + round) % (n - 1));
+  const matches = [];
+  const byes = [];
+  for (let i = 0; i < Math.floor(n / 2); i++) {
+    const j = n - 1 - i;
+    matches.push({ teams: [teamList[indices[i]], teamList[indices[j]]] });
+  }
+  if (n % 2 === 1) byes.push(teamList[indices[Math.floor(n / 2)]].join(''));
+  return { matches, byes };
+}
+
 function generateDoublesRound(players, round) {
   let males = players.filter(p => p.gender === 'male');
   let females = players.filter(p => p.gender === 'female');
@@ -36,30 +51,37 @@ function generateDoublesRound(players, round) {
     if (females.length >= 2) { const last = females.pop(); females.splice(1, 0, last); }
   }
 
-  const teams = [];
+  const maleTeams = [];
+  const femaleTeams = [];
+  const mixedTeams = [];
   const indivByes = [];
   let mi = 0;
-  while (mi + 1 < males.length) { teams.push({ members: [males[mi].label, males[mi+1].label] }); mi += 2; }
+  while (mi + 1 < males.length) { maleTeams.push([males[mi].label, males[mi+1].label]); mi += 2; }
   if (mi < males.length) indivByes.push(males[mi].label);
   let fi = 0;
-  while (fi + 1 < females.length) { teams.push({ members: [females[fi].label, females[fi+1].label] }); fi += 2; }
+  while (fi + 1 < females.length) { femaleTeams.push([females[fi].label, females[fi+1].label]); fi += 2; }
   if (fi < females.length) indivByes.push(females[fi].label);
-  if (indivByes.length === 2) { teams.push({ members: [indivByes[0], indivByes[1]] }); indivByes.length = 0; }
+  if (indivByes.length === 2) { mixedTeams.push([indivByes[0], indivByes[1]]); indivByes.length = 0; }
 
-  const n = teams.length;
-  if (n < 2) return { matches: [], byes: indivByes.concat(teams.map(t => t.members.join(''))) };
-
-  const indices = [0];
-  for (let i = 1; i < n; i++) indices.push(1 + (i - 1 + round) % (n - 1));
+  if (maleTeams.length === 1 && femaleTeams.length === 1) {
+    const allM = maleTeams[0].concat(indivByes.filter(b => males.some(p => p.label === b)));
+    const allF = femaleTeams[0].concat(indivByes.filter(b => females.some(p => p.label === b)));
+    if (Math.min(allM.length, allF.length) >= 2) {
+      const mc = Math.min(allM.length, allF.length);
+      maleTeams.length = 0; femaleTeams.length = 0; mixedTeams.length = 0; indivByes.length = 0;
+      for (let i = 0; i < mc; i++) mixedTeams.push([allM[i], allF[i]]);
+      if (allM.length > mc) indivByes.push(allM[mc]);
+      if (allF.length > mc) indivByes.push(allF[mc]);
+    }
+  }
 
   const matches = [];
   const byes = [...indivByes];
-  for (let i = 0; i < Math.floor(n / 2); i++) {
-    const j = n - 1 - i;
-    matches.push({ teams: [teams[indices[i]].members, teams[indices[j]].members] });
+  for (const tlist of [maleTeams, femaleTeams, mixedTeams]) {
+    const r = pairTeams(tlist, round);
+    matches.push(...r.matches);
+    byes.push(...r.byes);
   }
-  if (n % 2 === 1) byes.push(teams[indices[Math.floor(n / 2)]].members.join(''));
-
   return { matches, byes };
 }
 
