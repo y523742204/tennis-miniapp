@@ -35,7 +35,7 @@ Page({
 
   scheduleFormChange(e) {
     const { field } = e.currentTarget.dataset;
-    const val = Number(e.detail.value);
+    const val = Number(e.detail.value) + (field === 'rounds' || field === 'courts' ? 1 : 0);
     const patch = { ['scheduleForm.' + field]: val };
     if (field === 'maleCount' || field === 'femaleCount') {
       const mc = field === 'maleCount' ? val : this.data.scheduleForm.maleCount;
