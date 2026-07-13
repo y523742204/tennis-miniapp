@@ -33,9 +33,8 @@ Page({
       fixedPairs: []
     },
     showFixedPairPanel: false,
-    fixedPairOpts1: [],
-    fixedPairIdx1: 0,
-    fixedPairIdx2: 0,
+    fixedPairSel1: null,
+    fixedPairSel2: null,
     fixedPairRounds: 1,
     currentSchedule: null,
     editMode: false,
@@ -81,10 +80,6 @@ Page({
         ? [...cur, ...Array(val - cur.length).fill('mixed')]
         : cur.slice(0, val);
     }
-    if (field === 'maleCount' || field === 'femaleCount') {
-      const names = patch['scheduleForm.playerNames'] || this.data.scheduleForm.playerNames;
-      patch.fixedPairOpts1 = names;
-    }
     this.setData(patch);
   },
 
@@ -126,26 +121,26 @@ Page({
   },
 
   addFixedPair() {
-    const names = this.data.scheduleForm.playerNames;
-    const used = new Set();
-    for (const p of this.data.scheduleForm.fixedPairs) {
-      used.add(p.p1); used.add(p.p2);
-    }
     this.setData({
       showFixedPairPanel: true,
-      fixedPairOpts1: names,
-      fixedPairIdx1: 0,
-      fixedPairIdx2: 1,
+      fixedPairSel1: null,
+      fixedPairSel2: null,
       fixedPairRounds: 1
     });
   },
 
-  fixedPairChange1(e) {
-    this.setData({ fixedPairIdx1: Number(e.detail.value) });
-  },
-
-  fixedPairChange2(e) {
-    this.setData({ fixedPairIdx2: Number(e.detail.value) });
+  tapFixedPairPlayer(e) {
+    const player = e.currentTarget.dataset.player;
+    const { fixedPairSel1, fixedPairSel2 } = this.data;
+    if (player === fixedPairSel1) {
+      this.setData({ fixedPairSel1: null });
+    } else if (player === fixedPairSel2) {
+      this.setData({ fixedPairSel2: null });
+    } else if (!fixedPairSel1) {
+      this.setData({ fixedPairSel1: player });
+    } else if (!fixedPairSel2) {
+      this.setData({ fixedPairSel2: player });
+    }
   },
 
   fixedPairChangeRounds(e) {
@@ -153,11 +148,14 @@ Page({
   },
 
   confirmFixedPair() {
-    const names = this.data.scheduleForm.playerNames;
-    const idx1 = this.data.fixedPairIdx1;
-    const idx2 = this.data.fixedPairIdx2;
+    const p1 = this.data.fixedPairSel1;
+    const p2 = this.data.fixedPairSel2;
     const rounds = this.data.fixedPairRounds;
-    if (idx1 === idx2) {
+    if (!p1 || !p2) {
+      wx.showToast({ title: '请选择两名选手', icon: 'none' });
+      return;
+    }
+    if (p1 === p2) {
       wx.showToast({ title: '搭档不可为同一人', icon: 'none' });
       return;
     }
@@ -169,12 +167,12 @@ Page({
     for (const p of this.data.scheduleForm.fixedPairs) {
       used.add(p.p1); used.add(p.p2);
     }
-    if (used.has(names[idx1]) || used.has(names[idx2])) {
+    if (used.has(p1) || used.has(p2)) {
       wx.showToast({ title: '该选手已有固定搭档', icon: 'none' });
       return;
     }
     const pairs = [...this.data.scheduleForm.fixedPairs];
-    pairs.push({ p1: names[idx1], p2: names[idx2], rounds });
+    pairs.push({ p1, p2, rounds });
     this.setData({
       'scheduleForm.fixedPairs': pairs,
       showFixedPairPanel: false

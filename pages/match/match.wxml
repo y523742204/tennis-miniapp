@@ -134,23 +134,36 @@
         </view>
         <view class="sch-fixed-pair-add" bindtap="addFixedPair">+ 添加固定搭档</view>
         <view wx:if="{{showFixedPairPanel}}" class="sch-fixed-pair-panel">
-          <view class="sch-fp-row">
-            <text class="sch-label">搭档1</text>
-            <picker mode="selector" range="{{fixedPairOpts1}}" value="{{fixedPairIdx1}}" bindchange="fixedPairChange1">
-              <view class="sch-picker">{{fixedPairOpts1[fixedPairIdx1]}}</view>
-            </picker>
-          </view>
-          <view class="sch-fp-row">
-            <text class="sch-label">搭档2</text>
-            <picker mode="selector" range="{{fixedPairOpts1}}" value="{{fixedPairIdx2}}" bindchange="fixedPairChange2">
-              <view class="sch-picker">{{fixedPairOpts1[fixedPairIdx2]}}</view>
-            </picker>
+          <view class="sch-fp-hint">请依次点击两名选手组成固定搭档</view>
+          <view class="sch-fp-players">
+            <view class="sch-fp-col">
+              <view wx:for="{{scheduleForm.maleNames}}" wx:key="*this"
+                    class="sch-fp-player {{fixedPairSel1 === item || fixedPairSel2 === item ? 'sel' : ''}}"
+                    data-player="{{item}}" catchtap="tapFixedPairPlayer">
+                <text class="sch-fp-tag">♂</text>{{item}}
+              </view>
+            </view>
+            <view class="sch-fp-col-divider"></view>
+            <view class="sch-fp-col">
+              <view wx:for="{{scheduleForm.femaleNames}}" wx:key="*this"
+                    class="sch-fp-player {{fixedPairSel1 === item || fixedPairSel2 === item ? 'sel' : ''}}"
+                    data-player="{{item}}" catchtap="tapFixedPairPlayer">
+                <text class="sch-fp-tag">♀</text>{{item}}
+              </view>
+            </view>
           </view>
           <view class="sch-fp-row">
             <text class="sch-label">搭档轮数</text>
             <picker mode="selector" range="{{[1,2,3,4,5,6,7,8,9,10]}}" value="{{fixedPairRounds - 1}}" bindchange="fixedPairChangeRounds">
               <view class="sch-picker">{{fixedPairRounds}}轮</view>
             </picker>
+          </view>
+          <view class="sch-fp-selection">
+            <text wx:if="{{fixedPairSel1}}">搭档1：{{fixedPairSel1}}</text>
+            <text wx:else class="dim">搭档1：请选择</text>
+            <text>　</text>
+            <text wx:if="{{fixedPairSel2}}">搭档2：{{fixedPairSel2}}</text>
+            <text wx:else class="dim">搭档2：请选择</text>
           </view>
           <view class="sch-fp-actions">
             <view class="sch-fp-btn sch-fp-cancel" bindtap="cancelFixedPair">取消</view>
