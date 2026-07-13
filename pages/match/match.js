@@ -29,8 +29,14 @@ Page({
       rounds: 5,
       courts: defaultCourts('doubles', 4, 4, 'normal'),
       roundTypes: ['normal', 'mixed', 'mixed', 'mixed', 'mixed'],
-      courtLabels: defaultCourtLabels(defaultCourts('doubles', 4, 4, 'normal'))
+      courtLabels: defaultCourtLabels(defaultCourts('doubles', 4, 4, 'normal')),
+      fixedPairs: []
     },
+    showFixedPairPanel: false,
+    fixedPairOpts1: [],
+    fixedPairIdx1: 0,
+    fixedPairIdx2: 0,
+    fixedPairRounds: 1,
     currentSchedule: null,
     editMode: false,
     editData: {
@@ -40,12 +46,12 @@ Page({
     }
   },
 
-  onShow() {
-    this._loadSchedules();
+  async onShow() {
+    await this._loadSchedules();
   },
 
-  _loadSchedules() {
-    this.setData({ schedules: ScheduleStorage.getAll() });
+  async _loadSchedules() {
+    this.setData({ schedules: await ScheduleStorage.getAll() });
   },
 
   scheduleFormChange(e) {
@@ -74,6 +80,10 @@ Page({
       patch['scheduleForm.roundTypes'] = val > cur.length
         ? [...cur, ...Array(val - cur.length).fill('mixed')]
         : cur.slice(0, val);
+    }
+    if (field === 'maleCount' || field === 'femaleCount') {
+      const names = patch['scheduleForm.playerNames'] || this.data.scheduleForm.playerNames;
+      patch.fixedPairOpts1 = names;
     }
     this.setData(patch);
   },
@@ -115,6 +125,73 @@ Page({
     });
   },
 
+  addFixedPair() {
+    const names = this.data.scheduleForm.playerNames;
+    const used = new Set();
+    for (const p of this.data.scheduleForm.fixedPairs) {
+      used.add(p.p1); used.add(p.p2);
+    }
+    this.setData({
+      showFixedPairPanel: true,
+      fixedPairOpts1: names,
+      fixedPairIdx1: 0,
+      fixedPairIdx2: 1,
+      fixedPairRounds: 1
+    });
+  },
+
+  fixedPairChange1(e) {
+    this.setData({ fixedPairIdx1: Number(e.detail.value) });
+  },
+
+  fixedPairChange2(e) {
+    this.setData({ fixedPairIdx2: Number(e.detail.value) });
+  },
+
+  fixedPairChangeRounds(e) {
+    this.setData({ fixedPairRounds: Number(e.detail.value) + 1 });
+  },
+
+  confirmFixedPair() {
+    const names = this.data.scheduleForm.playerNames;
+    const idx1 = this.data.fixedPairIdx1;
+    const idx2 = this.data.fixedPairIdx2;
+    const rounds = this.data.fixedPairRounds;
+    if (idx1 === idx2) {
+      wx.showToast({ title: '搭档不可为同一人', icon: 'none' });
+      return;
+    }
+    if (rounds > this.data.scheduleForm.rounds) {
+      wx.showToast({ title: '轮数不能超过总轮数', icon: 'none' });
+      return;
+    }
+    const used = new Set();
+    for (const p of this.data.scheduleForm.fixedPairs) {
+      used.add(p.p1); used.add(p.p2);
+    }
+    if (used.has(names[idx1]) || used.has(names[idx2])) {
+      wx.showToast({ title: '该选手已有固定搭档', icon: 'none' });
+      return;
+    }
+    const pairs = [...this.data.scheduleForm.fixedPairs];
+    pairs.push({ p1: names[idx1], p2: names[idx2], rounds });
+    this.setData({
+      'scheduleForm.fixedPairs': pairs,
+      showFixedPairPanel: false
+    });
+  },
+
+  cancelFixedPair() {
+    this.setData({ showFixedPairPanel: false });
+  },
+
+  removeFixedPair(e) {
+    const idx = e.currentTarget.dataset.idx;
+    const pairs = [...this.data.scheduleForm.fixedPairs];
+    pairs.splice(idx, 1);
+    this.setData({ 'scheduleForm.fixedPairs': pairs });
+  },
+
   generateSchedule() {
     const f = this.data.scheduleForm;
     const total = f.playerNames.length;
@@ -128,22 +205,22 @@ Page({
     }
     const names = f.playerNames.map(n => n.trim() || '选手' + (f.playerNames.indexOf(n) + 1));
     const players = names.map((n, i) => ({ label: n, gender: i < f.maleCount ? 'male' : 'female' }));
-    const result = generateSchedule(f.mode, players, f.rounds, f.courts, f.roundTypes);
+    const result = generateSchedule(f.mode, players, f.rounds, f.courts, f.roundTypes, f.fixedPairs);
     result.courtLabels = [...f.courtLabels];
     this.setData({ currentSchedule: result });
   },
 
-  saveSchedule() {
+  async saveSchedule() {
     const s = this.data.currentSchedule;
     if (!s) return;
-    ScheduleStorage.save(s);
+    await ScheduleStorage.save(s);
     this.setData({ currentSchedule: null });
     wx.showToast({ title: '已保存排赛', icon: 'success' });
-    this._loadSchedules();
+    await this._loadSchedules();
   },
 
-  viewSchedule(e) {
-    const s = ScheduleStorage.get(e.currentTarget.dataset.id);
+  async viewSchedule(e) {
+    const s = await ScheduleStorage.get(e.currentTarget.dataset.id);
     if (s) {
       for (const round of s.schedule || []) {
         for (const m of round.matches || []) {
@@ -158,8 +235,8 @@ Page({
     const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: '确认删除', content: '确定要删除该排赛吗？',
-      success: (res) => {
-        if (res.confirm) { ScheduleStorage.remove(id); this._loadSchedules(); }
+      success: async (res) => {
+        if (res.confirm) { await ScheduleStorage.remove(id); await this._loadSchedules(); }
       }
     });
   },
@@ -168,12 +245,12 @@ Page({
     this.setData({ currentSchedule: null, editMode: false, editData: { waitingPlayers: [], selected: null, selKey: null } });
   },
 
-  toggleEdit() {
+  async toggleEdit() {
     const s = this.data.currentSchedule;
     if (this.data.editMode) {
       const saved = JSON.parse(JSON.stringify(s));
       saved.waitingPlayers = this.data.editData.waitingPlayers;
-      ScheduleStorage.save(saved);
+      await ScheduleStorage.save(saved);
       this._syncDisplay(saved);
       this.setData({
         editMode: false,

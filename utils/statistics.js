@@ -23,8 +23,8 @@ const TYPE_GROUPS = {
   practice: '陪练'
 };
 
-function calcCareerStats() {
-  const trainings = TrainingStorage.getAll();
+async function calcCareerStats() {
+  const trainings = await TrainingStorage.getAll();
 
   const totalTrainings = trainings.length;
   const totalDuration = trainings.reduce((s, r) => s + (r.duration || 0), 0);

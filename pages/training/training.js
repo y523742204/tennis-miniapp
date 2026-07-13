@@ -52,8 +52,8 @@ Page({
     this.goThisWeek();
   },
 
-  onShow() {
-    if (this.data.weekStartDate) this._refreshGrid();
+  async onShow() {
+    if (this.data.weekStartDate) await this._refreshGrid();
   },
 
   _fmtDate(d) {
@@ -68,7 +68,7 @@ Page({
     return ((h - START_HOUR) * 60 + m) / 30;
   },
 
-  _loadWeek(dateStr) {
+  async _loadWeek(dateStr) {
     const dates = getWeekDates(dateStr);
     const start = new Date(dates[0]);
     const end = new Date(dates[6]);
@@ -80,13 +80,13 @@ Page({
     }));
     const today = this._fmtDate(new Date());
     this.setData({ weekStartDate: dates[0], weekLabel, days, currentDate: today >= dates[0] && today <= dates[6] ? today : dates[0] });
-    this._refreshGrid();
+    await this._refreshGrid();
   },
 
-  _refreshGrid() {
+  async _refreshGrid() {
     const { days, weekStartDate } = this.data;
     const weekEnd = this._fmtDate(new Date(new Date(weekStartDate).getTime() + 6 * 86400000));
-    const records = TrainingStorage.getAll().filter(r => r.date >= weekStartDate && r.date <= weekEnd);
+    const records = (await TrainingStorage.getAll()).filter(r => r.date >= weekStartDate && r.date <= weekEnd);
     const hasTrainingMap = {};
     records.forEach(r => {
       const di = days.findIndex(d => d.date === r.date);
@@ -120,28 +120,28 @@ Page({
     this.setData({ cards, hasTrainingMap });
   },
 
-  prevWeek() {
+  async prevWeek() {
     const d = new Date(this.data.weekStartDate);
     d.setDate(d.getDate() - 7);
     this._clearSelection();
-    this._loadWeek(this._fmtDate(d));
+    await this._loadWeek(this._fmtDate(d));
   },
 
-  nextWeek() {
+  async nextWeek() {
     const d = new Date(this.data.weekStartDate);
     d.setDate(d.getDate() + 7);
     this._clearSelection();
-    this._loadWeek(this._fmtDate(d));
+    await this._loadWeek(this._fmtDate(d));
   },
 
-  goThisWeek() {
+  async goThisWeek() {
     this._clearSelection();
-    this._loadWeek(this._fmtDate(new Date()));
+    await this._loadWeek(this._fmtDate(new Date()));
   },
 
-  onDatePick(e) {
+  async onDatePick(e) {
     this._clearSelection();
-    this._loadWeek(e.detail.value);
+    await this._loadWeek(e.detail.value);
   },
 
   _clearSelection() {
@@ -192,8 +192,8 @@ Page({
     });
   },
 
-  onCardTap(e) {
-    const record = TrainingStorage.get(e.currentTarget.dataset.id);
+  async onCardTap(e) {
+    const record = await TrainingStorage.get(e.currentTarget.dataset.id);
     if (!record) return;
     const info = getTrainingType(record.type);
     this.setData({
@@ -233,11 +233,11 @@ Page({
     wx.showModal({
       title: '确认删除',
       content: '确定要删除这条训练记录吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          TrainingStorage.remove(this.data.detailRecord.id);
+          await TrainingStorage.remove(this.data.detailRecord.id);
           this.setData({ showDetail: false, detailRecord: null });
-          this._refreshGrid();
+          await this._refreshGrid();
         }
       }
     });
@@ -289,7 +289,7 @@ Page({
     this.setData({ 'formData.endTime': this.data.pickerItems[idx], endTimeIndex: idx });
   },
 
-  submitForm() {
+  async submitForm() {
     const fd = this.data.formData;
     const [sh, sm] = fd.startTime.split(':').map(Number);
     const [eh, em] = fd.endTime.split(':').map(Number);
@@ -300,7 +300,8 @@ Page({
     }
     const newStart = sh * 60 + sm;
     const newEnd = eh * 60 + em;
-    const overlap = TrainingStorage.getAll().some(r => {
+    const allRecords = await TrainingStorage.getAll();
+    const overlap = allRecords.some(r => {
       if (r.date !== fd.date) return false;
       if (fd.id && r.id === fd.id) return false;
       const [rh, rm] = r.startTime.split(':').map(Number);
@@ -316,9 +317,9 @@ Page({
       startTime: fd.startTime, endTime: fd.endTime, duration,
       type: fd.type, level: fd.level, court: fd.court, notes: fd.notes
     };
-    TrainingStorage.save(record);
+    await TrainingStorage.save(record);
     this.setData({ showForm: false, selectedCells: [], selectedSet: {} });
     wx.showToast({ title: fd.id ? '已更新' : '已添加', icon: 'success' });
-    this._refreshGrid();
+    await this._refreshGrid();
   }
 });

@@ -13,8 +13,8 @@ Page({
     hasData: false
   },
 
-  onShow() {
-    const raw = calcCareerStats();
+  async onShow() {
+    const raw = await calcCareerStats();
     const stats = {
       ...raw,
       totalText: fmt(raw.totalDuration),

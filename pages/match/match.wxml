@@ -127,6 +127,39 @@
       </view>
 
       <view class="sch-name-section">
+        <view class="sch-name-title">固定搭档</view>
+        <view wx:for="{{scheduleForm.fixedPairs}}" wx:for-index="pi" wx:key="pi" class="sch-fixed-pair-row">
+          <text class="sch-fixed-pair-text">{{item.p1}} + {{item.p2}}（{{item.rounds}}轮）</text>
+          <text class="sch-fixed-pair-del" data-idx="{{pi}}" bindtap="removeFixedPair">×</text>
+        </view>
+        <view class="sch-fixed-pair-add" bindtap="addFixedPair">+ 添加固定搭档</view>
+        <view wx:if="{{showFixedPairPanel}}" class="sch-fixed-pair-panel">
+          <view class="sch-fp-row">
+            <text class="sch-label">搭档1</text>
+            <picker mode="selector" range="{{fixedPairOpts1}}" value="{{fixedPairIdx1}}" bindchange="fixedPairChange1">
+              <view class="sch-picker">{{fixedPairOpts1[fixedPairIdx1]}}</view>
+            </picker>
+          </view>
+          <view class="sch-fp-row">
+            <text class="sch-label">搭档2</text>
+            <picker mode="selector" range="{{fixedPairOpts1}}" value="{{fixedPairIdx2}}" bindchange="fixedPairChange2">
+              <view class="sch-picker">{{fixedPairOpts1[fixedPairIdx2]}}</view>
+            </picker>
+          </view>
+          <view class="sch-fp-row">
+            <text class="sch-label">搭档轮数</text>
+            <picker mode="selector" range="{{[1,2,3,4,5,6,7,8,9,10]}}" value="{{fixedPairRounds - 1}}" bindchange="fixedPairChangeRounds">
+              <view class="sch-picker">{{fixedPairRounds}}轮</view>
+            </picker>
+          </view>
+          <view class="sch-fp-actions">
+            <view class="sch-fp-btn sch-fp-cancel" bindtap="cancelFixedPair">取消</view>
+            <view class="sch-fp-btn sch-fp-confirm" bindtap="confirmFixedPair">确认</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="sch-name-section">
         <view class="sch-name-title">{{scheduleForm.mode === 'doubles' ? '各轮类型 / 场地号' : '场地号（可修改）'}}</view>
         <view class="sch-two-col-section">
           <view wx:if="{{scheduleForm.mode === 'doubles'}}" class="sch-col">

@@ -42,29 +42,59 @@ function pairTeams(teamList, round) {
   return { matches, byes };
 }
 
-function generateDoublesRound(players, round, type) {
+function applyFixedPairsMixed(allMales, allFemales, fixedPairs, round) {
+  for (const pair of fixedPairs) {
+    if (round >= pair.rounds) continue;
+    const mi = allMales.findIndex(p => p.label === pair.p1);
+    const fi = allFemales.findIndex(p => p.label === pair.p2);
+    if (mi > -1 && fi > -1 && allFemales[mi].label !== pair.p2) {
+      [allFemales[mi], allFemales[fi]] = [allFemales[fi], allFemales[mi]];
+    }
+  }
+}
+
+function applyFixedPairsNormal(arr, fixedPairs, round) {
+  for (const pair of fixedPairs) {
+    if (round >= pair.rounds) continue;
+    const i1 = arr.findIndex(p => p.label === pair.p1);
+    const i2 = arr.findIndex(p => p.label === pair.p2);
+    if (i1 > -1 && i2 > -1) {
+      const partnerIdx = i1 % 2 === 0 ? i1 + 1 : i1 - 1;
+      if (partnerIdx >= 0 && partnerIdx < arr.length && i2 !== partnerIdx) {
+        [arr[partnerIdx], arr[i2]] = [arr[i2], arr[partnerIdx]];
+      }
+    }
+  }
+}
+
+function generateDoublesRound(players, globalRound, type, fixedPairs, mixedRoundIdx) {
   let males = players.filter(p => p.gender === 'male');
   let females = players.filter(p => p.gender === 'female');
 
   if (type === 'mixed') {
     const allMales = players.filter(p => p.gender === 'male');
     const allFemales = players.filter(p => p.gender === 'female');
-    for (let r = 0; r < round; r++) { if (allFemales.length >= 2) { allFemales.push(allFemales.shift()); } }
+    for (let r = 0; r < mixedRoundIdx; r++) { if (allFemales.length >= 2) { allFemales.push(allFemales.shift()); } }
+    if (fixedPairs) applyFixedPairsMixed(allMales, allFemales, fixedPairs, globalRound);
     const mc = Math.min(allMales.length, allFemales.length);
     const teams = [];
     for (let i = 0; i < mc; i++) teams.push([allMales[i].label, allFemales[i].label]);
     const extra = [];
     if (allMales.length > mc) extra.push(allMales[mc].label);
     if (allFemales.length > mc) extra.push(allFemales[mc].label);
-    const result = pairTeams(teams, round);
+    const result = pairTeams(teams, mixedRoundIdx);
     result.byes.push(...extra);
     return result;
   }
 
   // normal: auto 男双+女双, fallback 混双 when only 1+1
-  for (let r = 0; r < round; r++) {
+  for (let r = 0; r < globalRound; r++) {
     if (males.length >= 2) { const last = males.pop(); males.splice(1, 0, last); }
     if (females.length >= 2) { const last = females.pop(); females.splice(1, 0, last); }
+  }
+  if (fixedPairs) {
+    applyFixedPairsNormal(males, fixedPairs, globalRound);
+    applyFixedPairsNormal(females, fixedPairs, globalRound);
   }
   const mTeams = [];
   const fTeams = [];
@@ -90,19 +120,21 @@ function generateDoublesRound(players, round, type) {
   const matches = [];
   const byes = [...indivByes];
   for (const tlist of [mTeams, fTeams]) {
-    const r = pairTeams(tlist, round);
+    const r = pairTeams(tlist, globalRound);
     matches.push(...r.matches);
     byes.push(...r.byes);
   }
   return { matches, byes };
 }
 
-function generateSchedule(mode, players, rounds, numCourts, roundTypes) {
+function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPairs) {
   const playerNames = players.map(p => p.label);
   const schedule = [];
+  let mixedRoundCount = 0;
   for (let r = 0; r < rounds; r++) {
+    const isMixed = roundTypes[r] === 'mixed';
     const result = mode === 'doubles'
-      ? generateDoublesRound(players, r, roundTypes[r])
+      ? generateDoublesRound(players, r, roundTypes[r], fixedPairs, isMixed ? mixedRoundCount++ : -1)
       : generateSinglesRound(players, r);
     if (schedule.length > 0) {
       let prevMatches = schedule[schedule.length - 1].matches;
@@ -128,7 +160,8 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes) {
   }
   return {
     mode, playerNames, rounds: schedule.length, roundTypes,
-    courts: numCourts, schedule, createdAt: Date.now()
+    courts: numCourts, schedule, fixedPairs: fixedPairs || [],
+    createdAt: Date.now()
   };
 }
 

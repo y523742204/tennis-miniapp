@@ -18,21 +18,18 @@
         <text class="cc-dist">{{item.distance}}m</text>
       </view>
       <text wx:if="{{item.address}}" class="cc-addr">📍 {{item.address}}</text>
-      <text wx:if="{{item.phone}}" class="cc-phone">📞 {{item.phone}}</text>
     </view>
 
     <view wx:if="{{courts.length}}" class="section-title">我的球场</view>
+    <view wx:if="{{showMigrate}}" class="migrate-btn" bindtap="onMigrateTap">↑ 迁移本地数据到云端</view>
     <view wx:for="{{courts}}" wx:key="id" class="court-card" data-id="{{item.id}}" bindtap="onCourtTap">
       <view class="cc-top">
         <text class="cc-name">{{item.name}}</text>
         <view class="cc-rating">
-          <text wx:for="{{[1,2,3,4,5]}}" wx:key="s" class="c-star {{item.rating >= s ? 'on' : ''}}">★</text>
+          <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="sv" wx:key="*this" class="c-star {{item.rating >= sv ? 'on' : ''}}">★</text>
         </view>
       </view>
       <text wx:if="{{item.address}}" class="cc-addr">📍 {{item.address}}</text>
-      <view wx:if="{{item.phone}}" class="cc-phone" data-phone="{{item.phone}}" bindtap="callCourt">
-        📞 {{item.phone}}
-      </view>
     </view>
   </view>
 
@@ -51,12 +48,8 @@
     <view wx:if="{{!hasKey}}" class="map-hint">需在 utils/map.js 配置高德地图 Key</view>
   </view>
 
-  <view class="fab" bindtap="showAddForm">
-    <text>+</text>
-  </view>
-
   <view wx:if="{{showForm}}" class="overlay" bindtap="closeForm">
-    <view class="form-sheet" catchtap="">
+    <view class="form-sheet" catchtap="noop">
       <view class="form-title">{{formMode === 'add' ? '添加球场' : '编辑球场'}}</view>
       <view class="form-body">
         <view class="form-group">
@@ -68,14 +61,13 @@
           <input class="form-input" placeholder="球场地址" value="{{formData.address}}" data-field="address" bindinput="formInput"/>
         </view>
         <view class="form-group">
-          <text class="form-label">联系电话</text>
-          <input class="form-input" placeholder="电话" type="number" value="{{formData.phone}}" data-field="phone" bindinput="formInput"/>
-        </view>
-        <view class="form-group">
           <text class="form-label">评分</text>
           <view class="star-row">
-            <text wx:for="{{[1,2,3,4,5]}}" wx:key="s" class="star {{formData.rating >= s ? 'on' : ''}}"
-                  data-star="{{item}}" bindtap="formRating">★</text>
+            <view class="star {{formData.rating >= 1 ? 'on' : ''}}" bindtap="formRating" data-star="1">★</view>
+            <view class="star {{formData.rating >= 2 ? 'on' : ''}}" bindtap="formRating" data-star="2">★</view>
+            <view class="star {{formData.rating >= 3 ? 'on' : ''}}" bindtap="formRating" data-star="3">★</view>
+            <view class="star {{formData.rating >= 4 ? 'on' : ''}}" bindtap="formRating" data-star="4">★</view>
+            <view class="star {{formData.rating >= 5 ? 'on' : ''}}" bindtap="formRating" data-star="5">★</view>
           </view>
         </view>
       </view>
