@@ -67,13 +67,13 @@ function applyFixedPairsNormal(arr, fixedPairs, round) {
   }
 }
 
-function generateDoublesRound(players, globalRound, type, fixedPairs, mixedRoundIdx) {
+function generateDoublesRound(players, globalRound, type, fixedPairs, mixedRoundIdx, femaleBase) {
   let males = players.filter(p => p.gender === 'male');
   let females = players.filter(p => p.gender === 'female');
 
   if (type === 'mixed') {
     const allMales = players.filter(p => p.gender === 'male');
-    const allFemales = players.filter(p => p.gender === 'female');
+    const allFemales = femaleBase ? [...femaleBase] : players.filter(p => p.gender === 'female');
     for (let r = 0; r < mixedRoundIdx; r++) { if (allFemales.length >= 2) { allFemales.push(allFemales.shift()); } }
     if (fixedPairs) applyFixedPairsMixed(allMales, allFemales, fixedPairs, globalRound);
     const mc = Math.min(allMales.length, allFemales.length);
@@ -131,10 +131,24 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
   const playerNames = players.map(p => p.label);
   const schedule = [];
   let mixedRoundCount = 0;
+  // Pre‑compute adjusted female base so fixed‑pair partners align at rotation 0
+  let femaleBase = null;
+  if (mode === 'doubles' && fixedPairs && fixedPairs.length > 0) {
+    const allFemales = players.filter(p => p.gender === 'female');
+    const allMales = players.filter(p => p.gender === 'male');
+    for (const pair of fixedPairs) {
+      const mi = allMales.findIndex(p => p.label === pair.p1);
+      const fi = allFemales.findIndex(p => p.label === pair.p2);
+      if (mi > -1 && fi > -1 && allFemales[mi].label !== pair.p2) {
+        [allFemales[mi], allFemales[fi]] = [allFemales[fi], allFemales[mi]];
+      }
+    }
+    femaleBase = allFemales;
+  }
   for (let r = 0; r < rounds; r++) {
     const isMixed = roundTypes[r] === 'mixed';
     const result = mode === 'doubles'
-      ? generateDoublesRound(players, r, roundTypes[r], fixedPairs, isMixed ? mixedRoundCount++ : -1)
+      ? generateDoublesRound(players, r, roundTypes[r], fixedPairs, isMixed ? mixedRoundCount++ : -1, femaleBase)
       : generateSinglesRound(players, r);
     if (schedule.length > 0) {
       let prevMatches = schedule[schedule.length - 1].matches;
