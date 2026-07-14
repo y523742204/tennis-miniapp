@@ -220,31 +220,28 @@ Page({
   exportScheduleImage() {
     const s = this.data.currentSchedule;
     if (!s) { wx.showToast({ title: '暂无排赛数据', icon: 'none' }); return; }
-    const pad = 24, lCol = 150, rowH = 44, headH = 38;
-    const modeLabel = s.mode === 'doubles' ? '双打' : '单打';
+    const rowH = 44, headH = 38, pad = 16, badgeR = 11;
     const courtLabels = s.courtLabels || Array.from({ length: s.courts }, (_, i) => '场地' + (i + 1));
     const nc = s.courts || 1;
-    const cw = 640;
-    const mCol = Math.floor((cw - lCol - pad * 3) / nc);
+    const mCol = Math.floor((640 - pad * 2) / nc);
+    const cw = pad * 2 + mCol * nc;
     // Build table data
     const rows = [];
     let hasBye = false;
     for (const rd of s.schedule) {
-      const typeLabel = s.roundTypes && s.roundTypes[rd.round - 1] === 'normal' ? '男双/女双' : '混双';
       const cells = new Array(nc).fill('');
       for (const m of rd.matches) {
         const ci = m.court - 1;
         if (ci >= 0 && ci < nc) cells[ci] = m.display || (m.teams || []).map(t => t.join('')).join(' vs ');
       }
-      rows.push({ label: `第${rd.round}轮（${typeLabel}）`, cells, byes: rd.byes || [] });
+      rows.push({ round: rd.round, cells, byes: rd.byes || [] });
       if (rd.byes && rd.byes.length) hasBye = true;
     }
     // Heights
-    const titleH = 48, fpLine = s.fixedPairs && s.fixedPairs.length ? 30 : 0, byeH = hasBye ? 20 * rows.reduce((s2, r) => s2 + (r.byes.length ? 1 : 0), 0) + 12 : 0;
-    const footH = 28;
-    const tblTop = pad + titleH + fpLine + 8;
+    const fpLine = s.fixedPairs && s.fixedPairs.length ? 30 : 0;
+    const byeH = hasBye ? 20 * rows.reduce((s2, r) => s2 + (r.byes.length ? 1 : 0), 0) + 8 : 0;
     const tblBodyH = rows.length * rowH;
-    const totalH = tblTop + headH + tblBodyH + 8 + byeH + footH + pad;
+    const totalH = pad + fpLine + 4 + headH + tblBodyH + 4 + byeH + pad;
     wx.showLoading({ title: '生成中...' });
     const query = wx.createSelectorQuery();
     query.select('#scheduleCanvas').node((res) => {
@@ -254,72 +251,63 @@ Page({
       canvas.width = cw * dpr;
       canvas.height = totalH * dpr;
       ctx.scale(dpr, dpr);
-      // Background
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, cw, totalH);
-      // Title
-      ctx.textBaseline = 'top';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.fillStyle = '#333';
-      ctx.textAlign = 'center';
-      ctx.fillText(`排赛对阵表（${modeLabel}·${s.playerNames.length}人·${s.rounds}轮·${s.courts}场地）`, cw / 2, pad);
-      ctx.textAlign = 'left';
+      let y = pad;
       // Fixed pairs
-      let y = pad + titleH;
       if (s.fixedPairs && s.fixedPairs.length) {
         const fp = s.fixedPairs.map(p => `${p.p1}+${p.p2}(${p.rounds}轮)`).join('；');
-        ctx.font = '15px sans-serif';
+        ctx.font = '14px sans-serif';
         ctx.fillStyle = '#999';
-        ctx.fillText(`固定搭档：${fp}`, pad, y);
+        ctx.textBaseline = 'top';
+        ctx.fillText(fp, pad, y);
         y += fpLine;
       }
-      y += 8;
+      y += 4;
       // Table header
       const headY = y;
       ctx.fillStyle = '#07c160';
-      ctx.fillRect(pad, headY, cw - pad * 2, headH);
+      ctx.fillRect(0, headY, cw, headH);
       ctx.font = 'bold 15px sans-serif';
       ctx.fillStyle = '#fff';
       ctx.textBaseline = 'middle';
-      const cx = (ci) => pad + lCol + ci * mCol + (ci < nc - 1 ? 0 : 0);
       ctx.textAlign = 'center';
-      ctx.fillText('轮次', pad + lCol / 2, headY + headH / 2);
       for (let ci = 0; ci < nc; ci++) {
-        ctx.fillText(courtLabels[ci], cx(ci) + mCol / 2, headY + headH / 2);
+        ctx.fillText(courtLabels[ci], pad + ci * mCol + mCol / 2, headY + headH / 2);
       }
-      ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       y += headH;
       // Table body
       for (let ri = 0; ri < rows.length; ri++) {
         const r = rows[ri];
         const rowY = y;
-        // Alternating bg
         ctx.fillStyle = ri % 2 === 0 ? '#f8fdf8' : '#ffffff';
-        ctx.fillRect(pad, rowY, cw - pad * 2, rowH);
-        // Bottom border
+        ctx.fillRect(0, rowY, cw, rowH);
         ctx.strokeStyle = '#e8e8e8';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(pad, rowY + rowH);
-        ctx.lineTo(cw - pad, rowY + rowH);
+        ctx.moveTo(0, rowY + rowH);
+        ctx.lineTo(cw, rowY + rowH);
         ctx.stroke();
-        // Round label
-        ctx.font = 'bold 14px sans-serif';
-        ctx.fillStyle = '#333';
+        // Round badge
+        ctx.fillStyle = '#07c160';
+        ctx.beginPath();
+        ctx.arc(badgeR + 4, rowY + rowH / 2, badgeR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillStyle = '#fff';
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
-        ctx.fillText(r.label, pad + lCol / 2, rowY + rowH / 2);
-        ctx.textAlign = 'left';
+        ctx.fillText(String(r.round), badgeR + 4, rowY + rowH / 2);
         // Match cells
-        ctx.font = '14px sans-serif';
+        ctx.font = '13px sans-serif';
         ctx.fillStyle = '#555';
+        ctx.textBaseline = 'middle';
         for (let ci = 0; ci < nc; ci++) {
-          const cellX = pad + lCol + ci * mCol;
+          const cx = pad + ci * mCol;
           if (r.cells[ci]) {
             ctx.textAlign = 'center';
-            ctx.fillText(r.cells[ci], cellX + mCol / 2, rowY + rowH / 2);
-            ctx.textAlign = 'left';
+            ctx.fillText(r.cells[ci], cx + mCol / 2, rowY + rowH / 2);
           }
         }
         ctx.textBaseline = 'top';
@@ -328,32 +316,22 @@ Page({
       // Vertical lines
       ctx.strokeStyle = '#e8e8e8';
       ctx.lineWidth = 1;
-      const vt = headY;
-      const vb = y;
-      // Left border of round col
-      ctx.beginPath(); ctx.moveTo(pad, vt); ctx.lineTo(pad, vb); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(pad + lCol, vt); ctx.lineTo(pad + lCol, vb); ctx.stroke();
-      for (let ci = 0; ci < nc; ci++) {
-        const vx = pad + lCol + ci * mCol;
+      const vt = headY, vb = y;
+      for (let ci = 0; ci <= nc; ci++) {
+        const vx = ci * mCol;
         ctx.beginPath(); ctx.moveTo(vx, vt); ctx.lineTo(vx, vb); ctx.stroke();
       }
-      ctx.beginPath(); ctx.moveTo(cw - pad, vt); ctx.lineTo(cw - pad, vb); ctx.stroke();
       // Byes
       ctx.textBaseline = 'top';
-      y += 8;
+      y += 4;
       for (const r of rows) {
         if (r.byes.length) {
           ctx.font = '13px sans-serif';
           ctx.fillStyle = '#999';
-          ctx.fillText(`${r.label} 轮空：${r.byes.join('、')}`, pad + 8, y);
+          ctx.fillText(`第${r.round}轮 轮空：${r.byes.join('、')}`, pad, y);
           y += 20;
         }
       }
-      // Footer
-      y = totalH - footH - pad;
-      ctx.font = '13px sans-serif';
-      ctx.fillStyle = '#ccc';
-      ctx.fillText(`生成时间：${new Date(s.createdAt || Date.now()).toLocaleString('zh-CN')}`, pad, y);
       wx.hideLoading();
       wx.canvasToTempFilePath({ canvas, success: (res2) => {
         wx.previewImage({ urls: [res2.tempFilePath] });
