@@ -84,6 +84,7 @@
   <view wx:if="{{showPwd}}" class="overlay" bindtap="hidePwd">
     <view class="pwd-sheet" catchtap="noop">
       <view class="sheet-title">{{pwdMode === 'publish' ? '发布活动' : '删除活动'}} - 验证</view>
+      <view class="pwd-hint">密码为{{pwdMode === 'publish' ? '今天' : '活动'}}日期（MMDD）</view>
       <view class="form-group" style="padding:0 32rpx;">
         <text class="form-label">请输入密码</text>
         <input class="form-input" password type="text" value="{{pwdInput}}" bindinput="onPwdInput" placeholder="请输入密码"/>

@@ -85,8 +85,14 @@ Page({
     this.setData({ activities: list });
   },
 
-  _getPwd() {
-    return wx.getStorageSync('activity_pwd') || '123';
+  _todayPwd() {
+    const d = new Date();
+    return String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+  },
+
+  _datePwd(dateStr) {
+    const parts = dateStr.split('-');
+    return parts[1] + parts[2];
   },
 
   openForm() {
@@ -253,11 +259,18 @@ Page({
   },
 
   confirmPwd() {
-    if (this.data.pwdInput !== this._getPwd()) {
+    const mode = this.data.pwdMode;
+    let correct = false;
+    if (mode === 'publish') {
+      correct = this.data.pwdInput === this._todayPwd();
+    } else if (mode === 'delete') {
+      const act = this.data.activities[this.data.pwdTargetIdx];
+      if (act) correct = this.data.pwdInput === this._datePwd(act.date);
+    }
+    if (!correct) {
       wx.showToast({ title: '密码错误', icon: 'none' });
       return;
     }
-    const mode = this.data.pwdMode;
     this.setData({ showPwd: false, pwdInput: '' });
     if (mode === 'publish') this._doPublish();
     else if (mode === 'delete') this._confirmDelete();
