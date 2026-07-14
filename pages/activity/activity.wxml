@@ -80,8 +80,6 @@
     </view>
   </view>
 
-  <text class="debug-id">{{debugInfo}}</text>
-
   <view wx:if="{{showPwd}}" class="overlay" bindtap="hidePwd">
     <view class="pwd-sheet" catchtap="noop">
       <view class="sheet-title">{{pwdMode === 'publish' ? '发布活动' : '删除活动'}} - 验证</view>

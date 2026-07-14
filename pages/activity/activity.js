@@ -32,7 +32,6 @@ Page({
       levelMinFemale: 2.5
     },
     expandedIdx: -1,
-    debugInfo: '',
     cancelTarget: -1,
     cancelNames: [],
     showPwd: false,
@@ -84,8 +83,7 @@ Page({
       a.femaleWaitDisplay = a.waitlist.filter(p => p.gender === 'female').map(p => p.name + ' ' + (typeof p.level === 'number' ? p.level.toFixed(1) : p.level));
       a._joined = a.participants.some(p => p.openid === this.data.myOpenid);
     });
-    const first = list[0];
-    this.setData({ activities: list, debugInfo: 'myId:' + this.data.myOpenid + (first ? ' | pids:' + first.participants.map(p => p.openid).join(',') : '') });
+    this.setData({ activities: list });
   },
 
   _todayPwd() {
