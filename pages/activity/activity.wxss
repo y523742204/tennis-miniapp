@@ -104,7 +104,6 @@
 .f-cancel { background: #f5f5f5; color: #666; }
 .f-submit { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: #fff; }
 .f-cancel:active, .f-submit:active { opacity: 0.8; }
-.pwd-hint { font-size: 24rpx; color: #999; text-align: center; margin: -8rpx 0 16rpx; }
 
 .cancel-sheet {
   background: #fff; border-radius: 24rpx 24rpx 0 0; width: 100%;

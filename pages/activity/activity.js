@@ -201,32 +201,6 @@ Page({
     await this._loadActivities();
   },
 
-  onCardLongPress(e) {
-    const idx = e.currentTarget.dataset.idx;
-    const act = this.data.activities[idx];
-    if (!act) return;
-    const all = (act.participants || []).concat(act.waitlist || []);
-    const myParticipants = all.filter(p => p.openid === this.data.myOpenid);
-    if (myParticipants.length === 0) return;
-    if (myParticipants.length === 1) {
-      const p = myParticipants[0];
-      wx.showModal({
-        title: '取消报名',
-        content: '取消「' + p.name + '」的报名？',
-        success: async (r) => {
-          if (r.confirm) {
-            this._removePerson(act, p);
-            await ActivityStorage.save(act);
-            wx.showToast({ title: '已取消', icon: 'success' });
-            await this._loadActivities();
-          }
-        }
-      });
-    } else {
-      this.setData({ cancelTarget: idx, cancelNames: myParticipants.map(p => p.name) });
-    }
-  },
-
   _removePerson(act, p) {
     const pi = act.participants.indexOf(p);
     if (pi > -1) {
@@ -239,19 +213,25 @@ Page({
     if (wi > -1) act.waitlist.splice(wi, 1);
   },
 
-  selectCancelName(e) {
-    const name = e.currentTarget.dataset.name;
-    const act = this.data.activities[this.data.cancelTarget];
+  async cancelJoin(e) {
+    const idx = e.currentTarget.dataset.idx;
+    const act = this.data.activities[idx];
     if (!act) return;
     const all = (act.participants || []).concat(act.waitlist || []);
-    const p = all.find(p => p.name === name && p.openid === this.data.myOpenid);
-    if (!p) return;
-    this._removePerson(act, p);
-    ActivityStorage.save(act).then(() => {
-      this.setData({ cancelTarget: -1, cancelNames: [] });
+    const me = all.filter(p => p.openid === this.data.myOpenid);
+    if (me.length === 0) return;
+    if (me.length === 1) {
+      this._removePerson(act, me[0]);
+      await ActivityStorage.save(act);
       wx.showToast({ title: '已取消', icon: 'success' });
-      this._loadActivities();
-    });
+      await this._loadActivities();
+    } else {
+      this.setData({ cancelTarget: idx, cancelNames: me.map(p => p.name) });
+    }
+  },
+
+  isJoined(act) {
+    return (act.participants || []).some(p => p.openid === this.data.myOpenid);
   },
 
   onPwdInput(e) {
@@ -318,6 +298,21 @@ Page({
 
   hidePwd() {
     this.setData({ showPwd: false, pwdInput: '' });
+  },
+
+  selectCancelName(e) {
+    const name = e.currentTarget.dataset.name;
+    const act = this.data.activities[this.data.cancelTarget];
+    if (!act) return;
+    const all = (act.participants || []).concat(act.waitlist || []);
+    const p = all.find(p => p.name === name && p.openid === this.data.myOpenid);
+    if (!p) return;
+    this._removePerson(act, p);
+    ActivityStorage.save(act).then(() => {
+      this.setData({ cancelTarget: -1, cancelNames: [] });
+      wx.showToast({ title: '已取消', icon: 'success' });
+      this._loadActivities();
+    });
   },
 
   hideCancelPicker() {
