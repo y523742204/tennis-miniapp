@@ -41,7 +41,7 @@
       </view>
       <view class="ac-actions" catchtap="noop">
         <view class="ac-btn primary" bindtap="showJoinDialog" data-idx="{{idx}}">添加活动人员</view>
-        <view wx:if="{{item._joined}}" class="ac-btn cancel" bindtap="cancelJoin" data-idx="{{idx}}">取消报名</view>
+        <view wx:if="{{item._joined}}" class="ac-btn cancel" bindtap="cancelJoin" data-idx="{{idx}}">取消活动人员</view>
       </view>
     </view>
   </scroll-view>
@@ -75,7 +75,7 @@
 
   <view wx:if="{{cancelTarget > -1}}" class="overlay" bindtap="hideCancelPicker">
     <view class="cancel-sheet" catchtap="noop">
-      <view class="sheet-title">选择要取消报名的人</view>
+      <view class="sheet-title">选择要取消活动人员的人</view>
       <view wx:for="{{cancelNames}}" wx:key="*this" class="cancel-name-item" catchtap="selectCancelName" data-name="{{item}}">{{item}}</view>
     </view>
   </view>
