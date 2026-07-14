@@ -34,6 +34,10 @@ Page({
     expandedIdx: -1,
     cancelTarget: -1,
     cancelNames: [],
+    showPwd: false,
+    pwdMode: '',
+    pwdInput: '',
+    pwdTargetIdx: -1,
     levels: LEVELS,
     showJoinDialog: false,
     joinTarget: null,
@@ -81,14 +85,12 @@ Page({
     this.setData({ activities: list });
   },
 
+  _getPwd() {
+    return wx.getStorageSync('activity_pwd') || '123';
+  },
+
   openForm() {
-    wx.hideTabBar({ animation: false });
-    const today = new Date();
-    const date = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-    this.setData({
-      showForm: true, formMode: 'add',
-      formData: { date, dateLabel: fmtWeekday(date), time: '19:00', location: '酷胜网球中心', maxMale: 8, maxFemale: 8, levelMinMale: 3.0, levelMinFemale: 2.5 }
-    });
+    this.setData({ showPwd: true, pwdMode: 'publish', pwdInput: '' });
   },
 
   closeForm() {
@@ -246,10 +248,43 @@ Page({
     });
   },
 
+  onPwdInput(e) {
+    this.setData({ pwdInput: e.detail.value });
+  },
+
+  confirmPwd() {
+    if (this.data.pwdInput !== this._getPwd()) {
+      wx.showToast({ title: '密码错误', icon: 'none' });
+      return;
+    }
+    const mode = this.data.pwdMode;
+    this.setData({ showPwd: false, pwdInput: '' });
+    if (mode === 'publish') this._doPublish();
+    else if (mode === 'delete') this._confirmDelete();
+  },
+
+  async _doPublish() {
+    wx.hideTabBar({ animation: false });
+    const today = new Date();
+    const date = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    this.setData({
+      showForm: true, formMode: 'add',
+      formData: { date, dateLabel: fmtWeekday(date), time: '19:00', location: '酷胜网球中心', maxMale: 8, maxFemale: 8, levelMinMale: 3.0, levelMinFemale: 2.5 }
+    });
+  },
+
   async deleteActivity(e) {
     const idx = e.currentTarget.dataset.idx;
     const act = this.data.activities[idx];
     if (!act) return;
+    this.setData({ showPwd: true, pwdMode: 'delete', pwdInput: '', pwdTargetIdx: idx });
+  },
+
+  _confirmDelete() {
+    const idx = this.data.pwdTargetIdx;
+    const act = this.data.activities[idx];
+    if (!act) return;
+    this.setData({ pwdTargetIdx: -1 });
     wx.showModal({
       title: '删除活动',
       content: '删除「' + act.date + ' ' + act.time + ' ' + act.location + '」？',
@@ -266,6 +301,10 @@ Page({
   toggleExpand(e) {
     const idx = e.currentTarget.dataset.idx;
     this.setData({ expandedIdx: this.data.expandedIdx === idx ? -1 : idx });
+  },
+
+  hidePwd() {
+    this.setData({ showPwd: false, pwdInput: '' });
   },
 
   hideCancelPicker() {
