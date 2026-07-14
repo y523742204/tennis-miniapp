@@ -25,8 +25,10 @@
 .ac-detail { margin: 12rpx 0; padding-top: 12rpx; border-top: 2rpx solid #f0f0f0; }
 .ac-detail-title { font-size: 26rpx; font-weight: 600; color: #444; margin-bottom: 10rpx; }
 .ac-detail-table { display: flex; gap: 24rpx; }
-.ac-detail-col { flex: 1; display: flex; flex-direction: column; gap: 6rpx; }
-.ac-detail-name { font-size: 26rpx; color: #333; padding: 6rpx 12rpx; background: #fafafa; border-radius: 8rpx; }
+.ac-detail-col { flex: 1; display: flex; flex-direction: column; gap: 8rpx; }
+.ac-detail-name { font-size: 32rpx; padding: 8rpx 16rpx; border-radius: 10rpx; text-align: center; }
+.ac-detail-col:first-child .ac-detail-name { background: #e3f2fd; color: #1565c0; }
+.ac-detail-col:last-child .ac-detail-name { background: #fce4ec; color: #c62828; }
 
 .ac-actions { display: flex; gap: 12rpx; margin-top: 12rpx; }
 .ac-btn {
