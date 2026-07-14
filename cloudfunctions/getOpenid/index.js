@@ -1,3 +1,6 @@
+const cloud = require('wx-server-sdk');
+
 exports.main = async (event, context) => {
-  return { openid: context.OPENID };
+  const { OPENID } = cloud.getWXContext();
+  return { openid: OPENID };
 };

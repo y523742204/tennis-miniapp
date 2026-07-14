@@ -23,6 +23,7 @@ Page({
   data: {
     activities: [],
     myOpenid: '',
+    myCloudOpenid: '',
     showForm: false,
     formMode: 'add',
     formData: {
@@ -49,21 +50,22 @@ Page({
   },
 
   async _loadMyOpenid() {
+    let id = wx.getStorageSync('my_openid') || '';
+    if (!id) {
+      id = 'local_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      wx.setStorageSync('my_openid', id);
+    }
+    this.setData({ myOpenid: id });
     try {
       const res = await wx.cloud.callFunction({ name: 'getOpenid' });
       if (res.result && res.result.openid) {
-        this.setData({ myOpenid: res.result.openid });
+        wx.setStorageSync('my_cloud_openid', res.result.openid);
+        this.setData({ myCloudOpenid: res.result.openid });
         return;
       }
     } catch (e) {}
-    const stored = wx.getStorageSync('my_openid') || '';
-    if (stored) {
-      this.setData({ myOpenid: stored });
-    } else {
-      const id = 'local_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      wx.setStorageSync('my_openid', id);
-      this.setData({ myOpenid: id });
-    }
+    const cloudId = wx.getStorageSync('my_cloud_openid') || '';
+    if (cloudId) this.setData({ myCloudOpenid: cloudId });
   },
 
   async _loadActivities() {
@@ -222,12 +224,16 @@ Page({
 
   noop() {},
 
+  _myId() {
+    return this.data.myOpenid;
+  },
+
   isJoined(act) {
-    return (act.participants || []).some(p => p.openid === this.data.myOpenid);
+    return (act.participants || []).some(p => p.openid === this._myId());
   },
 
   isCreator(act) {
-    return act.creatorId === this.data.myOpenid;
+    return act.creatorId === this._myId();
   },
 
 });
