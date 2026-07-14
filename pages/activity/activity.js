@@ -74,8 +74,11 @@ Page({
       a.maleCount = a.participants.filter(p => p.gender === 'male').length;
       a.femaleCount = a.participants.filter(p => p.gender === 'female').length;
       a.weekday = WEEKDAYS[new Date(a.date + 'T00:00:00').getDay()];
-      a.maleDisplay = a.participants.filter(p => p.gender === 'male').map(p => p.name + ' ' + p.level);
-      a.femaleDisplay = a.participants.filter(p => p.gender === 'female').map(p => p.name + ' ' + p.level);
+      a.levelMinMale = a.levelMinMale || 0;
+      a.levelMinFemale = a.levelMinFemale || 0;
+      a.levelStr = '男 ' + a.levelMinMale.toFixed(1) + '+ 女 ' + a.levelMinFemale.toFixed(1) + '+';
+      a.maleDisplay = a.participants.filter(p => p.gender === 'male').map(p => p.name + ' ' + (typeof p.level === 'number' ? p.level.toFixed(1) : p.level));
+      a.femaleDisplay = a.participants.filter(p => p.gender === 'female').map(p => p.name + ' ' + (typeof p.level === 'number' ? p.level.toFixed(1) : p.level));
     });
     this.setData({ activities: list });
   },
