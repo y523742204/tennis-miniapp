@@ -112,6 +112,32 @@
             </view>
           </view>
         </view>
+        <view class="sch-roster-actions">
+          <view class="sch-roster-btn" bindtap="showSaveRoster">保存名单</view>
+          <view class="sch-roster-btn" bindtap="showLoadRoster">加载名单</view>
+        </view>
+        <!-- Save roster dialog -->
+        <view wx:if="{{showSaveRosterPanel}}" class="sch-roster-dialog">
+          <input class="sch-roster-input" value="{{rosterName}}" bindinput="rosterNameInput" placeholder="输入名单名称" />
+          <view class="sch-roster-dlg-actions">
+            <view class="sch-fp-btn sch-fp-cancel" bindtap="cancelSaveRoster">取消</view>
+            <view class="sch-fp-btn sch-fp-confirm" bindtap="confirmSaveRoster">保存</view>
+          </view>
+        </view>
+        <!-- Load roster dialog -->
+        <view wx:if="{{showLoadRosterPanel}}" class="sch-roster-dialog">
+          <view wx:if="{{savedRosters.length === 0}}" class="sch-roster-empty">暂无保存的名单</view>
+          <view wx:for="{{savedRosters}}" wx:key="id" class="sch-roster-item">
+            <view class="sch-roster-info" data-id="{{item.id}}" bindtap="applyRoster">
+              <text class="sch-roster-name">{{item.name}}</text>
+              <text class="sch-roster-meta">{{item.maleCount}}♂ {{item.femaleCount}}♀ · {{item.playerNames.join('、')}}</text>
+            </view>
+            <text class="sch-roster-del" data-id="{{item.id}}" bindtap="deleteRoster">×</text>
+          </view>
+          <view class="sch-roster-dlg-actions">
+            <view class="sch-fp-btn sch-fp-cancel" bindtap="cancelLoadRoster">关闭</view>
+          </view>
+        </view>
       </view>
 
       <view class="sch-row">

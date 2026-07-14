@@ -36,6 +36,10 @@ Page({
     fixedPairSel1: null,
     fixedPairSel2: null,
     fixedPairRounds: 1,
+    showSaveRosterPanel: false,
+    showLoadRosterPanel: false,
+    rosterName: '',
+    savedRosters: [],
     currentSchedule: null,
     editMode: false,
     editData: {
@@ -118,6 +122,54 @@ Page({
       'scheduleForm.maleNames': names.slice(0, mc),
       'scheduleForm.femaleNames': names.slice(mc)
     });
+  },
+
+  showSaveRoster() {
+    this.setData({ showSaveRosterPanel: true, rosterName: this.data.scheduleForm.maleCount + '男' + this.data.scheduleForm.femaleCount + '女' });
+  },
+  rosterNameInput(e) {
+    this.setData({ rosterName: e.detail.value });
+  },
+  cancelSaveRoster() {
+    this.setData({ showSaveRosterPanel: false });
+  },
+  confirmSaveRoster() {
+    const name = this.data.rosterName.trim();
+    if (!name) { wx.showToast({ title: '请输入名单名称', icon: 'none' }); return; }
+    const f = this.data.scheduleForm;
+    const rosters = wx.getStorageSync('saved_rosters') || [];
+    rosters.push({ id: Date.now(), name, maleCount: f.maleCount, femaleCount: f.femaleCount, playerNames: [...f.playerNames], createdAt: Date.now() });
+    wx.setStorageSync('saved_rosters', rosters);
+    this.setData({ showSaveRosterPanel: false });
+    wx.showToast({ title: '已保存', icon: 'success' });
+  },
+  showLoadRoster() {
+    this.setData({ savedRosters: wx.getStorageSync('saved_rosters') || [], showLoadRosterPanel: true });
+  },
+  cancelLoadRoster() {
+    this.setData({ showLoadRosterPanel: false });
+  },
+  applyRoster(e) {
+    const id = e.currentTarget.dataset.id;
+    const rosters = wx.getStorageSync('saved_rosters') || [];
+    const roster = rosters.find(r => r.id === id);
+    if (!roster) return;
+    const { maleCount, femaleCount, playerNames } = roster;
+    this.setData({
+      'scheduleForm.maleCount': maleCount,
+      'scheduleForm.femaleCount': femaleCount,
+      'scheduleForm.playerNames': [...playerNames],
+      'scheduleForm.maleNames': playerNames.slice(0, maleCount),
+      'scheduleForm.femaleNames': playerNames.slice(maleCount),
+      showLoadRosterPanel: false
+    });
+  },
+  deleteRoster(e) {
+    const id = e.currentTarget.dataset.id;
+    let rosters = wx.getStorageSync('saved_rosters') || [];
+    rosters = rosters.filter(r => r.id !== id);
+    wx.setStorageSync('saved_rosters', rosters);
+    this.setData({ savedRosters: rosters });
   },
 
   addFixedPair() {
