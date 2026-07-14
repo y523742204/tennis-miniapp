@@ -26,9 +26,7 @@
       <view class="ac-actions">
         <view wx:if="{{isCreator(item)}}" class="ac-btn danger" bindtap="deleteActivity" data-idx="{{idx}}">删除活动</view>
         <view wx:elif="{{isJoined(item)}}" class="ac-btn cancel" bindtap="cancelJoin" data-idx="{{idx}}">取消报名</view>
-        <view wx:elif="{{!item.expired && canJoin(item)}}" class="ac-btn primary" bindtap="showJoinDialog" data-idx="{{idx}}">加入活动</view>
-        <view wx:elif="{{item.expired}}" class="ac-btn disabled">已过期</view>
-        <view wx:else class="ac-btn disabled">名额已满</view>
+        <view wx:else class="ac-btn primary" bindtap="showJoinDialog" data-idx="{{idx}}">加入活动</view>
       </view>
     </view>
   </scroll-view>

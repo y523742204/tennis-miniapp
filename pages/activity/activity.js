@@ -16,7 +16,7 @@ function fmtLevels(min, max) {
 }
 
 function fmtPcount(list, gender) {
-  return list.filter(p => p.gender === gender).length;
+  return (list || []).filter(p => p.gender === gender).length;
 }
 
 Page({
@@ -68,12 +68,10 @@ Page({
   async _loadActivities() {
     const list = await ActivityStorage.getAll();
     list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-    const now = new Date();
     list.forEach(a => {
-      const dt = new Date(a.date + 'T' + a.time);
-      a.expired = dt < now;
-      a.maleCount = a.participants ? a.participants.filter(p => p.gender === 'male').length : 0;
-      a.femaleCount = a.participants ? a.participants.filter(p => p.gender === 'female').length : 0;
+      a.participants = a.participants || [];
+      a.maleCount = a.participants.filter(p => p.gender === 'male').length;
+      a.femaleCount = a.participants.filter(p => p.gender === 'female').length;
       a.weekday = WEEKDAYS[new Date(a.date + 'T00:00:00').getDay()];
     });
     this.setData({ activities: list });
@@ -172,30 +170,7 @@ Page({
     if (!name) { wx.showToast({ title: '请输入姓名', icon: 'none' }); return; }
     wx.setStorageSync('activity_user_name', name);
 
-    const gender = this.data.joinGender;
-    const level = this.data.joinLevel;
-
-    if (gender === 'male') {
-      if (level < act.levelMinMale || level > act.levelMaxMale) {
-        wx.showToast({ title: '级别不符合要求(男' + fmtLevels(act.levelMinMale, act.levelMaxMale) + ')', icon: 'none' });
-        return;
-      }
-      if (fmtPcount(act.participants, 'male') >= act.maxMale) {
-        wx.showToast({ title: '男名额已满', icon: 'none' });
-        return;
-      }
-    } else {
-      if (level < act.levelMinFemale || level > act.levelMaxFemale) {
-        wx.showToast({ title: '级别不符合要求(女' + fmtLevels(act.levelMinFemale, act.levelMaxFemale) + ')', icon: 'none' });
-        return;
-      }
-      if (fmtPcount(act.participants, 'female') >= act.maxFemale) {
-        wx.showToast({ title: '女名额已满', icon: 'none' });
-        return;
-      }
-    }
-
-    act.participants.push({ name, gender, level, openid: this.data.myOpenid });
+    act.participants.push({ name, gender: this.data.joinGender, level: this.data.joinLevel, openid: this.data.myOpenid });
     await ActivityStorage.save(act);
     this.hideJoinDialog();
     wx.showToast({ title: '已报名', icon: 'success' });
@@ -236,18 +211,11 @@ Page({
   noop() {},
 
   isJoined(act) {
-    return act.participants.some(p => p.openid === this.data.myOpenid);
+    return (act.participants || []).some(p => p.openid === this.data.myOpenid);
   },
 
   isCreator(act) {
     return act.creatorId === this.data.myOpenid;
   },
 
-  canJoin(act) {
-    if (act.expired) return false;
-    if (this.isJoined(act)) return false;
-    const maleOpen = fmtPcount(act.participants, 'male') < act.maxMale;
-    const femaleOpen = fmtPcount(act.participants, 'female') < act.maxFemale;
-    return maleOpen || femaleOpen;
-  }
 });
