@@ -34,9 +34,11 @@
 
     <view class="month-divider"></view>
 
-    <view class="sec-title month-title">本月数据（{{monthLabel}}）</view>
+    <picker mode="multiSelector" range="{{calendarRange}}" value="{{calendarIndex}}" bindchange="onCalendarChange">
+      <view class="sec-title month-title">{{monthLabel}} 📅</view>
+    </picker>
 
-    <view wx:if="{{monthStats.totalTrainings === 0}}" class="month-empty">本月暂无训练记录</view>
+    <view wx:if="{{monthStats.totalTrainings === 0}}" class="month-empty">{{monthLabel}} 暂无训练记录</view>
 
     <view wx:else>
       <view class="total-card mini">

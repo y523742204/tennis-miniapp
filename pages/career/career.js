@@ -12,14 +12,24 @@ Page({
     stats: null,
     hasData: false,
     monthStats: null,
-    monthLabel: ''
+    monthLabel: '',
+    calendarRange: [],
+    calendarIndex: [0, 0]
   },
 
   async onShow() {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const monthLabel = year + '年' + month + '月';
+    const curYear = now.getFullYear();
+    const curMonth = now.getMonth() + 1;
+
+    const years = [];
+    for (let y = 2020; y <= curYear; y++) years.push(y + '年');
+    const months = [];
+    for (let m = 1; m <= 12; m++) months.push(m + '月');
+
+    const yi = years.length - 1;
+    const mi = curMonth - 1;
+    const label = curYear + '年' + curMonth + '月';
 
     const raw = await calcCareerStats();
     const stats = {
@@ -28,13 +38,29 @@ Page({
       groupStats: raw.groupStats.map(g => ({ ...g, text: fmt(g.duration), pct: (g.duration / raw.totalDuration * 100).toFixed(1) }))
     };
 
+    this.setData({ stats, calendarRange: [years, months], calendarIndex: [yi, mi], hasData: stats.totalTrainings > 0 });
+    await this._loadMonthStats(curYear, curMonth, label);
+  },
+
+  async _loadMonthStats(year, month, label) {
     const mRaw = await calcMonthlyStats(year, month);
     const monthStats = {
       ...mRaw,
       totalText: fmt(mRaw.totalDuration),
       groupStats: mRaw.groupStats.map(g => ({ ...g, text: fmt(g.duration), pct: mRaw.totalDuration > 0 ? (g.duration / mRaw.totalDuration * 100).toFixed(1) : '0' }))
     };
+    this.setData({ monthStats, monthLabel: label });
+  },
 
-    this.setData({ stats, monthStats, monthLabel, hasData: stats.totalTrainings > 0 });
+  onCalendarChange(e) {
+    const idx = e.detail.value;
+    const yearText = this.data.calendarRange[0][idx[0]];
+    const monthText = this.data.calendarRange[1][idx[1]];
+    const year = parseInt(yearText);
+    const month = parseInt(monthText);
+    if (year && month) {
+      this.setData({ calendarIndex: idx });
+      this._loadMonthStats(year, month, year + '年' + month + '月');
+    }
   }
 });
