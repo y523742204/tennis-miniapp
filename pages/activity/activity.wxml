@@ -80,7 +80,7 @@
     </view>
   </view>
 
-  <text class="debug-id">{{myOpenid}}</text>
+  <text class="debug-id">{{debugInfo}}</text>
 
   <view wx:if="{{showPwd}}" class="overlay" bindtap="hidePwd">
     <view class="pwd-sheet" catchtap="noop">
