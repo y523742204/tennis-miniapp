@@ -3,7 +3,8 @@ const { getDB } = require('./cloud');
 const COLLECTION_MAP = {
   training: { cloud: 'trainings', local: 'tennis_training' },
   court: { cloud: 'courts', local: 'tennis_court' },
-  schedule: { cloud: 'schedules', local: 'tennis_schedule' }
+  schedule: { cloud: 'schedules', local: 'tennis_schedule' },
+  activity: { cloud: 'activity', local: 'tennis_activity' }
 };
 
 function getLocal(key) {
@@ -166,4 +167,6 @@ async function migrateLocalToCloud() {
   return total;
 }
 
-module.exports = { TrainingStorage, CourtStorage, ScheduleStorage, migrateLocalToCloud };
+const ActivityStorage = createStorage('activity');
+
+module.exports = { TrainingStorage, CourtStorage, ScheduleStorage, ActivityStorage, migrateLocalToCloud };

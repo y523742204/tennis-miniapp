@@ -41,6 +41,7 @@
     "condition": false
   },
   "compileType": "miniprogram",
+  "cloudfunctionRoot": "cloudfunctions/",
   "libVersion": "3.7.0",
   "appid": "wxa659fe08cd6ee391",
   "projectname": "网球训练助手",

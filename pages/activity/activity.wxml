@@ -1,6 +1,128 @@
 <view class="container">
-  <view class="empty-state">
-    <text>🏸</text>
-    <text>活动模块开发中</text>
+  <view class="top-bar">
+    <view class="publish-btn" bindtap="openForm">＋ 发布活动</view>
+  </view>
+
+  <view wx:if="{{activities.length === 0}}" class="empty-state">
+    <text>暂无活动</text>
+    <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">点击上方按钮发布活动</text>
+  </view>
+
+  <scroll-view scroll-y class="list-scroll" wx:else>
+    <view wx:for="{{activities}}" wx:for-index="idx" wx:key="id" class="activity-card">
+      <view class="ac-time">{{item.date}} {{item.time}}</view>
+      <view class="ac-location">{{item.location}}</view>
+      <view class="ac-info-row">
+        <text class="ac-info-item">男 {{item.maleCount}}/{{item.maxMale}}</text>
+        <text class="ac-info-item">女 {{item.femaleCount}}/{{item.maxFemale}}</text>
+      </view>
+      <view class="ac-info-row">
+        <text class="ac-info-item">男 {{item.levelMinMale}}–{{item.levelMaxMale}}</text>
+        <text class="ac-info-item">女 {{item.levelMinFemale}}–{{item.levelMaxFemale}}</text>
+      </view>
+      <view wx:if="{{item.participants.length}}" class="ac-participants">
+        <text wx:for="{{item.participants}}" wx:key="openid" class="ac-p-tag {{item.gender === 'male' ? 'pm' : 'pf'}}">{{item.name}} {{item.level}}</text>
+      </view>
+      <view class="ac-actions">
+        <view wx:if="{{isCreator(item)}}" class="ac-btn danger" bindtap="deleteActivity" data-idx="{{idx}}">删除活动</view>
+        <view wx:elif="{{isJoined(item)}}" class="ac-btn cancel" bindtap="cancelJoin" data-idx="{{idx}}">取消报名</view>
+        <view wx:elif="{{!item.expired && canJoin(item)}}" class="ac-btn primary" bindtap="showJoinDialog" data-idx="{{idx}}">加入活动</view>
+        <view wx:elif="{{item.expired}}" class="ac-btn disabled">已过期</view>
+        <view wx:else class="ac-btn disabled">名额已满</view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{showJoinDialog}}" class="overlay" bindtap="hideJoinDialog">
+    <view class="join-sheet" catchtap="noop">
+      <view class="sheet-title">报名活动</view>
+      <view class="form-group">
+        <text class="form-label">姓名</text>
+        <input class="form-input" placeholder="输入你的名字" value="{{joinName}}" bindinput="onJoinNameInput"/>
+      </view>
+      <view class="form-group">
+        <text class="form-label">性别</text>
+        <view class="gender-row">
+          <view class="gender-option {{joinGender === 'male' ? 'on' : ''}}" data-gender="male" bindtap="selectJoinGender">男</view>
+          <view class="gender-option {{joinGender === 'female' ? 'on' : ''}}" data-gender="female" bindtap="selectJoinGender">女</view>
+        </view>
+      </view>
+      <view class="form-group">
+        <text class="form-label">级别</text>
+        <picker mode="selector" range="{{levels}}" value="{{joinLevelIdx}}" bindchange="selectJoinLevel">
+          <view class="form-input picker">{{levels[joinLevelIdx]}}</view>
+        </picker>
+      </view>
+      <view class="sheet-actions">
+        <view class="f-btn f-cancel" bindtap="hideJoinDialog">取消</view>
+        <view class="f-btn f-submit" bindtap="confirmJoin">确认加入</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showForm}}" class="overlay" bindtap="closeForm">
+    <view class="form-sheet" catchtap="noop">
+      <view class="form-title">{{formMode === 'add' ? '发布活动' : '编辑活动'}}</view>
+      <view class="form-body">
+        <view class="form-group">
+          <text class="form-label">日期</text>
+          <picker mode="date" value="{{formData.date}}" bindchange="formDateChange">
+            <view class="form-input picker">{{formData.date}}</view>
+          </picker>
+        </view>
+        <view class="form-group">
+          <text class="form-label">时间</text>
+          <picker mode="time" value="{{formData.time}}" bindchange="formTimeChange">
+            <view class="form-input picker">{{formData.time}}</view>
+          </picker>
+        </view>
+        <view class="form-group">
+          <text class="form-label">地点</text>
+          <input class="form-input" placeholder="如：酷胜网球中心" value="{{formData.location}}" data-field="location" bindinput="formInput"/>
+        </view>
+        <view class="form-row">
+          <view class="form-group half">
+            <text class="form-label">男上限</text>
+            <input class="form-input" type="number" value="{{formData.maxMale}}" data-field="maxMale" bindinput="formInput"/>
+          </view>
+          <view class="form-group half">
+            <text class="form-label">女上限</text>
+            <input class="form-input" type="number" value="{{formData.maxFemale}}" data-field="maxFemale" bindinput="formInput"/>
+          </view>
+        </view>
+        <view class="form-row">
+          <view class="form-group half">
+            <text class="form-label">男最低级别</text>
+            <picker mode="selector" range="{{levels}}" value="{{formData.levelMinMale * 2}}" bindchange="formLevelChange" data-field="levelMinMale">
+              <view class="form-input picker">{{formData.levelMinMale}}</view>
+            </picker>
+          </view>
+          <view class="form-group half">
+            <text class="form-label">男最高级别</text>
+            <picker mode="selector" range="{{levels}}" value="{{formData.levelMaxMale * 2}}" bindchange="formLevelChange" data-field="levelMaxMale">
+              <view class="form-input picker">{{formData.levelMaxMale}}</view>
+            </picker>
+          </view>
+        </view>
+        <view class="form-row">
+          <view class="form-group half">
+            <text class="form-label">女最低级别</text>
+            <picker mode="selector" range="{{levels}}" value="{{formData.levelMinFemale * 2}}" bindchange="formLevelChange" data-field="levelMinFemale">
+              <view class="form-input picker">{{formData.levelMinFemale}}</view>
+            </picker>
+          </view>
+          <view class="form-group half">
+            <text class="form-label">女最高级别</text>
+            <picker mode="selector" range="{{levels}}" value="{{formData.levelMaxFemale * 2}}" bindchange="formLevelChange" data-field="levelMaxFemale">
+              <view class="form-input picker">{{formData.levelMaxFemale}}</view>
+            </picker>
+          </view>
+        </view>
+      </view>
+      <view class="form-actions">
+        <view class="f-btn f-cancel" bindtap="closeForm">取消</view>
+        <view class="f-btn f-submit" bindtap="submitForm">发布</view>
+      </view>
+    </view>
   </view>
 </view>
