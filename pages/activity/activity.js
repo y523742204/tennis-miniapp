@@ -32,6 +32,8 @@ Page({
       levelMinFemale: 2.5
     },
     expandedIdx: -1,
+    cancelTarget: -1,
+    cancelNames: [],
     levels: LEVELS,
     showJoinDialog: false,
     joinTarget: null,
@@ -179,18 +181,39 @@ Page({
     const idx = e.currentTarget.dataset.idx;
     const act = this.data.activities[idx];
     if (!act) return;
-    if (!(act.participants || []).some(p => p.openid === this.data.myOpenid)) return;
-    wx.showModal({
-      title: '取消报名',
-      content: '确定取消报名「' + act.date + ' ' + act.time + ' ' + act.location + '」？',
-      success: async (r) => {
-        if (r.confirm) {
-          act.participants = act.participants.filter(p => p.openid !== this.data.myOpenid);
-          await ActivityStorage.save(act);
-          wx.showToast({ title: '已取消报名', icon: 'success' });
-          await this._loadActivities();
+    const myParticipants = (act.participants || []).filter(p => p.openid === this.data.myOpenid);
+    if (myParticipants.length === 0) return;
+    if (myParticipants.length === 1) {
+      const p = myParticipants[0];
+      wx.showModal({
+        title: '取消报名',
+        content: '取消「' + p.name + '」的报名？',
+        success: async (r) => {
+          if (r.confirm) {
+            const i = act.participants.indexOf(p);
+            if (i > -1) act.participants.splice(i, 1);
+            await ActivityStorage.save(act);
+            wx.showToast({ title: '已取消', icon: 'success' });
+            await this._loadActivities();
+          }
         }
-      }
+      });
+    } else {
+      this.setData({ cancelTarget: idx, cancelNames: myParticipants.map(p => p.name) });
+    }
+  },
+
+  selectCancelName(e) {
+    const name = e.currentTarget.dataset.name;
+    const act = this.data.activities[this.data.cancelTarget];
+    if (!act) return;
+    const idx = act.participants.findIndex(p => p.name === name && p.openid === this.data.myOpenid);
+    if (idx === -1) return;
+    act.participants.splice(idx, 1);
+    ActivityStorage.save(act).then(() => {
+      this.setData({ cancelTarget: -1, cancelNames: [] });
+      wx.showToast({ title: '已取消', icon: 'success' });
+      this._loadActivities();
     });
   },
 
@@ -214,6 +237,10 @@ Page({
   toggleExpand(e) {
     const idx = e.currentTarget.dataset.idx;
     this.setData({ expandedIdx: this.data.expandedIdx === idx ? -1 : idx });
+  },
+
+  hideCancelPicker() {
+    this.setData({ cancelTarget: -1, cancelNames: [] });
   },
 
   noop() {},

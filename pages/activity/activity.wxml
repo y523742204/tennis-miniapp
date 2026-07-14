@@ -61,6 +61,13 @@
     </view>
   </view>
 
+  <view wx:if="{{cancelTarget > -1}}" class="overlay" bindtap="hideCancelPicker">
+    <view class="cancel-sheet" catchtap="noop">
+      <view class="sheet-title">选择要取消报名的人</view>
+      <view wx:for="{{cancelNames}}" wx:key="*this" class="cancel-name-item" catchtap="selectCancelName" data-name="{{item}}">{{item}}</view>
+    </view>
+  </view>
+
   <text class="debug-id">{{myOpenid}}</text>
 
   <view wx:if="{{showForm}}" class="overlay" bindtap="closeForm">
