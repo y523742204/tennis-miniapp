@@ -347,11 +347,11 @@ Page({
     const modeLabel = s.mode === 'doubles' ? '双打' : '单打';
     let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>th,td{font-size:12pt;padding:6px 12px;border:1px solid #ccc;text-align:center}th{background:#07c160;color:#fff;font-weight:bold}</style></head><body>`;
     // Title row (merged)
-    html += `<table><tr><td colspan="${nc + 2}" style="font-size:14pt;font-weight:bold;border:none;text-align:center">排赛对阵表（${modeLabel}·${s.playerNames.length}人·${s.rounds}轮·${s.courts}场地）</td></tr>`;
+    html += `<table><tr><td colspan="${nc + 1}" style="font-size:14pt;font-weight:bold;border:none;text-align:center">排赛对阵表（${modeLabel}·${s.playerNames.length}人·${s.rounds}轮·${s.courts}场地）</td></tr>`;
     // Header
     html += '<tr><th>轮次</th>';
     for (const cl of courtLabels) html += `<th>${cl}</th>`;
-    html += '<th>轮空</th></tr>';
+    html += '</tr>';
     // Rows
     for (const rd of s.schedule) {
       const typeLabel = s.roundTypes && s.roundTypes[rd.round - 1] === 'normal' ? '男双/女双' : '混双';
@@ -360,14 +360,15 @@ Page({
         const ci = m.court - 1;
         if (ci >= 0 && ci < nc) cells[ci] = m.display || (m.teams || []).map(t => t.join('')).join(' vs ');
       }
-      html += `<tr><td style="font-weight:bold">第${rd.round}轮（${typeLabel}）</td>`;
+      const byeText = (rd.byes || []).length ? '（轮空：' + rd.byes.join('、') + '）' : '';
+      html += `<tr><td style="font-weight:bold">第${rd.round}轮（${typeLabel}）${byeText}</td>`;
       for (let ci = 0; ci < nc; ci++) html += `<td>${cells[ci] || ''}</td>`;
-      html += `<td>${(rd.byes || []).join('、')}</td></tr>`;
+      html += '</tr>';
     }
     // Fixed pairs
     if (s.fixedPairs && s.fixedPairs.length) {
       const fp = s.fixedPairs.map(p => `${p.p1}+${p.p2}(${p.rounds}轮)`).join('；');
-      html += `<tr><td colspan="${nc + 2}" style="font-size:11pt;color:#666;border:none;text-align:left">固定搭档：${fp}</td></tr>`;
+      html += `<tr><td colspan="${nc + 1}" style="font-size:11pt;color:#666;border:none;text-align:left">固定搭档：${fp}</td></tr>`;
     }
     html += '</table></body></html>';
     // Write and open
