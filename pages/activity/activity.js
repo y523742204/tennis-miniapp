@@ -64,14 +64,19 @@ Page({
     list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
     list.forEach(a => {
       a.participants = a.participants || [];
+      a.waitlist = a.waitlist || [];
       a.maleCount = a.participants.filter(p => p.gender === 'male').length;
       a.femaleCount = a.participants.filter(p => p.gender === 'female').length;
+      a.maleWaitCount = a.waitlist.filter(p => p.gender === 'male').length;
+      a.femaleWaitCount = a.waitlist.filter(p => p.gender === 'female').length;
       a.weekday = WEEKDAYS[new Date(a.date + 'T00:00:00').getDay()];
       a.levelMinMale = a.levelMinMale || 0;
       a.levelMinFemale = a.levelMinFemale || 0;
       a.levelStr = '男 ' + a.levelMinMale.toFixed(1) + '+ 女 ' + a.levelMinFemale.toFixed(1) + '+';
       a.maleDisplay = a.participants.filter(p => p.gender === 'male').map(p => p.name + ' ' + (typeof p.level === 'number' ? p.level.toFixed(1) : p.level));
       a.femaleDisplay = a.participants.filter(p => p.gender === 'female').map(p => p.name + ' ' + (typeof p.level === 'number' ? p.level.toFixed(1) : p.level));
+      a.maleWaitDisplay = a.waitlist.filter(p => p.gender === 'male').map(p => p.name + ' ' + (typeof p.level === 'number' ? p.level.toFixed(1) : p.level));
+      a.femaleWaitDisplay = a.waitlist.filter(p => p.gender === 'female').map(p => p.name + ' ' + (typeof p.level === 'number' ? p.level.toFixed(1) : p.level));
     });
     this.setData({ activities: list });
   },
@@ -126,6 +131,7 @@ Page({
       levelMinMale: parseFloat(fd.levelMinMale) || 0,
       levelMinFemale: parseFloat(fd.levelMinFemale) || 0,
       participants: [],
+      waitlist: [],
       creatorId: this.data.myOpenid,
       creatorName: wx.getStorageSync('activity_user_name') || '匿名'
     };
@@ -170,10 +176,20 @@ Page({
     if (!name) { wx.showToast({ title: '请输入姓名', icon: 'none' }); return; }
     wx.setStorageSync('activity_user_name', name);
 
-    act.participants.push({ name, gender: this.data.joinGender, level: this.data.joinLevel, openid: this.data.myOpenid });
+    const gender = this.data.joinGender;
+    const isFull = gender === 'male'
+      ? act.participants.filter(p => p.gender === 'male').length >= act.maxMale
+      : act.participants.filter(p => p.gender === 'female').length >= act.maxFemale;
+    const obj = { name, gender, level: this.data.joinLevel, openid: this.data.myOpenid };
+    if (isFull) {
+      act.waitlist.push(obj);
+      wx.showToast({ title: '名额已满，已加入候补', icon: 'none' });
+    } else {
+      act.participants.push(obj);
+      wx.showToast({ title: '已报名', icon: 'success' });
+    }
     await ActivityStorage.save(act);
     this.hideJoinDialog();
-    wx.showToast({ title: '已报名', icon: 'success' });
     await this._loadActivities();
   },
 
@@ -181,7 +197,8 @@ Page({
     const idx = e.currentTarget.dataset.idx;
     const act = this.data.activities[idx];
     if (!act) return;
-    const myParticipants = (act.participants || []).filter(p => p.openid === this.data.myOpenid);
+    const all = (act.participants || []).concat(act.waitlist || []);
+    const myParticipants = all.filter(p => p.openid === this.data.myOpenid);
     if (myParticipants.length === 0) return;
     if (myParticipants.length === 1) {
       const p = myParticipants[0];
@@ -190,8 +207,7 @@ Page({
         content: '取消「' + p.name + '」的报名？',
         success: async (r) => {
           if (r.confirm) {
-            const i = act.participants.indexOf(p);
-            if (i > -1) act.participants.splice(i, 1);
+            this._removePerson(act, p);
             await ActivityStorage.save(act);
             wx.showToast({ title: '已取消', icon: 'success' });
             await this._loadActivities();
@@ -203,13 +219,26 @@ Page({
     }
   },
 
+  _removePerson(act, p) {
+    const pi = act.participants.indexOf(p);
+    if (pi > -1) {
+      act.participants.splice(pi, 1);
+      const wi = act.waitlist.findIndex(w => w.gender === p.gender);
+      if (wi > -1) act.participants.push(act.waitlist.splice(wi, 1)[0]);
+      return;
+    }
+    const wi = act.waitlist.indexOf(p);
+    if (wi > -1) act.waitlist.splice(wi, 1);
+  },
+
   selectCancelName(e) {
     const name = e.currentTarget.dataset.name;
     const act = this.data.activities[this.data.cancelTarget];
     if (!act) return;
-    const idx = act.participants.findIndex(p => p.name === name && p.openid === this.data.myOpenid);
-    if (idx === -1) return;
-    act.participants.splice(idx, 1);
+    const all = (act.participants || []).concat(act.waitlist || []);
+    const p = all.find(p => p.name === name && p.openid === this.data.myOpenid);
+    if (!p) return;
+    this._removePerson(act, p);
     ActivityStorage.save(act).then(() => {
       this.setData({ cancelTarget: -1, cancelNames: [] });
       wx.showToast({ title: '已取消', icon: 'success' });

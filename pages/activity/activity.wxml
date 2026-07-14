@@ -14,8 +14,8 @@
       <view class="ac-time">{{item.date}} {{item.weekday}} {{item.time}}</view>
       <view class="ac-location">{{item.location}} （水平限制：{{item.levelStr}}）</view>
       <view class="ac-count-row">
-        <text>男 [ {{item.maleCount}} / {{item.maxMale}} ]</text>
-        <text>女 [ {{item.femaleCount}} / {{item.maxFemale}} ]</text>
+        <view class="ac-count-m">男 [ {{item.maleCount}} / {{item.maxMale}} ]<text wx:if="{{item.maleWaitCount}}" class="wait-badge"> 候补{{item.maleWaitCount}}</text></view>
+        <view class="ac-count-f">女 [ {{item.femaleCount}} / {{item.maxFemale}} ]<text wx:if="{{item.femaleWaitCount}}" class="wait-badge"> 候补{{item.femaleWaitCount}}</text></view>
       </view>
       <view wx:if="{{expandedIdx === idx}}" class="ac-detail">
         <view class="ac-detail-title">已报名：</view>
@@ -25,6 +25,17 @@
           </view>
           <view class="ac-detail-col">
             <view wx:for="{{item.femaleDisplay}}" wx:key="*this" class="ac-detail-name">{{item}}</view>
+          </view>
+        </view>
+        <view wx:if="{{item.maleWaitDisplay.length || item.femaleWaitDisplay.length}}" class="ac-detail-wait">
+          <view class="ac-detail-title">候补：</view>
+          <view class="ac-detail-table">
+            <view class="ac-detail-col">
+              <view wx:for="{{item.maleWaitDisplay}}" wx:key="*this" class="ac-detail-name wait">{{item}}</view>
+            </view>
+            <view class="ac-detail-col">
+              <view wx:for="{{item.femaleWaitDisplay}}" wx:key="*this" class="ac-detail-name wait">{{item}}</view>
+            </view>
           </view>
         </view>
       </view>

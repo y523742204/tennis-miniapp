@@ -26,8 +26,9 @@
 .ac-time { font-size: 30rpx; font-weight: 600; color: #222; margin-bottom: 6rpx; }
 .ac-location { font-size: 32rpx; font-weight: 500; color: #333; margin-bottom: 8rpx; }
 .ac-count-row { display: flex; gap: 48rpx; justify-content: center; margin-bottom: 8rpx; font-size: 32rpx; font-weight: 600; }
-.ac-count-row text:first-child { color: #2e7d32; }
-.ac-count-row text:last-child { color: #c62828; }
+.ac-count-m { color: #2e7d32; }
+.ac-count-f { color: #c62828; }
+.wait-badge { font-size: 24rpx; color: #e67e22; font-weight: 400; }
 
 .ac-detail { margin: 12rpx 0; padding-top: 12rpx; border-top: 2rpx solid #f0f0f0; }
 .ac-detail-title { font-size: 26rpx; font-weight: 600; color: #444; margin-bottom: 10rpx; }
@@ -36,6 +37,8 @@
 .ac-detail-name { font-size: 32rpx; padding: 8rpx 16rpx; border-radius: 10rpx; text-align: center; }
 .ac-detail-col:first-child .ac-detail-name { background: #e3f2fd; color: #1565c0; }
 .ac-detail-col:last-child .ac-detail-name { background: #fce4ec; color: #c62828; }
+.ac-detail-name.wait { opacity: 0.5; }
+.ac-detail-wait { margin-top: 16rpx; border-top: 2rpx dashed #eee; padding-top: 12rpx; }
 
 .ac-actions { display: flex; gap: 12rpx; margin-top: 12rpx; }
 .ac-btn {
