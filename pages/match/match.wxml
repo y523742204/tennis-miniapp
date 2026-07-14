@@ -73,6 +73,9 @@
         <view class="sch-save-btn sch-export-btn" bindtap="exportScheduleImage">导出图片</view>
         <view class="sch-save-btn sch-excel-btn" bindtap="exportExcel">导出Excel</view>
       </view>
+      <view class="sch-export-bar" style="margin-top:16rpx">
+        <view class="sch-save-btn sch-network-btn" bindtap="openNetworkGraph">对阵统计</view>
+      </view>
     </view>
     <canvas type="2d" id="scheduleCanvas" class="hidden-canvas"></canvas>
   </view>

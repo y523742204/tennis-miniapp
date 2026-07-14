@@ -3,7 +3,8 @@
     "pages/training/training",
     "pages/match/match",
     "pages/court/court",
-    "pages/career/career"
+    "pages/career/career",
+    "pages/network/network"
   ],
   "tabBar": {
     "color": "#999",

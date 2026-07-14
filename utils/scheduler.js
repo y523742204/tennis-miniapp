@@ -129,6 +129,8 @@ function generateDoublesRound(players, globalRound, type, fixedPairs, mixedRound
 
 function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPairs) {
   const playerNames = players.map(p => p.label);
+  const maleCount = players.filter(p => p.gender === 'male').length;
+  const femaleCount = players.filter(p => p.gender === 'female').length;
   const schedule = [];
   let mixedRoundCount = 0;
   // Pre‑compute adjusted female base so fixed‑pair partners align at rotation 0
@@ -175,6 +177,7 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
   return {
     mode, playerNames, rounds: schedule.length, roundTypes,
     courts: numCourts, schedule, fixedPairs: fixedPairs || [],
+    maleCount, femaleCount,
     createdAt: Date.now()
   };
 }

@@ -1,0 +1,58 @@
+<view class="page">
+  <view class="summary-card">
+    <view class="summary-row">
+      <view class="summary-item">
+        <text class="summary-num">{{summary.players}}</text>
+        <text class="summary-label">选手</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-num">{{summary.rounds}}</text>
+        <text class="summary-label">轮次</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-num">{{summary.matches}}</text>
+        <text class="summary-label">场次</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-title">选手对阵统计</view>
+
+  <view wx:for="{{playerStats}}" wx:key="name" class="player-card" data-name="{{item.name}}" bindtap="togglePlayer">
+    <view class="player-row">
+      <view class="player-name">{{item.name}}</view>
+      <view class="player-counts">
+        <text class="tag partner">搭档 {{item.partnerCount}}/{{item.totalOthers}}</text>
+        <text class="tag opponent">对手 {{item.opponentCount}}/{{item.totalOthers}}</text>
+      </view>
+    </view>
+    <view wx:if="{{selected === item.name}}" class="player-detail">
+      <view class="rel-label partner">搭档</view>
+      <view wx:if="{{item.maleRels.length}}" wx:for="{{item.maleRels}}" wx:for-item="row" class="rel-grid">
+        <view wx:for="{{row}}" wx:key="name" class="rel-cell">
+          <text class="rel-name {{item.partnerCount ? 'active' : 'inactive'}}">{{item.name}}</text>
+          <text class="rel-count {{item.partnerCount ? 'active' : 'inactive'}}">{{item.partnerCount}}</text>
+        </view>
+      </view>
+      <view wx:if="{{item.femaleRels.length}}" wx:for="{{item.femaleRels}}" wx:for-item="row" class="rel-grid">
+        <view wx:for="{{row}}" wx:key="name" class="rel-cell">
+          <text class="rel-name {{item.partnerCount ? 'active' : 'inactive'}}">{{item.name}}</text>
+          <text class="rel-count {{item.partnerCount ? 'active' : 'inactive'}}">{{item.partnerCount}}</text>
+        </view>
+      </view>
+      <view class="rel-label opponent">对手</view>
+      <view wx:if="{{item.maleRels.length}}" wx:for="{{item.maleRels}}" wx:for-item="row" class="rel-grid">
+        <view wx:for="{{row}}" wx:key="name" class="rel-cell">
+          <text class="rel-name {{item.opponentCount ? 'active' : 'inactive'}}">{{item.name}}</text>
+          <text class="rel-count {{item.opponentCount ? 'active' : 'inactive'}}">{{item.opponentCount}}</text>
+        </view>
+      </view>
+      <view wx:if="{{item.femaleRels.length}}" wx:for="{{item.femaleRels}}" wx:for-item="row" class="rel-grid">
+        <view wx:for="{{row}}" wx:key="name" class="rel-cell">
+          <text class="rel-name {{item.opponentCount ? 'active' : 'inactive'}}">{{item.name}}</text>
+          <text class="rel-count {{item.opponentCount ? 'active' : 'inactive'}}">{{item.opponentCount}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

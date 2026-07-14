@@ -256,6 +256,8 @@ Page({
     const names = f.playerNames.map(n => n.trim() || '选手' + (f.playerNames.indexOf(n) + 1));
     const players = names.map((n, i) => ({ label: n, gender: i < f.maleCount ? 'male' : 'female' }));
     const result = generateSchedule(f.mode, players, f.rounds, f.courts, f.roundTypes, f.fixedPairs);
+    result.maleCount = f.maleCount;
+    result.femaleCount = f.femaleCount;
     result.courtLabels = [...f.courtLabels];
     this.setData({ currentSchedule: result });
   },
@@ -509,6 +511,17 @@ Page({
     this.setData({ currentSchedule: null, editMode: false, editData: { waitingPlayers: [], selected: null, selKey: null } });
   },
 
+  openNetworkGraph() {
+    const s = this.data.currentSchedule;
+    if (!s || !s.schedule || s.schedule.length === 0) {
+      wx.showToast({ title: '无可用的排赛数据', icon: 'none' });
+      return;
+    }
+    const app = getApp();
+    app.globalData.networkSchedule = JSON.parse(JSON.stringify(s));
+    wx.navigateTo({ url: '/pages/network/network' });
+  },
+
   async toggleEdit() {
     const s = this.data.currentSchedule;
     if (this.data.editMode) {
@@ -580,12 +593,19 @@ Page({
       s.schedule[sel.ri].matches[sel.ci].teams[sel.ti][sel.si] = null;
     }
     this._syncDisplay(s);
-    this.setData({
-      currentSchedule: s,
-      'editData.selected': null,
-      'editData.selKey': null,
-      'editData.waitingPlayers': wp
-    });
+    const dups = this._checkDuplicatePartnerships(s);
+    if (dups) {
+      var that = this;
+      wx.showModal({
+        title: '发现重复搭档',
+        content: '以下搭档组合在多个轮次重复出现：\n' + dups.map(function(d) { return d.team + '\n' + d.rounds; }).join('\n'),
+        confirmText: '确认修改',
+        cancelText: '取消修改',
+        success: function(res) { if (res.confirm) that._applyEdit(s, wp); }
+      });
+    } else {
+      this._applyEdit(s, wp);
+    }
   },
 
   moveToWaiting() {
@@ -596,12 +616,19 @@ Page({
     s.schedule[sel.ri].matches[sel.ci].teams[sel.ti][sel.si] = null;
     wp.push(sel.player);
     this._syncDisplay(s);
-    this.setData({
-      currentSchedule: s,
-      'editData.selected': null,
-      'editData.selKey': null,
-      'editData.waitingPlayers': wp
-    });
+    const dups = this._checkDuplicatePartnerships(s);
+    if (dups) {
+      var that = this;
+      wx.showModal({
+        title: '发现重复搭档',
+        content: '以下搭档组合在多个轮次重复出现：\n' + dups.map(function(d) { return d.team + '\n' + d.rounds; }).join('\n'),
+        confirmText: '确认修改',
+        cancelText: '取消修改',
+        success: function(res) { if (res.confirm) that._applyEdit(s, wp); }
+      });
+    } else {
+      this._applyEdit(s, wp);
+    }
   },
 
   _doSwap(a, b) {
@@ -627,12 +654,54 @@ Page({
       if (ia !== -1 && ib !== -1) { [wp[ia], wp[ib]] = [wp[ib], wp[ia]]; }
     }
     this._syncDisplay(s);
+    const dups = this._checkDuplicatePartnerships(s);
+    if (dups) {
+      var that = this;
+      wx.showModal({
+        title: '发现重复搭档',
+        content: '以下搭档组合在多个轮次重复出现：\n' + dups.map(function(d) { return d.team + '\n' + d.rounds; }).join('\n'),
+        confirmText: '确认修改',
+        cancelText: '取消修改',
+        success: function(res) { if (res.confirm) that._applyEdit(s, wp); }
+      });
+    } else {
+      this._applyEdit(s, wp);
+    }
+  },
+
+  _applyEdit(s, wp) {
     this.setData({
       currentSchedule: s,
       'editData.selected': null,
       'editData.selKey': null,
-      'editData.waitingPlayers': wp
+      'editData.waitingPlayers': wp || []
     });
+  },
+
+  _checkDuplicatePartnerships(s) {
+    if (s.mode !== 'doubles') return null;
+    var teamMap = {};
+    for (var ri = 0; ri < s.schedule.length; ri++) {
+      var rd = s.schedule[ri];
+      for (var mi = 0; mi < (rd.matches || []).length; mi++) {
+        var m = rd.matches[mi];
+        for (var ti = 0; ti < (m.teams || []).length; ti++) {
+          var team = (m.teams[ti] || []).filter(function(p) { return p && p !== '___' && p !== null; });
+          if (team.length < 2) continue;
+          var key = team.slice().sort().join('+');
+          if (!teamMap[key]) teamMap[key] = [];
+          teamMap[key].push({ round: rd.round, court: m.court });
+        }
+      }
+    }
+    var result = [];
+    for (var key in teamMap) {
+      if (teamMap[key].length > 1) {
+        var rounds = teamMap[key].map(function(o) { return '第' + o.round + '轮'; }).join('、');
+        result.push({ team: key, rounds: rounds });
+      }
+    }
+    return result.length ? result : null;
   },
 
   renameCard(e) {
