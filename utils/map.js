@@ -56,30 +56,33 @@ function geocodeAddress(address) {
   });
 }
 
-function getInputTips(keywords, location) {
+function searchByKeyword(keywords, location, radius) {
   return new Promise(function(resolve, reject) {
     if (!AMAP_KEY) { reject(new Error('未配置地图API Key')); return; }
-    getAMap().getInputtips({
-      keywords: keywords,
+    getAMap().getPoiAround({
       location: location,
-      type: '080203',
+      querykeywords: keywords,
+      radius: radius || 50000,
       success: function(data) {
-        var tips = data.tips || [];
-        resolve(tips.map(function(t) {
+        var raw = data.poisData || [];
+        resolve(raw.map(function(p) {
+          var loc = (p.location || '').split(',');
           return {
-            id: t.id,
-            name: t.name,
-            address: (t.district || '') + (t.address || ''),
-            latitude: t.location ? parseFloat(t.location.split(',')[1]) : 0,
-            longitude: t.location ? parseFloat(t.location.split(',')[0]) : 0
+            id: p.id || '',
+            name: p.name || '',
+            address: p.address || '',
+            latitude: loc.length > 1 ? parseFloat(loc[1]) : 0,
+            longitude: loc.length > 1 ? parseFloat(loc[0]) : 0,
+            distance: parseInt(p.distance) || 0,
+            phone: p.tel || ''
           };
-        }).filter(function(t) { return t.latitude && t.longitude; }));
+        }));
       },
       fail: function(err) {
-        reject(new Error(err.errMsg || (err.errCode ? '错误码:' + err.errCode : '获取提示失败')));
+        reject(new Error(err.errMsg || (err.errCode ? '错误码:' + err.errCode : '搜索失败')));
       }
     });
   });
 }
 
-module.exports = { searchNearbyPOI, geocodeAddress, getInputTips, AMAP_KEY };
+module.exports = { searchNearbyPOI, geocodeAddress, searchByKeyword, AMAP_KEY };

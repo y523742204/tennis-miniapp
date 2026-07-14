@@ -53,7 +53,8 @@
     </view>
     <map class="map" longitude="{{mapLongitude}}" latitude="{{mapLatitude}}" scale="14"
          markers="{{markers}}"
-         show-location>
+         show-location
+         bindcallouttap="onCalloutTap">
     </map>
     <view wx:if="{{!hasKey}}" class="map-hint">需在 utils/map.js 配置高德地图 Key</view>
   </view>

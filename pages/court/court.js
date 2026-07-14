@@ -1,5 +1,5 @@
 const { CourtStorage, migrateLocalToCloud } = require('../../utils/storage');
-const { searchNearbyPOI, geocodeAddress, getInputTips, AMAP_KEY } = require('../../utils/map');
+const { searchNearbyPOI, geocodeAddress, searchByKeyword, AMAP_KEY } = require('../../utils/map');
 
 var _mid = 1000;
 var _midMap = {};
@@ -8,7 +8,7 @@ Page({
   data: {
     courts: [],
     markers: [],
-    mode: 'list',
+    mode: 'map',
     showForm: false,
     formMode: 'add',
     formData: {},
@@ -31,7 +31,7 @@ Page({
       await CourtStorage.save({
         name: '酷胜网球中心',
         address: '成都市双流区双华路三段898号',
-    
+
         rating: 3
       });
       await this._loadCourts();
@@ -39,6 +39,56 @@ Page({
     try {
       const local = wx.getStorageSync('tennis_court') || [];
       this.setData({ showMigrate: local.some(r => !r._id) });
+    } catch (e) {}
+    if (!this._autoSearched) {
+      this._autoSearched = true;
+      this._autoSearchNearby();
+    }
+  },
+
+  async _autoSearchNearby() {
+    try {
+      const loc = await new Promise((resolve, reject) => {
+        wx.getSetting({
+          success: (r) => {
+            if (r.authSetting['scope.userLocation']) {
+              wx.getLocation({ type: 'gcj02', success: resolve, fail: reject });
+            } else {
+              wx.authorize({
+                scope: 'scope.userLocation',
+                success: () => { wx.getLocation({ type: 'gcj02', success: resolve, fail: reject }); },
+                fail: () => reject()
+              });
+            }
+          },
+          fail: () => reject()
+        });
+      });
+      if (!loc) return;
+      this.setData({ mapLatitude: loc.latitude, mapLongitude: loc.longitude });
+      const pois = await searchNearbyPOI(loc.latitude, loc.longitude, this.data.searchRadius, '网球场');
+      if (pois.length === 0) return;
+      var nx = pois.map(function(p) {
+        var mid = this._nextMid();
+        _midMap[mid] = { type: 'poi', id: p.id };
+        return {
+          id: mid,
+          latitude: p.latitude, longitude: p.longitude, title: p.name,
+          iconPath: '/images/marker.png', width: 24, height: 24,
+          callout: { content: p.name, color: '#fff', fontSize: 12, bgColor: '#4a90d9', borderRadius: 8, borderColor: '#357abd', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
+        };
+      }.bind(this));
+      var saved = (await CourtStorage.getAll()).filter(function(c) { return c.latitude; }).map(function(c) {
+        var mid = this._nextMid();
+        _midMap[mid] = { type: 'court', id: c.id };
+        return {
+          id: mid,
+          latitude: c.latitude, longitude: c.longitude, title: c.name,
+          iconPath: '/images/marker.png', width: 24, height: 24,
+          callout: { content: c.name, color: '#fff', fontSize: 12, bgColor: '#07c160', borderRadius: 8, borderColor: '#05a14f', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
+        };
+      }.bind(this));
+      this.setData({ markers: [...saved, ...nx], nearbyCourts: pois });
     } catch (e) {}
   },
 
@@ -95,6 +145,8 @@ Page({
     this.setData({ radiusIndex: idx, searchRadius: radii[idx] });
   },
 
+  _searchTimer: null,
+
   onSearchInput(e) {
     var keyword = e.detail.value;
     this.setData({ searchKeyword: keyword });
@@ -103,11 +155,18 @@ Page({
       return;
     }
     var loc = this.data.mapLongitude + ',' + this.data.mapLatitude;
-    getInputTips(keyword, loc).then(function(tips) {
-      this.setData({ searchSuggestions: tips.slice(0, 8), showSuggestions: tips.length > 0 });
-    }.bind(this)).catch(function() {
-      this.setData({ showSuggestions: false });
-    }.bind(this));
+    if (this._searchTimer) clearTimeout(this._searchTimer);
+    this._searchTimer = setTimeout(() => {
+      this._searchTimer = null;
+      searchByKeyword(keyword, loc).then((pois) => {
+        this.setData({ searchSuggestions: pois.slice(0, 8), showSuggestions: pois.length > 0 });
+        if (pois.length > 0) {
+          this._updateMarkersFromPOIs(pois);
+        }
+      }).catch(() => {
+        this.setData({ showSuggestions: false });
+      });
+    }, 300);
   },
 
   onSearchConfirm(e) {
@@ -124,6 +183,9 @@ Page({
   selectSuggestion(e) {
     var tip = e.currentTarget.dataset.tip;
     this.setData({ searchKeyword: tip.name, showSuggestions: false });
+    if (tip.latitude && tip.longitude) {
+      this.setData({ mapLatitude: tip.latitude, mapLongitude: tip.longitude });
+    }
     this._searchByKeyword(tip.name);
   },
 
@@ -173,30 +235,35 @@ Page({
     });
   },
 
+  _updateMarkersFromPOIs(pois) {
+    var nx = pois.map(function(p) {
+      var mid = this._nextMid();
+      _midMap[mid] = { type: 'poi', id: p.id };
+      return {
+        id: mid,
+        latitude: p.latitude, longitude: p.longitude, title: p.name,
+        iconPath: '/images/marker.png', width: 24, height: 24,
+        callout: { content: p.name, color: '#fff', fontSize: 12, bgColor: '#4a90d9', borderRadius: 8, borderColor: '#357abd', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
+      };
+    }.bind(this));
+    var mlat = pois[0] ? pois[0].latitude : this.data.mapLatitude;
+    var mlng = pois[0] ? pois[0].longitude : this.data.mapLongitude;
+    this.setData({ markers: nx, nearbyCourts: pois, searching: false, mapLatitude: mlat, mapLongitude: mlng });
+    if (pois.length === 0) {
+      wx.showToast({ title: '未找到相关球场', icon: 'none' });
+    } else {
+      wx.showToast({ title: '找到 ' + pois.length + ' 个结果', icon: 'success' });
+    }
+  },
+
   _searchByKeyword(keyword) {
     this.setData({ searching: true });
     this._ensureLocation().then(() => {
-      searchNearbyPOI(this.data.mapLatitude, this.data.mapLongitude, 50000, keyword)
-      .then(function(pois) {
-        var nx = pois.map(function(p) {
-          var mid = this._nextMid();
-          _midMap[mid] = { type: 'poi', id: p.id };
-          return {
-            id: mid,
-            latitude: p.latitude, longitude: p.longitude, title: p.name,
-            iconPath: '/images/marker.png', width: 24, height: 24,
-            callout: { content: p.name, color: '#fff', fontSize: 12, bgColor: '#4a90d9', borderRadius: 8, borderColor: '#357abd', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
-          };
-        }.bind(this));
-        var mlat = pois[0] ? pois[0].latitude : this.data.mapLatitude;
-        var mlng = pois[0] ? pois[0].longitude : this.data.mapLongitude;
-        this.setData({ markers: nx, nearbyCourts: pois, searching: false, mapLatitude: mlat, mapLongitude: mlng });
-        if (pois.length === 0) {
-          wx.showToast({ title: '未找到相关球场', icon: 'none' });
-        } else {
-          wx.showToast({ title: '找到 ' + pois.length + ' 个结果', icon: 'success' });
-        }
-      }.bind(this))
+      var loc = this.data.mapLongitude + ',' + this.data.mapLatitude;
+      searchByKeyword(keyword, loc)
+      .then((pois) => {
+        this._updateMarkersFromPOIs(pois);
+      })
       .catch(function(err) {
         wx.showToast({ title: '搜索失败: ' + err.message, icon: 'none' });
         this.setData({ searching: false });
@@ -264,6 +331,10 @@ Page({
     const idx = e.currentTarget.dataset.idx;
     const court = this.data.nearbyCourts[idx];
     if (!court) return;
+    this._showNearbyActions(court);
+  },
+
+  _showNearbyActions(court) {
     wx.showActionSheet({
       itemList: ['地图导航', '保存到本地球场', '复制地址'],
       success: async (res) => {
@@ -278,7 +349,6 @@ Page({
           await CourtStorage.save({
             name: court.name,
             address: court.address || '',
-
             rating: 3,
             latitude: court.latitude,
             longitude: court.longitude
@@ -343,10 +413,13 @@ Page({
   async onCourtTap(e) {
     const id = e.currentTarget.dataset.id;
     const court = await CourtStorage.get(id);
-    if (court) {
-      wx.showActionSheet({
-        itemList: ['编辑', '地图导航', '删除'],
-        success: (res) => {
+    if (court) this._showCourtActions(court);
+  },
+
+  _showCourtActions(court) {
+    wx.showActionSheet({
+      itemList: ['编辑', '地图导航', '删除'],
+      success: (res) => {
         if (res.tapIndex === 0) {
           wx.hideTabBar({ animation: false });
           this.setData({
@@ -354,48 +427,51 @@ Page({
             showForm: true,
             formData: { ...court }
           });
-          } else if (res.tapIndex === 1) {
-            if (court.latitude && court.longitude) {
-              wx.openLocation({
-                latitude: court.latitude,
-                longitude: court.longitude,
-                name: court.name,
-                address: court.address
-              });
-            } else if (court.address) {
-              wx.showLoading({ title: '解析地址中...' });
-              geocodeAddress(court.address).then(async (loc) => {
-                wx.hideLoading();
-                court.latitude = loc.latitude;
-                court.longitude = loc.longitude;
-                await CourtStorage.save(court);
-                wx.openLocation({
-                  latitude: loc.latitude,
-                  longitude: loc.longitude,
-                  name: court.name,
-                  address: court.address
-                });
-              }).catch(() => {
-                wx.hideLoading();
-                wx.showToast({ title: '无法解析地址', icon: 'none' });
-              });
-            } else {
-              wx.showToast({ title: '该球场暂无位置信息', icon: 'none' });
+        } else if (res.tapIndex === 1) {
+          this._navigateToCourt(court);
+        } else if (res.tapIndex === 2) {
+          wx.showModal({
+            title: '确认删除',
+            content: `删除「${court.name}」？`,
+            success: async (r) => {
+              if (r.confirm) {
+                await CourtStorage.remove(court.id);
+                await this._loadCourts();
+              }
             }
-          } else if (res.tapIndex === 2) {
-            wx.showModal({
-              title: '确认删除',
-              content: `删除「${court.name}」？`,
-          success: async (r) => {
-            if (r.confirm) {
-              await CourtStorage.remove(id);
-              await this._loadCourts();
-            }
-          }
-            });
-          }
+          });
         }
+      }
+    });
+  },
+
+  _navigateToCourt(court) {
+    if (court.latitude && court.longitude) {
+      wx.openLocation({
+        latitude: court.latitude,
+        longitude: court.longitude,
+        name: court.name,
+        address: court.address
       });
+    } else if (court.address) {
+      wx.showLoading({ title: '解析地址中...' });
+      geocodeAddress(court.address).then(async (loc) => {
+        wx.hideLoading();
+        court.latitude = loc.latitude;
+        court.longitude = loc.longitude;
+        await CourtStorage.save(court);
+        wx.openLocation({
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          name: court.name,
+          address: court.address
+        });
+      }).catch(() => {
+        wx.hideLoading();
+        wx.showToast({ title: '无法解析地址', icon: 'none' });
+      });
+    } else {
+      wx.showToast({ title: '该球场暂无位置信息', icon: 'none' });
     }
   },
 
@@ -403,7 +479,18 @@ Page({
     return ++_mid;
   },
 
-  onMapMarkerTap(e) {},
+  onCalloutTap(e) {
+    const markerId = e.detail.markerId;
+    const info = _midMap[markerId];
+    if (!info) return;
+    if (info.type === 'poi') {
+      const court = this.data.nearbyCourts.find(c => c.id === info.id);
+      if (court) this._showNearbyActions(court);
+    } else if (info.type === 'court') {
+      const court = this.data.courts.find(c => c.id === info.id);
+      if (court) this._showCourtActions(court);
+    }
+  },
 
   async onMigrateTap() {
     wx.showLoading({ title: '迁移中...' });
