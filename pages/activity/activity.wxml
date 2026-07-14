@@ -41,7 +41,7 @@
       </view>
       <view class="ac-actions" catchtap="noop">
         <view class="ac-btn primary" bindtap="showJoinDialog" data-idx="{{idx}}">加入活动</view>
-        <view wx:if="{{isJoined(item)}}" class="ac-btn cancel" bindtap="cancelJoin" data-idx="{{idx}}">取消报名</view>
+        <view wx:if="{{item._joined}}" class="ac-btn cancel" bindtap="cancelJoin" data-idx="{{idx}}">取消报名</view>
       </view>
     </view>
   </scroll-view>
