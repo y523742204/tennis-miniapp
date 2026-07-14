@@ -54,7 +54,7 @@ Page({
         callout: { content: c.name, color: '#fff', fontSize: 12, bgColor: '#07c160', borderRadius: 8, borderColor: '#05a14f', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
       };
     }.bind(this));
-    this.setData({ courts, markers, nearbyCourts: [] });
+    this.setData({ courts, markers });
     return courts;
   },
 
@@ -91,7 +91,7 @@ Page({
 
   radiusChange(e) {
     const idx = Number(e.detail.value);
-    const radii = [500, 1000, 2000, 5000];
+    const radii = [1000, 2000, 5000, 10000];
     this.setData({ radiusIndex: idx, searchRadius: radii[idx] });
   },
 
@@ -127,9 +127,56 @@ Page({
     this._searchByKeyword(tip.name);
   },
 
+  _ensureLocation() {
+    return new Promise((resolve, reject) => {
+      wx.getSetting({
+        success: (res) => {
+          if (res.authSetting['scope.userLocation']) {
+            wx.getLocation({
+              type: 'gcj02',
+              success: (loc) => {
+                this.setData({ mapLatitude: loc.latitude, mapLongitude: loc.longitude });
+                resolve();
+              },
+              fail: reject
+            });
+          } else {
+            wx.authorize({
+              scope: 'scope.userLocation',
+              success: () => {
+                wx.getLocation({
+                  type: 'gcj02',
+                  success: (loc) => {
+                    this.setData({ mapLatitude: loc.latitude, mapLongitude: loc.longitude });
+                    resolve();
+                  },
+                  fail: reject
+                });
+              },
+              fail: () => {
+                wx.showModal({
+                  title: '需要位置权限',
+                  content: '请授权位置信息以搜索附近球场',
+                  success: (m) => {
+                    if (m.confirm) {
+                      wx.openSetting();
+                    }
+                    reject(new Error('位置权限未授权'));
+                  }
+                });
+              }
+            });
+          }
+        },
+        fail: reject
+      });
+    });
+  },
+
   _searchByKeyword(keyword) {
     this.setData({ searching: true });
-    searchNearbyPOI(this.data.mapLatitude, this.data.mapLongitude, 50000, keyword)
+    this._ensureLocation().then(() => {
+      searchNearbyPOI(this.data.mapLatitude, this.data.mapLongitude, 50000, keyword)
       .then(function(pois) {
         var nx = pois.map(function(p) {
           var mid = this._nextMid();
@@ -154,6 +201,9 @@ Page({
         wx.showToast({ title: '搜索失败: ' + err.message, icon: 'none' });
         this.setData({ searching: false });
       }.bind(this));
+    }).catch(function(err) {
+      this.setData({ searching: false });
+    }.bind(this));
   },
 
   searchNearby() {
@@ -166,14 +216,8 @@ Page({
       return;
     }
     this.setData({ searching: true });
-    wx.authorize({
-      scope: 'scope.userLocation',
-      success: () => {
-        wx.getLocation({
-          type: 'gcj02',
-          success: (loc) => {
-            this.setData({ mapLatitude: loc.latitude, mapLongitude: loc.longitude });
-            searchNearbyPOI(loc.latitude, loc.longitude, this.data.searchRadius, '网球场')
+    this._ensureLocation().then(() => {
+      searchNearbyPOI(this.data.mapLatitude, this.data.mapLongitude, this.data.searchRadius, '网球场')
               .then(async (pois) => {
                 var that = this;
                 var nx = pois.map(function(p) {
@@ -211,17 +255,8 @@ Page({
                 wx.showToast({ title: '搜索失败: ' + err.message, icon: 'none' });
                 this.setData({ searching: false });
               });
-          },
-          fail: () => {
-            wx.showToast({ title: '获取位置失败', icon: 'none' });
-            this.setData({ searching: false });
-          }
-        });
-      },
-      fail: () => {
-        wx.showToast({ title: '需授权位置信息才能搜索', icon: 'none' });
-        this.setData({ searching: false });
-      }
+    }).catch((err) => {
+      this.setData({ searching: false });
     });
   },
 

@@ -4,7 +4,7 @@
     <view class="mode-tab {{mode === 'map' ? 'active' : ''}}" data-mode="map" bindtap="switchMode">地图</view>
   </view>
 
-  <view wx:if="{{mode === 'list'}}">
+  <view wx:if="{{mode === 'list'}}" class="list-scroll">
     <view wx:if="{{courts.length === 0 && nearbyCourts.length === 0}}" class="empty-state">
       <text>🎾</text>
       <text>还没有添加球场</text>
@@ -46,8 +46,8 @@
       </view>
     </view>
     <view class="map-toolbar">
-      <picker mode="selector" range="{{['500m', '1km', '2km', '5km']}}" value="{{radiusIndex}}" bindchange="radiusChange">
-        <view class="map-radius-btn">{{['500m', '1km', '2km', '5km'][radiusIndex]}} ▼</view>
+      <picker mode="selector" range="{{['1km', '2km', '5km', '10km']}}" value="{{radiusIndex}}" bindchange="radiusChange">
+        <view class="map-radius-btn">{{['1km', '2km', '5km', '10km'][radiusIndex]}} ▼</view>
       </picker>
       <view class="map-search-btn {{searching ? 'loading' : ''}}" bindtap="searchNearby">{{searching ? '搜索中...' : '搜附近网球场'}}</view>
     </view>
