@@ -388,6 +388,8 @@
 .sch-save-btn:active { opacity: 0.8; }
 .sch-export-btn { background: #4a90d9; margin-left: 16rpx; }
 .sch-export-btn:active { opacity: 0.8; }
+.sch-excel-btn { background: #e8a838; margin-left: 16rpx; }
+.sch-excel-btn:active { opacity: 0.8; }
 
 .hidden-canvas { position: fixed; left: -9999px; top: 0; }
 
