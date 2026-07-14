@@ -43,6 +43,11 @@
 .ac-btn.danger:active { opacity: 0.8; }
 .ac-btn.disabled { background: #f0f0f0; color: #ccc; }
 
+.debug-id {
+  position: fixed; bottom: 120rpx; right: 16rpx; font-size: 20rpx; color: #aaa;
+  z-index: 1; pointer-events: none;
+}
+
 .overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100;
   display: flex; align-items: flex-end; justify-content: center;

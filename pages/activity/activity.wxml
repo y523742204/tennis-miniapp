@@ -62,6 +62,8 @@
     </view>
   </view>
 
+  <text class="debug-id">{{myOpenid}} / {{myCloudOpenid}}</text>
+
   <view wx:if="{{showForm}}" class="overlay" bindtap="closeForm">
     <view class="form-sheet" catchtap="noop">
       <view class="form-title">{{formMode === 'add' ? '发布活动' : '编辑活动'}}</view>
