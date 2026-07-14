@@ -23,7 +23,6 @@ Page({
   data: {
     activities: [],
     myOpenid: '',
-    myCloudOpenid: '',
     showForm: false,
     formMode: 'add',
     formData: {
@@ -33,7 +32,6 @@ Page({
       levelMinFemale: 2.5
     },
     expandedIdx: -1,
-    debugInfo: '',
     levels: LEVELS,
     showJoinDialog: false,
     joinTarget: null,
@@ -56,24 +54,12 @@ Page({
       id = 'local_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       wx.setStorageSync('my_openid', id);
     }
-    this.setData({ myOpenid: id, debugInfo: 'myId:' + id });
-    try {
-      const res = await wx.cloud.callFunction({ name: 'getOpenid' });
-      if (res.result && res.result.openid) {
-        wx.setStorageSync('my_cloud_openid', res.result.openid);
-        this.setData({ myCloudOpenid: res.result.openid });
-        return;
-      }
-    } catch (e) {}
-    const cloudId = wx.getStorageSync('my_cloud_openid') || '';
-    if (cloudId) this.setData({ myCloudOpenid: cloudId });
+    this.setData({ myOpenid: id });
   },
 
   async _loadActivities() {
     const list = await ActivityStorage.getAll();
     list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-    const first = list[0];
-    this.setData({ debugInfo: 'myId:' + this.data.myOpenid + ' | cid:' + (first ? first.creatorId : '-') + ' | isC:' + (first ? first.creatorId === this.data.myOpenid : '-') });
     list.forEach(a => {
       a.participants = a.participants || [];
       a.maleCount = a.participants.filter(p => p.gender === 'male').length;
@@ -189,26 +175,31 @@ Page({
     await this._loadActivities();
   },
 
-  async cancelJoin(e) {
+  onCardLongPress(e) {
     const idx = e.currentTarget.dataset.idx;
     const act = this.data.activities[idx];
     if (!act) return;
-    act.participants = act.participants.filter(p => p.openid !== this.data.myOpenid);
-    await ActivityStorage.save(act);
-    wx.showToast({ title: '已取消报名', icon: 'success' });
-    await this._loadActivities();
+    if (!(act.participants || []).some(p => p.openid === this.data.myOpenid)) return;
+    wx.showModal({
+      title: '取消报名',
+      content: '确定取消报名「' + act.date + ' ' + act.time + ' ' + act.location + '」？',
+      success: async (r) => {
+        if (r.confirm) {
+          act.participants = act.participants.filter(p => p.openid !== this.data.myOpenid);
+          await ActivityStorage.save(act);
+          wx.showToast({ title: '已取消报名', icon: 'success' });
+          await this._loadActivities();
+        }
+      }
+    });
   },
 
   async deleteActivity(e) {
     const idx = e.currentTarget.dataset.idx;
     const act = this.data.activities[idx];
     if (!act) return;
-    if (act.creatorId !== this.data.myOpenid) {
-      wx.showToast({ title: '仅有发布者可删除', icon: 'none' });
-      return;
-    }
     wx.showModal({
-      title: '确认删除',
+      title: '删除活动',
       content: '删除「' + act.date + ' ' + act.time + ' ' + act.location + '」？',
       success: async (r) => {
         if (r.confirm) {
@@ -226,13 +217,5 @@ Page({
   },
 
   noop() {},
-
-  isJoined(act) {
-    return (act.participants || []).some(p => p.openid === this.data.myOpenid);
-  },
-
-  isCreator(act) {
-    return act.creatorId === this.data.myOpenid;
-  },
 
 });
