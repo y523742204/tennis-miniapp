@@ -28,9 +28,9 @@
         </view>
       </view>
       <view class="ac-actions" catchtap="noop">
+        <view wx:if="{{isCreator(item)}}" class="ac-btn danger" bindtap="deleteActivity" data-idx="{{idx}}">删除活动</view>
         <view wx:if="{{isJoined(item)}}" class="ac-btn cancel" bindtap="cancelJoin" data-idx="{{idx}}">取消报名</view>
         <view wx:else class="ac-btn primary" bindtap="showJoinDialog" data-idx="{{idx}}">加入活动</view>
-        <view wx:if="{{isCreator(item)}}" class="ac-btn danger" bindtap="deleteActivity" data-idx="{{idx}}">删除活动</view>
       </view>
     </view>
   </scroll-view>
