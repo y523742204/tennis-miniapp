@@ -146,7 +146,7 @@ Page({
     };
     await ActivityStorage.save(record);
     this.closeForm();
-    wx.showToast({ title: '活动已发布', icon: 'success' });
+    wx.showToast({ title: '活动已记录', icon: 'success' });
     await this._loadActivities();
   },
 

@@ -1,11 +1,11 @@
 <view class="container">
   <view class="top-bar">
-    <view class="publish-btn" bindtap="openForm">＋ 发布活动</view>
+    <view class="publish-btn" bindtap="openForm">＋ 记录活动</view>
   </view>
 
   <view wx:if="{{activities.length === 0}}" class="empty-state">
     <text>暂无活动</text>
-    <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">点击上方按钮发布活动</text>
+    <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">点击上方按钮记录活动</text>
   </view>
 
   <scroll-view scroll-y class="list-scroll" wx:else>
@@ -40,7 +40,7 @@
         </view>
       </view>
       <view class="ac-actions" catchtap="noop">
-        <view class="ac-btn primary" bindtap="showJoinDialog" data-idx="{{idx}}">加入活动</view>
+        <view class="ac-btn primary" bindtap="showJoinDialog" data-idx="{{idx}}">添加活动人员</view>
         <view wx:if="{{item._joined}}" class="ac-btn cancel" bindtap="cancelJoin" data-idx="{{idx}}">取消报名</view>
       </view>
     </view>
@@ -48,7 +48,7 @@
 
   <view wx:if="{{showJoinDialog}}" class="overlay" bindtap="hideJoinDialog">
     <view class="join-sheet" catchtap="noop">
-      <view class="sheet-title">报名活动</view>
+      <view class="sheet-title">添加活动人员</view>
       <view class="form-group">
         <text class="form-label">姓名</text>
         <input class="form-input" placeholder="输入你的名字" value="{{joinName}}" bindinput="onJoinNameInput"/>
@@ -68,7 +68,7 @@
       </view>
       <view class="sheet-actions">
         <view class="f-btn f-cancel" bindtap="hideJoinDialog">取消</view>
-        <view class="f-btn f-submit" bindtap="confirmJoin">确认加入</view>
+        <view class="f-btn f-submit" bindtap="confirmJoin">确认添加</view>
       </view>
     </view>
   </view>
@@ -82,7 +82,7 @@
 
   <view wx:if="{{showPwd}}" class="overlay" bindtap="hidePwd">
     <view class="pwd-sheet" catchtap="noop">
-      <view class="sheet-title">{{pwdMode === 'publish' ? '发布活动' : '删除活动'}} - 验证</view>
+      <view class="sheet-title">{{pwdMode === 'publish' ? '记录活动' : '删除活动'}} - 验证</view>
       <view class="form-group" style="padding:0 32rpx;">
         <text class="form-label">请输入密码</text>
         <input class="form-input" password type="text" value="{{pwdInput}}" bindinput="onPwdInput" placeholder="请输入密码"/>
@@ -96,7 +96,7 @@
 
   <view wx:if="{{showForm}}" class="overlay" bindtap="closeForm">
     <view class="form-sheet" catchtap="noop">
-      <view class="form-title">{{formMode === 'add' ? '发布活动' : '编辑活动'}}</view>
+      <view class="form-title">{{formMode === 'add' ? '记录活动' : '编辑活动'}}</view>
       <view class="form-body">
         <view class="form-group">
           <text class="form-label">日期</text>
@@ -141,7 +141,7 @@
       </view>
       <view class="form-actions">
         <view class="f-btn f-cancel" bindtap="closeForm">取消</view>
-        <view class="f-btn f-submit" bindtap="submitForm">发布</view>
+        <view class="f-btn f-submit" bindtap="submitForm">记录</view>
       </view>
     </view>
   </view>
