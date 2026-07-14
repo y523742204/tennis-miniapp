@@ -1,5 +1,8 @@
 const { CourtStorage, migrateLocalToCloud } = require('../../utils/storage');
-const { searchNearbyPOI, geocodeAddress, AMAP_KEY } = require('../../utils/map');
+const { searchNearbyPOI, geocodeAddress, getInputTips, AMAP_KEY } = require('../../utils/map');
+
+var _mid = 1000;
+var _midMap = {};
 
 Page({
   data: {
@@ -16,7 +19,10 @@ Page({
     mapLongitude: 116.4,
     mapLatitude: 39.9,
     hasKey: !!AMAP_KEY,
-    showMigrate: false
+    showMigrate: false,
+    searchKeyword: '',
+    searchSuggestions: [],
+    showSuggestions: false
   },
 
   async onShow() {
@@ -38,15 +44,16 @@ Page({
 
   async _loadCourts() {
     const courts = await CourtStorage.getAll();
-    const markers = courts.filter(c => c.latitude).map((c) => ({
-      id: c.id,
-      latitude: c.latitude,
-      longitude: c.longitude,
-      title: c.name,
-      iconPath: '/images/marker.png',
-      width: 40,
-      height: 40
-    }));
+    const markers = courts.filter(function(c) { return c.latitude; }).map(function(c) {
+      var mid = this._nextMid();
+      _midMap[mid] = { type: 'court', id: c.id };
+      return {
+        id: mid,
+        latitude: c.latitude, longitude: c.longitude, title: c.name,
+        iconPath: '/images/marker.png', width: 24, height: 24,
+        callout: { content: c.name, color: '#fff', fontSize: 12, bgColor: '#07c160', borderRadius: 8, borderColor: '#05a14f', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
+      };
+    }.bind(this));
     this.setData({ courts, markers, nearbyCourts: [] });
     return courts;
   },
@@ -88,6 +95,67 @@ Page({
     this.setData({ radiusIndex: idx, searchRadius: radii[idx] });
   },
 
+  onSearchInput(e) {
+    var keyword = e.detail.value;
+    this.setData({ searchKeyword: keyword });
+    if (!keyword || keyword.length < 2) {
+      this.setData({ showSuggestions: false, searchSuggestions: [] });
+      return;
+    }
+    var loc = this.data.mapLongitude + ',' + this.data.mapLatitude;
+    getInputTips(keyword, loc).then(function(tips) {
+      this.setData({ searchSuggestions: tips.slice(0, 8), showSuggestions: tips.length > 0 });
+    }.bind(this)).catch(function() {
+      this.setData({ showSuggestions: false });
+    }.bind(this));
+  },
+
+  onSearchConfirm(e) {
+    var keyword = e.detail.value || this.data.searchKeyword;
+    if (!keyword) return;
+    this.setData({ searchKeyword: keyword, showSuggestions: false });
+    this._searchByKeyword(keyword);
+  },
+
+  onClearSearch() {
+    this.setData({ searchKeyword: '', searchSuggestions: [], showSuggestions: false });
+  },
+
+  selectSuggestion(e) {
+    var tip = e.currentTarget.dataset.tip;
+    this.setData({ searchKeyword: tip.name, showSuggestions: false });
+    this._searchByKeyword(tip.name);
+  },
+
+  _searchByKeyword(keyword) {
+    this.setData({ searching: true });
+    searchNearbyPOI(this.data.mapLatitude, this.data.mapLongitude, 50000, keyword)
+      .then(function(pois) {
+        var nx = pois.map(function(p) {
+          var mid = this._nextMid();
+          _midMap[mid] = { type: 'poi', id: p.id };
+          return {
+            id: mid,
+            latitude: p.latitude, longitude: p.longitude, title: p.name,
+            iconPath: '/images/marker.png', width: 24, height: 24,
+            callout: { content: p.name, color: '#fff', fontSize: 12, bgColor: '#4a90d9', borderRadius: 8, borderColor: '#357abd', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
+          };
+        }.bind(this));
+        var mlat = pois[0] ? pois[0].latitude : this.data.mapLatitude;
+        var mlng = pois[0] ? pois[0].longitude : this.data.mapLongitude;
+        this.setData({ markers: nx, nearbyCourts: pois, searching: false, mapLatitude: mlat, mapLongitude: mlng });
+        if (pois.length === 0) {
+          wx.showToast({ title: '未找到相关球场', icon: 'none' });
+        } else {
+          wx.showToast({ title: '找到 ' + pois.length + ' 个结果', icon: 'success' });
+        }
+      }.bind(this))
+      .catch(function(err) {
+        wx.showToast({ title: '搜索失败: ' + err.message, icon: 'none' });
+        this.setData({ searching: false });
+      }.bind(this));
+  },
+
   searchNearby() {
     if (!this.data.hasKey) {
       wx.showModal({
@@ -107,24 +175,27 @@ Page({
             this.setData({ mapLatitude: loc.latitude, mapLongitude: loc.longitude });
             searchNearbyPOI(loc.latitude, loc.longitude, this.data.searchRadius, '网球场')
               .then(async (pois) => {
-                const nx = pois.map(p => ({
-                  id: 'poi_' + p.id,
-                  latitude: p.latitude,
-                  longitude: p.longitude,
-                  title: p.name,
-                  iconPath: '/images/marker.png',
-                  width: 40,
-                  height: 40
-                }));
-                const saved = (await CourtStorage.getAll()).filter(c => c.latitude).map(c => ({
-                  id: c.id,
-                  latitude: c.latitude,
-                  longitude: c.longitude,
-                  title: c.name,
-                  iconPath: '/images/marker.png',
-                  width: 40,
-                  height: 40
-                }));
+                var that = this;
+                var nx = pois.map(function(p) {
+                  var mid = that._nextMid();
+                  _midMap[mid] = { type: 'poi', id: p.id };
+                  return {
+                    id: mid,
+                    latitude: p.latitude, longitude: p.longitude, title: p.name,
+                    iconPath: '/images/marker.png', width: 24, height: 24,
+                    callout: { content: p.name, color: '#fff', fontSize: 12, bgColor: '#4a90d9', borderRadius: 8, borderColor: '#357abd', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
+                  };
+                });
+                var saved = (await CourtStorage.getAll()).filter(function(c) { return c.latitude; }).map(function(c) {
+                  var mid = that._nextMid();
+                  _midMap[mid] = { type: 'court', id: c.id };
+                  return {
+                    id: mid,
+                    latitude: c.latitude, longitude: c.longitude, title: c.name,
+                    iconPath: '/images/marker.png', width: 24, height: 24,
+                    callout: { content: c.name, color: '#fff', fontSize: 12, bgColor: '#07c160', borderRadius: 8, borderColor: '#05a14f', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
+                  };
+                });
                 this.setData({
                   markers: [...saved, ...nx],
                   nearbyCourts: pois,
@@ -293,51 +364,11 @@ Page({
     }
   },
 
-  async onMapMarkerTap(e) {
-    const id = e.detail.markerId;
-    const court = await CourtStorage.get(String(id));
-    if (court) {
-      wx.showActionSheet({
-        itemList: ['查看详情', '地图导航'],
-        success: async (res) => {
-          if (res.tapIndex === 1 && court.latitude) {
-            wx.openLocation({
-              latitude: court.latitude,
-              longitude: court.longitude,
-              name: court.name
-            });
-          }
-        }
-      });
-      return;
-    }
-    const poi = this.data.nearbyCourts.find(p => 'poi_' + p.id === id);
-    if (poi) {
-      wx.showActionSheet({
-        itemList: ['地图导航', '保存到本地球场'],
-        success: async (res) => {
-          if (res.tapIndex === 0) {
-            wx.openLocation({
-              latitude: poi.latitude,
-              longitude: poi.longitude,
-              name: poi.name
-            });
-          } else if (res.tapIndex === 1) {
-            await CourtStorage.save({
-              name: poi.name,
-              address: poi.address || '',
-
-              rating: 3,
-              latitude: poi.latitude,
-              longitude: poi.longitude
-            });
-            wx.showToast({ title: '已保存', icon: 'success' });
-            await this._loadCourts();
-          }
-        }
-      });
-    }
+  _nextMid() {
+    return ++_mid;
   },
+
+  onMapMarkerTap(e) {},
 
   async onMigrateTap() {
     wx.showLoading({ title: '迁移中...' });

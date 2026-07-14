@@ -27,7 +27,10 @@
   flex: 1;
   font-size: 28rpx;
   color: #333;
-  padding: 10rpx 0;
+  padding: 12rpx 16rpx;
+  background: #fafafa;
+  border: 2rpx solid #e5e7eb;
+  border-radius: 10rpx;
 }
 
 .sch-row {
@@ -396,6 +399,10 @@
 
 .sch-save-bar {
   padding: 20rpx 20rpx 0;
+}
+.sch-save-bar .sch-save-btn {
+  display: block;
+  padding: 20rpx 0;
   text-align: center;
 }
 

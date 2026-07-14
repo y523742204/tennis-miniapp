@@ -34,6 +34,17 @@
   </view>
 
   <view wx:if="{{mode === 'map'}}" class="map-wrap">
+    <view class="map-search-box">
+      <input class="map-search-input" placeholder="搜索球场名称或地址" value="{{searchKeyword}}"
+             bindinput="onSearchInput" bindconfirm="onSearchConfirm" confirm-type="search"/>
+      <view wx:if="{{searchKeyword && !searching}}" class="map-search-clear" bindtap="onClearSearch">×</view>
+      <view wx:if="{{showSuggestions}}" class="map-suggestions">
+        <view wx:for="{{searchSuggestions}}" wx:key="id" class="map-suggestion-item" data-tip="{{item}}" bindtap="selectSuggestion">
+          <text class="map-sug-name">{{item.name}}</text>
+          <text wx:if="{{item.address}}" class="map-sug-addr">{{item.address}}</text>
+        </view>
+      </view>
+    </view>
     <view class="map-toolbar">
       <picker mode="selector" range="{{['500m', '1km', '2km', '5km']}}" value="{{radiusIndex}}" bindchange="radiusChange">
         <view class="map-radius-btn">{{['500m', '1km', '2km', '5km'][radiusIndex]}} ▼</view>
@@ -42,8 +53,7 @@
     </view>
     <map class="map" longitude="{{mapLongitude}}" latitude="{{mapLatitude}}" scale="14"
          markers="{{markers}}"
-         show-location
-         bindmarkertap="onMapMarkerTap">
+         show-location>
     </map>
     <view wx:if="{{!hasKey}}" class="map-hint">需在 utils/map.js 配置高德地图 Key</view>
   </view>

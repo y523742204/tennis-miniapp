@@ -3,7 +3,7 @@
     <view class="sch-header">
       <view class="sch-back" bindtap="goBackToList">‹ 返回</view>
       <view class="sch-title">排赛 #{{currentSchedule.createdAt ? currentSchedule.createdAt.toString().slice(-4) : ''}}</view>
-      <view wx:if="{{currentSchedule.id}}" class="sch-edit-btn {{editMode ? 'active' : ''}}" bindtap="toggleEdit">{{editMode ? '完成' : '编辑'}}</view>
+      <view class="sch-edit-btn {{editMode ? 'active' : ''}}" bindtap="toggleEdit">{{editMode ? '完成' : '编辑'}}</view>
     </view>
     <view class="sch-meta">
       <text>{{currentSchedule.mode === 'doubles' ? '双打' : '单打'}}</text>

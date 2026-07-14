@@ -365,12 +365,12 @@ Page({
         ctx.textBaseline = 'top';
         y += rowH;
       }
-      // Vertical lines
+      // Vertical lines (align with content columns, offset by pad)
       ctx.strokeStyle = '#e8e8e8';
       ctx.lineWidth = 1;
       const vt = headY, vb = y;
       for (let ci = 0; ci <= nc; ci++) {
-        const vx = ci * mCol;
+        const vx = pad + ci * mCol;
         ctx.beginPath(); ctx.moveTo(vx, vt); ctx.lineTo(vx, vb); ctx.stroke();
       }
       // Byes
@@ -427,9 +427,13 @@ Page({
     const fs = wx.getFileSystemManager();
     const filePath = `${wx.env.USER_DATA_PATH}/schedule_${Date.now()}.xls`;
     fs.writeFile({ filePath, data: html, encoding: 'utf8', success() {
-      wx.openDocument({ filePath, fileType: 'xls', success() {
-        wx.showToast({ title: '导出成功', icon: 'success' });
-      }, fail() { wx.showToast({ title: '打开失败', icon: 'none' }); } });
+      wx.saveFileToDisk({ filePath, success() {
+        wx.showToast({ title: '已保存到本地', icon: 'success' });
+      }, fail() {
+        wx.openDocument({ filePath, fileType: 'xls', showMenu: true, success() {
+          wx.showToast({ title: '导出成功，点击右上角保存', icon: 'success' });
+        }, fail() { wx.showToast({ title: '导出失败', icon: 'none' }); } });
+      } });
     }, fail() { wx.showToast({ title: '导出失败', icon: 'none' }); } });
   },
 
