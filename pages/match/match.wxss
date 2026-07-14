@@ -395,8 +395,14 @@
 }
 
 .sch-save-bar {
-  padding: 20rpx;
+  padding: 20rpx 20rpx 0;
   text-align: center;
+}
+
+.sch-export-bar {
+  display: flex;
+  gap: 16rpx;
+  padding: 16rpx 20rpx 20rpx;
 }
 
 .sch-save-btn {
@@ -407,13 +413,13 @@
   font-size: 30rpx;
   font-weight: 500;
   border-radius: 40rpx;
+  text-align: center;
 }
 
 .sch-save-btn:active { opacity: 0.8; }
-.sch-export-btn { background: #4a90d9; margin-left: 16rpx; }
-.sch-export-btn:active { opacity: 0.8; }
-.sch-excel-btn { background: #e8a838; margin-left: 16rpx; }
-.sch-excel-btn:active { opacity: 0.8; }
+.sch-export-bar .sch-save-btn { flex: 1; padding: 20rpx 0; }
+.sch-export-btn { background: #4a90d9; }
+.sch-excel-btn { background: #e8a838; }
 
 .hidden-canvas { position: fixed; left: -9999px; top: 0; }
 
