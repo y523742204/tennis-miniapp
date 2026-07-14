@@ -62,7 +62,7 @@
     </view>
   </view>
 
-  <text class="debug-id">{{myOpenid}} / {{myCloudOpenid}}</text>
+  <text class="debug-id">{{debugInfo}}</text>
 
   <view wx:if="{{showForm}}" class="overlay" bindtap="closeForm">
     <view class="form-sheet" catchtap="noop">

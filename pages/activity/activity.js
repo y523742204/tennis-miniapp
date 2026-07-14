@@ -33,6 +33,7 @@ Page({
       levelMinFemale: 2.5
     },
     expandedIdx: -1,
+    debugInfo: '',
     levels: LEVELS,
     showJoinDialog: false,
     joinTarget: null,
@@ -55,7 +56,7 @@ Page({
       id = 'local_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       wx.setStorageSync('my_openid', id);
     }
-    this.setData({ myOpenid: id });
+    this.setData({ myOpenid: id, debugInfo: 'myId:' + id });
     try {
       const res = await wx.cloud.callFunction({ name: 'getOpenid' });
       if (res.result && res.result.openid) {
@@ -71,6 +72,8 @@ Page({
   async _loadActivities() {
     const list = await ActivityStorage.getAll();
     list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    const first = list[0];
+    this.setData({ debugInfo: 'myId:' + this.data.myOpenid + ' | cid:' + (first ? first.creatorId : '-') + ' | isC:' + (first ? first.creatorId === this.data.myOpenid : '-') });
     list.forEach(a => {
       a.participants = a.participants || [];
       a.maleCount = a.participants.filter(p => p.gender === 'male').length;
@@ -224,16 +227,12 @@ Page({
 
   noop() {},
 
-  _myId() {
-    return this.data.myOpenid;
-  },
-
   isJoined(act) {
-    return (act.participants || []).some(p => p.openid === this._myId());
+    return (act.participants || []).some(p => p.openid === this.data.myOpenid);
   },
 
   isCreator(act) {
-    return act.creatorId === this._myId();
+    return act.creatorId === this.data.myOpenid;
   },
 
 });
