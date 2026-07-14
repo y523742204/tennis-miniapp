@@ -28,9 +28,10 @@ Page({
     formData: {
       date: '', dateLabel: '', time: '', location: '',
       maxMale: 8, maxFemale: 8,
-      levelMinMale: 3.0, levelMaxMale: 4.5,
-      levelMinFemale: 2.5, levelMaxFemale: 4.0
+      levelMinMale: 3.0,
+      levelMinFemale: 2.5
     },
+    expandedIdx: -1,
     levels: LEVELS,
     showJoinDialog: false,
     joinTarget: null,
@@ -73,6 +74,8 @@ Page({
       a.maleCount = a.participants.filter(p => p.gender === 'male').length;
       a.femaleCount = a.participants.filter(p => p.gender === 'female').length;
       a.weekday = WEEKDAYS[new Date(a.date + 'T00:00:00').getDay()];
+      a.maleNames = a.participants.filter(p => p.gender === 'male').map(p => p.name);
+      a.femaleNames = a.participants.filter(p => p.gender === 'female').map(p => p.name);
     });
     this.setData({ activities: list });
   },
@@ -83,7 +86,7 @@ Page({
     const date = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
     this.setData({
       showForm: true, formMode: 'add',
-      formData: { date, dateLabel: fmtWeekday(date), time: '19:00', location: '酷胜网球中心', maxMale: 8, maxFemale: 8, levelMinMale: 3.0, levelMaxMale: 4.5, levelMinFemale: 2.5, levelMaxFemale: 4.0 }
+      formData: { date, dateLabel: fmtWeekday(date), time: '19:00', location: '酷胜网球中心', maxMale: 8, maxFemale: 8, levelMinMale: 3.0, levelMinFemale: 2.5 }
     });
   },
 
@@ -125,9 +128,7 @@ Page({
       maxMale: parseInt(fd.maxMale) || 0,
       maxFemale: parseInt(fd.maxFemale) || 0,
       levelMinMale: parseFloat(fd.levelMinMale) || 0,
-      levelMaxMale: parseFloat(fd.levelMaxMale) || 5,
       levelMinFemale: parseFloat(fd.levelMinFemale) || 0,
-      levelMaxFemale: parseFloat(fd.levelMaxFemale) || 5,
       participants: [],
       creatorId: this.data.myOpenid,
       creatorName: wx.getStorageSync('activity_user_name') || '匿名'
@@ -206,6 +207,11 @@ Page({
         }
       }
     });
+  },
+
+  toggleExpand(e) {
+    const idx = e.currentTarget.dataset.idx;
+    this.setData({ expandedIdx: this.data.expandedIdx === idx ? -1 : idx });
   },
 
   noop() {},

@@ -9,21 +9,26 @@
   </view>
 
   <scroll-view scroll-y class="list-scroll" wx:else>
-    <view wx:for="{{activities}}" wx:for-index="idx" wx:key="id" class="activity-card">
+    <view wx:for="{{activities}}" wx:for-index="idx" wx:key="id" class="activity-card" bindtap="toggleExpand" data-idx="{{idx}}">
       <view class="ac-time">{{item.date}} {{item.weekday}} {{item.time}}</view>
       <view class="ac-location">{{item.location}}</view>
-      <view class="ac-info-row">
-        <text class="ac-info-item">男 {{item.maleCount}}/{{item.maxMale}}</text>
-        <text class="ac-info-item">女 {{item.femaleCount}}/{{item.maxFemale}}</text>
+      <view class="ac-level">（水平限制：男 {{item.levelMinMale}}+ 女 {{item.levelMinFemale}}+）</view>
+      <view class="ac-count-row">
+        <text class="ac-count-male">男 [ {{item.maleCount}} / {{item.maxMale}} ]</text>
+        <text class="ac-count-female">女 [ {{item.femaleCount}} / {{item.maxFemale}} ]</text>
       </view>
-      <view class="ac-info-row">
-        <text class="ac-info-item">男 {{item.levelMinMale}}–{{item.levelMaxMale}}</text>
-        <text class="ac-info-item">女 {{item.levelMinFemale}}–{{item.levelMaxFemale}}</text>
+      <view wx:if="{{expandedIdx === idx}}" class="ac-detail">
+        <view class="ac-detail-title">已报名：</view>
+        <view class="ac-detail-table">
+          <view class="ac-detail-col">
+            <view wx:for="{{item.maleNames}}" wx:key="*this" class="ac-detail-name">{{item}}</view>
+          </view>
+          <view class="ac-detail-col">
+            <view wx:for="{{item.femaleNames}}" wx:key="*this" class="ac-detail-name">{{item}}</view>
+          </view>
+        </view>
       </view>
-      <view wx:if="{{item.participants.length}}" class="ac-participants">
-        <text wx:for="{{item.participants}}" wx:key="openid" class="ac-p-tag {{item.gender === 'male' ? 'pm' : 'pf'}}">{{item.name}} {{item.level}}</text>
-      </view>
-      <view class="ac-actions">
+      <view class="ac-actions" catchtap="noop">
         <view wx:if="{{isCreator(item)}}" class="ac-btn danger" bindtap="deleteActivity" data-idx="{{idx}}">删除活动</view>
         <view wx:elif="{{isJoined(item)}}" class="ac-btn cancel" bindtap="cancelJoin" data-idx="{{idx}}">取消报名</view>
         <view wx:else class="ac-btn primary" bindtap="showJoinDialog" data-idx="{{idx}}">加入活动</view>
@@ -96,23 +101,9 @@
             </picker>
           </view>
           <view class="form-group half">
-            <text class="form-label">男最高级别</text>
-            <picker mode="selector" range="{{levels}}" value="{{formData.levelMaxMale * 2}}" bindchange="formLevelChange" data-field="levelMaxMale">
-              <view class="form-input picker">{{formData.levelMaxMale}}</view>
-            </picker>
-          </view>
-        </view>
-        <view class="form-row">
-          <view class="form-group half">
             <text class="form-label">女最低级别</text>
             <picker mode="selector" range="{{levels}}" value="{{formData.levelMinFemale * 2}}" bindchange="formLevelChange" data-field="levelMinFemale">
               <view class="form-input picker">{{formData.levelMinFemale}}</view>
-            </picker>
-          </view>
-          <view class="form-group half">
-            <text class="form-label">女最高级别</text>
-            <picker mode="selector" range="{{levels}}" value="{{formData.levelMaxFemale * 2}}" bindchange="formLevelChange" data-field="levelMaxFemale">
-              <view class="form-input picker">{{formData.levelMaxFemale}}</view>
             </picker>
           </view>
         </view>
