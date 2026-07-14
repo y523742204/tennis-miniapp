@@ -74,8 +74,8 @@ Page({
       a.maleCount = a.participants.filter(p => p.gender === 'male').length;
       a.femaleCount = a.participants.filter(p => p.gender === 'female').length;
       a.weekday = WEEKDAYS[new Date(a.date + 'T00:00:00').getDay()];
-      a.maleNames = a.participants.filter(p => p.gender === 'male').map(p => p.name);
-      a.femaleNames = a.participants.filter(p => p.gender === 'female').map(p => p.name);
+      a.maleDisplay = a.participants.filter(p => p.gender === 'male').map(p => p.name + ' ' + p.level);
+      a.femaleDisplay = a.participants.filter(p => p.gender === 'female').map(p => p.name + ' ' + p.level);
     });
     this.setData({ activities: list });
   },
@@ -144,7 +144,7 @@ Page({
     const act = this.data.activities[idx];
     if (!act) return;
     const uname = wx.getStorageSync('activity_user_name') || '';
-    this.setData({ showJoinDialog: true, joinTarget: idx, joinName: uname, joinGender: 'male', joinLevel: 0, joinLevelIdx: 0 });
+    this.setData({ showJoinDialog: true, joinTarget: idx, joinName: uname, joinGender: 'male', joinLevel: 3.0, joinLevelIdx: 6 });
   },
 
   hideJoinDialog() {
@@ -156,7 +156,10 @@ Page({
   },
 
   selectJoinGender(e) {
-    this.setData({ joinGender: e.currentTarget.dataset.gender });
+    const gender = e.currentTarget.dataset.gender;
+    const level = gender === 'male' ? 3.0 : 2.5;
+    const idx = gender === 'male' ? 6 : 5;
+    this.setData({ joinGender: gender, joinLevel: level, joinLevelIdx: idx });
   },
 
   selectJoinLevel(e) {

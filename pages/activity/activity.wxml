@@ -20,10 +20,10 @@
         <view class="ac-detail-title">已报名：</view>
         <view class="ac-detail-table">
           <view class="ac-detail-col">
-            <view wx:for="{{item.maleNames}}" wx:key="*this" class="ac-detail-name">{{item}}</view>
+            <view wx:for="{{item.maleDisplay}}" wx:key="*this" class="ac-detail-name">{{item}}</view>
           </view>
           <view class="ac-detail-col">
-            <view wx:for="{{item.femaleNames}}" wx:key="*this" class="ac-detail-name">{{item}}</view>
+            <view wx:for="{{item.femaleDisplay}}" wx:key="*this" class="ac-detail-name">{{item}}</view>
           </view>
         </view>
       </view>
