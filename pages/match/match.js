@@ -217,6 +217,56 @@ Page({
     await this._loadSchedules();
   },
 
+  exportScheduleImage() {
+    const s = this.data.currentSchedule;
+    if (!s) { wx.showToast({ title: '暂无排赛数据', icon: 'none' }); return; }
+    const pad = 30, lx = 30, titleY = 50, rh = 44, mh = 36, gap = 10, footH = 40;
+    const lines = [];
+    const modeLabel = s.mode === 'doubles' ? '双打' : '单打';
+    lines.push({ text: `排赛对阵表（${modeLabel}·${s.playerNames.length}人·${s.rounds}轮·${s.courts}场地）`, bold: true, size: 22 });
+    if (s.fixedPairs && s.fixedPairs.length) {
+      const fp = s.fixedPairs.map(p => `${p.p1}+${p.p2}(${p.rounds}轮)`).join('；');
+      lines.push({ text: `固定搭档：${fp}`, bold: false, size: 16, color: '#666' });
+    }
+    for (const rd of s.schedule) {
+      const typeLabel = s.roundTypes ? (s.roundTypes[rd.round - 1] === 'normal' ? '男双/女双' : '混双') : '';
+      lines.push({ text: `第${rd.round}轮${typeLabel ? '（' + typeLabel + '）' : ''}${rd.byes.length ? '  轮空：' + rd.byes.join('、') : ''}`, bold: true, size: 18, color: '#07c160' });
+      for (const m of rd.matches) {
+        const courtLabel = s.courtLabels && s.courtLabels[m.court - 1] ? s.courtLabels[m.court - 1] : '场地' + m.court;
+        lines.push({ text: `${courtLabel}  ${m.display}`, bold: false, size: 16 });
+      }
+      lines.push({ text: '', bold: false, size: 8 });
+    }
+    lines.push({ text: `生成时间：${new Date(s.createdAt || Date.now()).toLocaleString('zh-CN')}`, bold: false, size: 14, color: '#999' });
+    const cw = 620;
+    const lineH = (l) => l.size + 8;
+    const ch = Math.max(200, pad * 2 + titleY + lines.reduce((sum, l) => sum + lineH(l), 0) + (s.fixedPairs && s.fixedPairs.length ? 0 : -10));
+    wx.showLoading({ title: '生成中...' });
+    const query = wx.createSelectorQuery();
+    query.select('#scheduleCanvas').node((res) => {
+      const canvas = res.node;
+      const ctx = canvas.getContext('2d');
+      const dpr = wx.getSystemInfoSync().pixelRatio;
+      canvas.width = cw * dpr;
+      canvas.height = ch * dpr;
+      ctx.scale(dpr, dpr);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, cw, ch);
+      let y = pad + 20;
+      ctx.textBaseline = 'top';
+      for (const l of lines) {
+        ctx.font = (l.bold ? 'bold ' : '') + l.size + 'px sans-serif';
+        ctx.fillStyle = l.color || '#333';
+        if (l.text) ctx.fillText(l.text, lx, y);
+        y += lineH(l);
+      }
+      wx.hideLoading();
+      wx.canvasToTempFilePath({ canvas, success: (res2) => {
+        wx.previewImage({ urls: [res2.tempFilePath] });
+      }, fail: () => { wx.showToast({ title: '导出失败', icon: 'none' }); } });
+    }).exec();
+  },
+
   async viewSchedule(e) {
     const s = await ScheduleStorage.get(e.currentTarget.dataset.id);
     if (s) {

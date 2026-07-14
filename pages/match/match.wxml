@@ -65,9 +65,11 @@
       </view>
     </view>
 
-    <view wx:if="{{!currentSchedule.id && !editMode}}" class="sch-save-bar">
-      <view class="sch-save-btn" bindtap="saveSchedule">保存排赛</view>
+    <view wx:if="{{!editMode}}" class="sch-save-bar">
+      <view wx:if="{{!currentSchedule.id}}" class="sch-save-btn" bindtap="saveSchedule">保存排赛</view>
+      <view class="sch-save-btn sch-export-btn" bindtap="exportScheduleImage">导出图片</view>
     </view>
+    <canvas type="2d" id="scheduleCanvas" class="hidden-canvas"></canvas>
   </view>
 
   <view wx:if="{{!currentSchedule}}">
