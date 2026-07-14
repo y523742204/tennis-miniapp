@@ -272,46 +272,60 @@ Page({
   exportScheduleImage() {
     const s = this.data.currentSchedule;
     if (!s) { wx.showToast({ title: '暂无排赛数据', icon: 'none' }); return; }
-    const rowH = 44, headH = 38, pad = 16, badgeR = 11;
+    const rowH = 36, headH = 38, pad = 16, titleH = 36, firstColW = 100, margin = 20;
+    const modeLabel = s.mode === 'doubles' ? '双打' : '单打';
     const courtLabels = s.courtLabels || Array.from({ length: s.courts }, (_, i) => '场地' + (i + 1));
     const nc = s.courts || 1;
-    const mCol = Math.floor((640 - pad * 2) / nc);
-    const cw = pad * 2 + mCol * nc;
-    // Build table data
+    const mCol = Math.floor((640 - firstColW) / nc);
+    const cw = firstColW + mCol * nc;
+    // Build table data: each round -> top (partner) + bottom (opponent)
     const rows = [];
     let hasBye = false;
     for (const rd of s.schedule) {
-      const cells = new Array(nc).fill('');
+      const top = new Array(nc).fill('');
+      const bottom = new Array(nc).fill('');
       for (const m of rd.matches) {
         const ci = m.court - 1;
-        if (ci >= 0 && ci < nc) cells[ci] = m.display || (m.teams || []).map(t => t.join('')).join(' vs ');
+        if (ci >= 0 && ci < nc) {
+          const teams = m.teams || [];
+          top[ci] = teams[0] ? teams[0].join('+') : '';
+          bottom[ci] = teams[1] ? teams[1].join('+') : '';
+        }
       }
-      rows.push({ round: rd.round, cells, byes: rd.byes || [] });
+      rows.push({ round: rd.round, top, bottom, byes: rd.byes || [] });
       if (rd.byes && rd.byes.length) hasBye = true;
     }
-    // Heights
+    // Heights: each round = 2 rows
     const fpLine = s.fixedPairs && s.fixedPairs.length ? 30 : 0;
-    const byeH = hasBye ? 20 * rows.reduce((s2, r) => s2 + (r.byes.length ? 1 : 0), 0) + 8 : 0;
-    const tblBodyH = rows.length * rowH;
-    const totalH = pad + fpLine + 4 + headH + tblBodyH + 4 + byeH + pad;
+    const tblBodyH = rows.length * rowH * 2;
+    const totalH = pad + titleH + 4 + fpLine + 4 + headH + tblBodyH + pad;
     wx.showLoading({ title: '生成中...' });
     const query = wx.createSelectorQuery();
     query.select('#scheduleCanvas').node((res) => {
       const canvas = res.node;
       const ctx = canvas.getContext('2d');
       const dpr = wx.getSystemInfoSync().pixelRatio;
-      canvas.width = cw * dpr;
+      canvas.width = (cw + margin * 2) * dpr;
       canvas.height = totalH * dpr;
       ctx.scale(dpr, dpr);
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, cw, totalH);
+      ctx.fillRect(0, 0, cw + margin * 2, totalH);
+      ctx.translate(margin, 0);
       let y = pad;
+      // Title row
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillStyle = '#333';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      ctx.fillText('排赛对阵表（' + modeLabel + '·' + s.playerNames.length + '人·' + s.rounds + '轮·' + s.courts + '场地）', cw / 2, y + titleH / 2);
+      y += titleH + 4;
       // Fixed pairs
       if (s.fixedPairs && s.fixedPairs.length) {
         const fp = s.fixedPairs.map(p => `${p.p1}+${p.p2}(${p.rounds}轮)`).join('；');
         ctx.font = '14px sans-serif';
         ctx.fillStyle = '#999';
         ctx.textBaseline = 'top';
+        ctx.textAlign = 'left';
         ctx.fillText(fp, pad, y);
         y += fpLine;
       }
@@ -324,66 +338,81 @@ Page({
       ctx.fillStyle = '#fff';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'center';
+      ctx.fillText('轮次', firstColW / 2, headY + headH / 2);
       for (let ci = 0; ci < nc; ci++) {
-        ctx.fillText(courtLabels[ci], pad + ci * mCol + mCol / 2, headY + headH / 2);
+        ctx.fillText(courtLabels[ci], firstColW + ci * mCol + mCol / 2, headY + headH / 2);
       }
       ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
       y += headH;
-      // Table body
+      // Table body - each round = 2 rows (top=partner, bottom=opponent)
       for (let ri = 0; ri < rows.length; ri++) {
         const r = rows[ri];
-        const rowY = y;
+        const topY = y;
+        // Top row (partner)
         ctx.fillStyle = ri % 2 === 0 ? '#f8fdf8' : '#ffffff';
-        ctx.fillRect(0, rowY, cw, rowH);
-        ctx.strokeStyle = '#e8e8e8';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, rowY + rowH);
-        ctx.lineTo(cw, rowY + rowH);
-        ctx.stroke();
-        // Round badge
-        ctx.fillStyle = '#07c160';
-        ctx.beginPath();
-        ctx.arc(badgeR + 4, rowY + rowH / 2, badgeR, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.font = 'bold 12px sans-serif';
-        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, topY, cw, rowH);
+        // Bottom row (opponent)
+        ctx.fillStyle = ri % 2 === 0 ? '#f0f8f0' : '#f8fdf8';
+        ctx.fillRect(0, topY + rowH, cw, rowH);
+        // First column: round info (centered between 2 rows, like rowspan)
+        const typeLabel = s.roundTypes && s.roundTypes[r.round - 1] === 'normal' ? '男双' : '混双';
+        const byeText = r.byes.length ? '轮空：' + r.byes.join('、') : '';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = '#333';
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
-        ctx.fillText(String(r.round), badgeR + 4, rowY + rowH / 2);
-        // Match cells
+        ctx.fillText('第' + r.round + '轮（' + typeLabel + '）', firstColW / 2, topY + rowH);
+        if (byeText) {
+          ctx.font = '11px sans-serif';
+          ctx.fillStyle = '#999';
+          ctx.fillText(byeText, firstColW / 2, topY + rowH + 14);
+        }
+        // Top row cells (partner team)
         ctx.font = '13px sans-serif';
         ctx.fillStyle = '#555';
         ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
         for (let ci = 0; ci < nc; ci++) {
-          const cx = pad + ci * mCol;
-          if (r.cells[ci]) {
-            ctx.textAlign = 'center';
-            ctx.fillText(r.cells[ci], cx + mCol / 2, rowY + rowH / 2);
-          }
+          const cx = firstColW + ci * mCol;
+          if (r.top[ci]) ctx.fillText(r.top[ci], cx + mCol / 2, topY + rowH / 2);
+        }
+        // Bottom row cells (opponent team)
+        for (let ci = 0; ci < nc; ci++) {
+          const cx = firstColW + ci * mCol;
+          if (r.bottom[ci]) ctx.fillText(r.bottom[ci], cx + mCol / 2, topY + rowH * 1.5);
         }
         ctx.textBaseline = 'top';
-        y += rowH;
+        ctx.textAlign = 'left';
+        y += rowH * 2;
       }
-      // Vertical lines (align with content columns, offset by pad)
+      // Horizontal lines (after fills to ensure visibility)
+      ctx.strokeStyle = '#e8e8e8';
+      ctx.lineWidth = 1;
+      let ly = headY;
+      ctx.beginPath(); ctx.moveTo(0, ly + headH); ctx.lineTo(cw, ly + headH); ctx.stroke(); // header bottom
+      ly += headH;
+      for (let ri = 0; ri < rows.length; ri++) {
+        ly += rowH;
+        ctx.beginPath(); ctx.moveTo(firstColW, ly); ctx.lineTo(cw, ly); ctx.stroke(); // partner/opponent
+        ly += rowH;
+        ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(cw, ly); ctx.stroke(); // between rounds
+      }
+      // Vertical lines (first column + court columns)
       ctx.strokeStyle = '#e8e8e8';
       ctx.lineWidth = 1;
       const vt = headY, vb = y;
-      for (let ci = 0; ci <= nc; ci++) {
-        const vx = pad + ci * mCol;
+      // First column right border (left edge of court columns)
+      ctx.beginPath(); ctx.moveTo(firstColW, vt); ctx.lineTo(firstColW, vb); ctx.stroke();
+      // Court column borders (skip ci=0 since already drawn)
+      for (let ci = 1; ci <= nc; ci++) {
+        const vx = firstColW + ci * mCol;
         ctx.beginPath(); ctx.moveTo(vx, vt); ctx.lineTo(vx, vb); ctx.stroke();
       }
-      // Byes
-      ctx.textBaseline = 'top';
-      y += 4;
-      for (const r of rows) {
-        if (r.byes.length) {
-          ctx.font = '13px sans-serif';
-          ctx.fillStyle = '#999';
-          ctx.fillText(`第${r.round}轮 轮空：${r.byes.join('、')}`, pad, y);
-          y += 20;
-        }
-      }
+      // Outer border (bold, table only, below title)
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(0, headY, cw, y - headY);
       wx.hideLoading();
       wx.canvasToTempFilePath({ canvas, success: (res2) => {
         wx.previewImage({ urls: [res2.tempFilePath] });
@@ -404,18 +433,35 @@ Page({
     html += '<tr><th>轮次</th>';
     for (const cl of courtLabels) html += `<th>${cl}</th>`;
     html += '</tr>';
-    // Rows
+    // Rows - each round = 2 rows (top=partner, bottom=opponent)
     for (const rd of s.schedule) {
-      const typeLabel = s.roundTypes && s.roundTypes[rd.round - 1] === 'normal' ? '男双/女双' : '混双';
-      const cells = new Array(nc).fill('');
+      const typeLabel = s.roundTypes && s.roundTypes[rd.round - 1] === 'normal' ? '男双' : '混双';
+      const top = new Array(nc).fill('');
+      const bottom = new Array(nc).fill('');
       for (const m of rd.matches) {
         const ci = m.court - 1;
-        if (ci >= 0 && ci < nc) cells[ci] = m.display || (m.teams || []).map(t => t.join('')).join(' vs ');
+        if (ci >= 0 && ci < nc) {
+          const teams = m.teams || [];
+          top[ci] = teams[0] ? teams[0].join('+') : '';
+          bottom[ci] = teams[1] ? teams[1].join('+') : '';
+        }
       }
       const byeText = (rd.byes || []).length ? '（轮空：' + rd.byes.join('、') + '）' : '';
-      html += `<tr><td style="font-weight:bold">第${rd.round}轮（${typeLabel}）${byeText}</td>`;
-      for (let ci = 0; ci < nc; ci++) html += `<td>${cells[ci] || ''}</td>`;
+      html += `<tr><td rowspan="2" style="font-weight:bold;vertical-align:middle">第${rd.round}轮（${typeLabel}）<br>${byeText}</td>`;
+      for (let ci = 0; ci < nc; ci++) html += `<td>${top[ci] || ''}</td>`;
       html += '</tr>';
+      html += '<tr>';
+      for (let ci = 0; ci < nc; ci++) html += `<td>${bottom[ci] || ''}</td>`;
+      html += '</tr>';
+    }
+    // Byes
+    const hasBye = s.schedule.some(rd => rd.byes && rd.byes.length);
+    if (hasBye) {
+      for (const rd of s.schedule) {
+        if (rd.byes && rd.byes.length) {
+          html += `<tr><td colspan="${nc + 1}" style="font-size:11pt;color:#999;border:none;text-align:left">第${rd.round}轮 轮空：${rd.byes.join('、')}</td></tr>`;
+        }
+      }
     }
     // Fixed pairs
     if (s.fixedPairs && s.fixedPairs.length) {
