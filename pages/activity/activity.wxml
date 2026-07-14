@@ -11,11 +11,13 @@
   <scroll-view scroll-y class="list-scroll" wx:else>
     <view wx:for="{{activities}}" wx:for-index="idx" wx:key="id" class="activity-card" bindtap="toggleExpand" data-idx="{{idx}}">
       <view class="ac-time">{{item.date}} {{item.weekday}} {{item.time}}</view>
-      <view class="ac-location">{{item.location}}</view>
-      <view class="ac-level">（水平限制：男 {{item.levelMinMale}}+ 女 {{item.levelMinFemale}}+）</view>
+      <view class="ac-location">
+        <text>{{item.location}}</text>
+        <text class="ac-level">男 {{item.levelMinMale}}+ 女 {{item.levelMinFemale}}+</text>
+      </view>
       <view class="ac-count-row">
-        <text class="ac-count-male">男 [ {{item.maleCount}} / {{item.maxMale}} ]</text>
-        <text class="ac-count-female">女 [ {{item.femaleCount}} / {{item.maxFemale}} ]</text>
+        <text>男 [ {{item.maleCount}} / {{item.maxMale}} ]</text>
+        <text>女 [ {{item.femaleCount}} / {{item.maxFemale}} ]</text>
       </view>
       <view wx:if="{{expandedIdx === idx}}" class="ac-detail">
         <view class="ac-detail-title">已报名：</view>
