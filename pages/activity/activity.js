@@ -3,6 +3,13 @@ const { ActivityStorage } = require('../../utils/storage');
 const LEVELS = [];
 for (let i = 0; i <= 10; i++) LEVELS.push((i * 0.5).toFixed(1));
 
+const WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+function fmtWeekday(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return dateStr + ' ' + WEEKDAYS[d.getDay()];
+}
+
 function fmtLevels(min, max) {
   if (min === undefined || max === undefined) return '';
   return min + '–' + max;
@@ -19,10 +26,10 @@ Page({
     showForm: false,
     formMode: 'add',
     formData: {
-      date: '', time: '', location: '',
-      maxMale: 8, maxFemale: 6,
-      levelMinMale: 0, levelMaxMale: 5,
-      levelMinFemale: 0, levelMaxFemale: 5
+      date: '', dateLabel: '', time: '', location: '',
+      maxMale: 8, maxFemale: 8,
+      levelMinMale: 3.0, levelMaxMale: 4.5,
+      levelMinFemale: 2.5, levelMaxFemale: 4.0
     },
     levels: LEVELS,
     showJoinDialog: false,
@@ -67,6 +74,7 @@ Page({
       a.expired = dt < now;
       a.maleCount = a.participants ? a.participants.filter(p => p.gender === 'male').length : 0;
       a.femaleCount = a.participants ? a.participants.filter(p => p.gender === 'female').length : 0;
+      a.weekday = WEEKDAYS[new Date(a.date + 'T00:00:00').getDay()];
     });
     this.setData({ activities: list });
   },
@@ -77,7 +85,7 @@ Page({
     const date = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
     this.setData({
       showForm: true, formMode: 'add',
-      formData: { date, time: '14:00', location: '', maxMale: 8, maxFemale: 6, levelMinMale: 0, levelMaxMale: 5, levelMinFemale: 0, levelMaxFemale: 5 }
+      formData: { date, dateLabel: fmtWeekday(date), time: '19:00', location: '酷胜网球中心', maxMale: 8, maxFemale: 8, levelMinMale: 3.0, levelMaxMale: 4.5, levelMinFemale: 2.5, levelMaxFemale: 4.0 }
     });
   },
 
@@ -92,7 +100,8 @@ Page({
   },
 
   formDateChange(e) {
-    this.setData({ 'formData.date': e.detail.value });
+    const date = e.detail.value;
+    this.setData({ 'formData.date': date, 'formData.dateLabel': fmtWeekday(date) });
   },
 
   formTimeChange(e) {

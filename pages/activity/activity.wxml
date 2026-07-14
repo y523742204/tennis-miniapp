@@ -10,7 +10,7 @@
 
   <scroll-view scroll-y class="list-scroll" wx:else>
     <view wx:for="{{activities}}" wx:for-index="idx" wx:key="id" class="activity-card">
-      <view class="ac-time">{{item.date}} {{item.time}}</view>
+      <view class="ac-time">{{item.date}} {{item.weekday}} {{item.time}}</view>
       <view class="ac-location">{{item.location}}</view>
       <view class="ac-info-row">
         <text class="ac-info-item">男 {{item.maleCount}}/{{item.maxMale}}</text>
@@ -67,7 +67,7 @@
         <view class="form-group">
           <text class="form-label">日期</text>
           <picker mode="date" value="{{formData.date}}" bindchange="formDateChange">
-            <view class="form-input picker">{{formData.date}}</view>
+            <view class="form-input picker">{{formData.dateLabel}}</view>
           </picker>
         </view>
         <view class="form-group">
