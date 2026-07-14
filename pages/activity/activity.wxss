@@ -17,9 +17,10 @@
   box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
 }
 .ac-time { font-size: 30rpx; font-weight: 600; color: #222; margin-bottom: 6rpx; }
-.ac-location { display: flex; justify-content: space-between; align-items: baseline; font-size: 32rpx; font-weight: 500; color: #333; margin-bottom: 8rpx; }
-.ac-level { font-size: 32rpx; font-weight: 500; color: #999; }
-.ac-count-row { display: flex; gap: 48rpx; justify-content: center; margin-bottom: 8rpx; font-size: 26rpx; font-weight: 600; color: #555; }
+.ac-location { font-size: 32rpx; font-weight: 500; color: #333; margin-bottom: 8rpx; }
+.ac-count-row { display: flex; gap: 48rpx; justify-content: center; margin-bottom: 8rpx; font-size: 32rpx; font-weight: 600; }
+.ac-count-row text:first-child { color: #2e7d32; }
+.ac-count-row text:last-child { color: #c62828; }
 
 .ac-detail { margin: 12rpx 0; padding-top: 12rpx; border-top: 2rpx solid #f0f0f0; }
 .ac-detail-title { font-size: 26rpx; font-weight: 600; color: #444; margin-bottom: 10rpx; }
