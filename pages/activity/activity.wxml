@@ -1,0 +1,6 @@
+<view class="container">
+  <view class="empty-state">
+    <text>🏸</text>
+    <text>活动模块开发中</text>
+  </view>
+</view>

@@ -2,6 +2,7 @@
   "pages": [
     "pages/training/training",
     "pages/match/match",
+    "pages/activity/activity",
     "pages/court/court",
     "pages/career/career",
     "pages/network/network"
@@ -23,6 +24,12 @@
         "text": "比赛",
         "iconPath": "images/match.png",
         "selectedIconPath": "images/match_hl.png"
+      },
+      {
+        "pagePath": "pages/activity/activity",
+        "text": "活动",
+        "iconPath": "images/activity.png",
+        "selectedIconPath": "images/activity_hl.png"
       },
       {
         "pagePath": "pages/court/court",
