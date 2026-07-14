@@ -31,5 +31,39 @@
         </view>
       </view>
     </view>
+
+    <view class="month-divider"></view>
+
+    <view class="sec-title month-title">本月数据（{{monthLabel}}）</view>
+
+    <view wx:if="{{monthStats.totalTrainings === 0}}" class="month-empty">本月暂无训练记录</view>
+
+    <view wx:else>
+      <view class="total-card mini">
+        <text class="total-num">{{monthStats.totalText}}</text>
+        <text class="total-label">{{monthLabel}} 训练时长</text>
+      </view>
+
+      <view class="stat-section">
+        <view class="sec-title">时长分布</view>
+        <view wx:for="{{monthStats.groupStats}}" wx:key="label" class="stat-row">
+          <text class="stat-label">{{item.label}}</text>
+          <view class="stat-bar-bg">
+            <view class="stat-bar-fill" style="width: {{item.pct + '%'}}"></view>
+          </view>
+          <text class="stat-val">{{item.text}}</text>
+        </view>
+      </view>
+
+      <view class="stat-section">
+        <view class="sec-title">训练场次</view>
+        <view class="count-grid">
+          <view wx:for="{{monthStats.groupStats}}" wx:key="label" class="count-item">
+            <text class="count-num">{{item.count}}</text>
+            <text class="count-label">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </view>

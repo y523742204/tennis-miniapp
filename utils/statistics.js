@@ -64,4 +64,30 @@ async function calcCareerStats() {
   return { totalTrainings, totalDuration, groupStats, typeDist, monthlyTrend };
 }
 
-module.exports = { calcCareerStats, getMonthRange };
+async function calcMonthlyStats(year, month) {
+  const key = `${year}-${String(month).padStart(2, '0')}`;
+  const all = await TrainingStorage.getAll();
+  const trainings = all.filter(t => t.date && t.date.slice(0, 7) === key);
+
+  const totalTrainings = trainings.length;
+  const totalDuration = trainings.reduce((s, r) => s + (r.duration || 0), 0);
+
+  const byGroup = {};
+  trainings.forEach(t => {
+    const group = TYPE_GROUPS[t.type] || '其他';
+    if (!byGroup[group]) byGroup[group] = { count: 0, duration: 0 };
+    byGroup[group].count += 1;
+    byGroup[group].duration += (t.duration || 0);
+  });
+
+  const groupStats = Object.entries(byGroup).map(([key, v]) => ({
+    label: key,
+    count: v.count,
+    duration: v.duration
+  }));
+  groupStats.sort((a, b) => b.duration - a.duration);
+
+  return { totalTrainings, totalDuration, groupStats };
+}
+
+module.exports = { calcCareerStats, getMonthRange, calcMonthlyStats };
