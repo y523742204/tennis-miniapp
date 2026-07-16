@@ -167,6 +167,19 @@ async function migrateLocalToCloud() {
   return total;
 }
 
-const ActivityStorage = createStorage('activity');
+const ActivityStorage = {
+  ...createStorage('activity'),
+  async getAll() {
+    try {
+      const db = getDB();
+      const res = await db.collection('activity').get();
+      const data = (res.data || []).map(r => ({ ...r, id: r._id }));
+      if (data.length > 0) setLocal('tennis_activity', data);
+      return data.length > 0 ? data : getLocal('tennis_activity');
+    } catch (e) {
+      return getLocal('tennis_activity');
+    }
+  }
+};
 
 module.exports = { TrainingStorage, CourtStorage, ScheduleStorage, ActivityStorage, migrateLocalToCloud };

@@ -279,6 +279,10 @@ Page({
     const act = this.data.activities[idx];
     if (!act) return;
     this.setData({ pwdTargetIdx: -1 });
+    if (act.creatorId !== this.data.myOpenid) {
+      wx.showToast({ title: '仅有发布者可删除', icon: 'none' });
+      return;
+    }
     wx.showModal({
       title: '删除活动',
       content: '删除「' + act.date + ' ' + act.time + ' ' + act.location + '」？',
