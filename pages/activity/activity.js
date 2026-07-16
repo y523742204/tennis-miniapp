@@ -365,9 +365,7 @@ Page({
     const idx = e.currentTarget.dataset.idx;
     const act = this.data.activities[idx];
     if (!act) return;
-    const pwd = this._datePwd(act.date);
-    this.setData({ showPwd: true, pwdMode: 'delete', pwdInput: pwd, pwdTargetIdx: idx });
-    this.confirmPwd();
+    this.setData({ showPwd: true, pwdMode: 'delete', pwdInput: '', pwdTargetIdx: idx });
   },
 
   editActivity(e) {
