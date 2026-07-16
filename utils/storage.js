@@ -23,16 +23,17 @@ function createStorage(type) {
   const { cloud: colName, local: localKey } = COLLECTION_MAP[type];
 
   return {
-    async getAll() {
+    async getAll(openid) {
       try {
         const db = getDB();
+        const cond = openid ? { _openid: openid } : {};
         const res = await db.collection(colName)
-          .where({ _openid: '{openid}' })
+          .where(cond)
           .get();
         const data = (res.data || []).map(r => ({ ...r, id: r._id }));
         data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-        if (data.length > 0) setLocal(localKey, data);
-        return data.length > 0 ? data : getLocal(localKey);
+        setLocal(localKey, data);
+        return data;
       } catch (e) {
         console.warn('[' + colName + '] cloud getAll failed, fallback to local:', e);
         return getLocal(localKey);
@@ -65,6 +66,7 @@ function createStorage(type) {
         const data = JSON.parse(JSON.stringify(record));
         delete data.id;
         delete data._id;
+        delete data._openid;
 
         data.createdAt = record.createdAt || Date.now();
         if (record.id) {
@@ -174,8 +176,8 @@ const ActivityStorage = {
       const db = getDB();
       const res = await db.collection('activity').get();
       const data = (res.data || []).map(r => ({ ...r, id: r._id }));
-      if (data.length > 0) setLocal('tennis_activity', data);
-      return data.length > 0 ? data : getLocal('tennis_activity');
+      setLocal('tennis_activity', data);
+      return data;
     } catch (e) {
       return getLocal('tennis_activity');
     }

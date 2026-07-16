@@ -33,10 +33,16 @@ Page({
     levelIndex: 5,
     startTimeIndex: 0,
     endTimeIndex: 0,
-    trainingTypes: TRAINING_TYPES
+    trainingTypes: TRAINING_TYPES,
+
+    myOpenid: ''
   },
 
-  onLoad() {
+  async onLoad() {
+    try {
+      const res = await wx.cloud.callFunction({ name: 'getOpenid' });
+      if (res.result && res.result.openid) this.setData({ myOpenid: res.result.openid });
+    } catch (e) {}
     const slotList = [];
     const items = [];
     for (let h = START_HOUR; h < END_HOUR; h++) {
@@ -86,7 +92,7 @@ Page({
   async _refreshGrid() {
     const { days, weekStartDate } = this.data;
     const weekEnd = this._fmtDate(new Date(new Date(weekStartDate).getTime() + 6 * 86400000));
-    const records = (await TrainingStorage.getAll()).filter(r => r.date >= weekStartDate && r.date <= weekEnd);
+    const records = (await TrainingStorage.getAll(this.data.myOpenid)).filter(r => r.date >= weekStartDate && r.date <= weekEnd);
     const hasTrainingMap = {};
     records.forEach(r => {
       const di = days.findIndex(d => d.date === r.date);
@@ -300,7 +306,7 @@ Page({
     }
     const newStart = sh * 60 + sm;
     const newEnd = eh * 60 + em;
-    const allRecords = await TrainingStorage.getAll();
+    const allRecords = await TrainingStorage.getAll(this.data.myOpenid);
     const overlap = allRecords.some(r => {
       if (r.date !== fd.date) return false;
       if (fd.id && r.id === fd.id) return false;
@@ -321,5 +327,9 @@ Page({
     this.setData({ showForm: false, selectedCells: [], selectedSet: {} });
     wx.showToast({ title: fd.id ? '已更新' : '已添加', icon: 'success' });
     await this._refreshGrid();
+  },
+
+  onShareAppMessage() {
+    return { title: '网球训练助手', path: 'pages/training/training' };
   }
 });

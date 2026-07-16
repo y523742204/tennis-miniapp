@@ -8,6 +8,7 @@ App({
         this.globalData.systemInfo = res;
       }
     });
+    wx.showShareMenu({ withShareTicket: true, menus: ['shareAppMessage'] });
   },
   globalData: {
     systemInfo: null

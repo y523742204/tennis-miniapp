@@ -96,5 +96,9 @@ Page({
   togglePlayer(e) {
     const name = e.currentTarget.dataset.name;
     this.setData({ selected: this.data.selected === name ? null : name });
+  },
+
+  onShareAppMessage() {
+    return { title: '网球训练助手', path: 'pages/network/network' };
   }
 });

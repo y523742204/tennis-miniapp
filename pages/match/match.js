@@ -19,6 +19,7 @@ function defaultCourtLabels(courts) {
 Page({
   data: {
     schedules: [],
+    myOpenid: '',
     scheduleForm: {
       mode: 'doubles',
       maleCount: 4,
@@ -50,11 +51,15 @@ Page({
   },
 
   async onShow() {
+    try {
+      const res = await wx.cloud.callFunction({ name: 'getOpenid' });
+      if (res.result && res.result.openid) this.setData({ myOpenid: res.result.openid });
+    } catch (e) {}
     await this._loadSchedules();
   },
 
   async _loadSchedules() {
-    this.setData({ schedules: await ScheduleStorage.getAll() });
+    this.setData({ schedules: await ScheduleStorage.getAll(this.data.myOpenid) });
   },
 
   scheduleFormChange(e) {
@@ -769,5 +774,9 @@ Page({
         m.display = m.teams.map(t => t.map(p => p || '___').join('')).join(' vs ');
       }
     }
+  },
+
+  onShareAppMessage() {
+    return { title: '网球训练助手', path: 'pages/match/match' };
   }
 });

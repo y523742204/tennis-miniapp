@@ -10,12 +10,18 @@
 
   <scroll-view scroll-y class="list-scroll" wx:else>
     <view wx:for="{{activities}}" wx:for-index="idx" wx:key="id" class="activity-card" bindtap="toggleExpand" data-idx="{{idx}}">
-      <view class="ac-del" catchtap="deleteActivity" data-idx="{{idx}}">✕</view>
-      <view class="ac-time">{{item.date}} {{item.weekday}} {{item.time}}</view>
-      <view class="ac-location">{{item.location}} （水平限制：{{item.levelStr}}）</view>
+      <view class="ac-top-row">
+        <view class="ac-time">{{item.date}} {{item.weekday}} {{item.time}}-{{item.endTime || item.time}}</view>
+        <view class="ac-del" catchtap="deleteActivity" data-idx="{{idx}}">✕</view>
+      </view>
+      <view class="ac-location">{{item.location}}</view>
+      <view class="ac-type-line" wx:if="{{item.typeLabel}}">{{item.typeLabel}}</view>
+      <view class="ac-level-limit">（水平限制：{{item.levelStr}}）</view>
+      <view class="ac-fee" wx:if="{{item.fee}}">{{item.fee}}元/人</view>
       <view class="ac-count-row">
         <view class="ac-count-m">男 [ {{item.maleCount}} / {{item.maxMale}} ]<text wx:if="{{item.maleWaitCount}}" class="wait-badge"> 候补{{item.maleWaitCount}}</text></view>
         <view class="ac-count-f">女 [ {{item.femaleCount}} / {{item.maxFemale}} ]<text wx:if="{{item.femaleWaitCount}}" class="wait-badge"> 候补{{item.femaleWaitCount}}</text></view>
+        <view class="ac-count-total">总 [ {{item.totalCount}} / {{item.totalPlayers}} ]</view>
       </view>
       <view wx:if="{{expandedIdx === idx}}" class="ac-detail">
         <view class="ac-detail-title">已报名：</view>
@@ -35,13 +41,18 @@
             </view>
             <view class="ac-detail-col">
               <view wx:for="{{item.femaleWaitDisplay}}" wx:key="*this" class="ac-detail-name wait">{{item}}</view>
-            </view>
-          </view>
+        </view>
+        <view class="form-group">
+          <text class="form-label">费用（元/人）</text>
+          <input class="form-input" type="number" value="{{formData.fee}}" data-field="fee" bindinput="formInput"/>
+        </view>
+      </view>
         </view>
       </view>
       <view class="ac-actions" catchtap="noop">
         <view class="ac-btn primary" bindtap="showJoinDialog" data-idx="{{idx}}">添加活动人员</view>
         <view wx:if="{{item._joined}}" class="ac-btn cancel" bindtap="cancelJoin" data-idx="{{idx}}">取消活动人员</view>
+        <view wx:if="{{item.creatorId === myOpenid}}" class="ac-btn edit" bindtap="editActivity" data-idx="{{idx}}">编辑</view>
       </view>
     </view>
   </scroll-view>
@@ -105,9 +116,21 @@
           </picker>
         </view>
         <view class="form-group">
-          <text class="form-label">时间</text>
+          <text class="form-label">开始时间</text>
           <picker mode="time" value="{{formData.time}}" bindchange="formTimeChange">
             <view class="form-input picker">{{formData.time}}</view>
+          </picker>
+        </view>
+        <view class="form-group">
+          <text class="form-label">结束时间</text>
+          <picker mode="time" value="{{formData.endTime}}" bindchange="formEndTimeChange">
+            <view class="form-input picker">{{formData.endTime}}</view>
+          </picker>
+        </view>
+        <view class="form-group">
+          <text class="form-label">类型</text>
+          <picker mode="selector" range="{{activityTypes}}" range-key="label" value="{{formTypeIndex}}" bindchange="formTypeChange">
+            <view class="form-input picker">{{activityTypes[formTypeIndex].label}}</view>
           </picker>
         </view>
         <view class="form-group">
@@ -124,6 +147,10 @@
             <input class="form-input" type="number" value="{{formData.maxFemale}}" data-field="maxFemale" bindinput="formInput"/>
           </view>
         </view>
+        <view class="form-group">
+          <text class="form-label">总人数</text>
+          <input class="form-input" type="number" value="{{formData.totalPlayers}}" data-field="totalPlayers" bindinput="formInput"/>
+        </view>
         <view class="form-row">
           <view class="form-group half">
             <text class="form-label">男最低级别</text>
@@ -138,10 +165,14 @@
             </picker>
           </view>
         </view>
+        <view class="form-group">
+          <text class="form-label">费用（元/人）</text>
+          <input class="form-input" type="number" value="{{formData.fee}}" data-field="fee" bindinput="formInput"/>
+        </view>
       </view>
       <view class="form-actions">
         <view class="f-btn f-cancel" bindtap="closeForm">取消</view>
-        <view class="f-btn f-submit" bindtap="submitForm">记录</view>
+        <view class="f-btn f-submit" bindtap="submitForm">{{formMode === 'add' ? '记录' : '保存'}}</view>
       </view>
     </view>
   </view>

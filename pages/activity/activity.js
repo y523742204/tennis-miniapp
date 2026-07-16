@@ -1,9 +1,15 @@
-const { ActivityStorage } = require('../../utils/storage');
+const { ActivityStorage, TrainingStorage } = require('../../utils/storage');
 
 const LEVELS = [];
 for (let i = 0; i <= 10; i++) LEVELS.push((i * 0.5).toFixed(1));
 
 const WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+const ACTIVITY_TYPES = [
+  { value: 'singles', label: '单打' },
+  { value: 'doubles', label: '双打' },
+  { value: 'practice', label: '练习' }
+];
 
 function fmtWeekday(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
@@ -19,6 +25,14 @@ function fmtPcount(list, gender) {
   return (list || []).filter(p => p.gender === gender).length;
 }
 
+function addHours(time, hours) {
+  const [h, m] = time.split(':').map(Number);
+  const total = h * 60 + m + hours * 60;
+  const nh = Math.floor(total / 60);
+  const nm = total % 60;
+  return String(nh).padStart(2, '0') + ':' + String(nm).padStart(2, '0');
+}
+
 Page({
   data: {
     activities: [],
@@ -26,11 +40,16 @@ Page({
     showForm: false,
     formMode: 'add',
     formData: {
-      date: '', dateLabel: '', time: '', location: '',
-      maxMale: 8, maxFemale: 8,
+      date: '', dateLabel: '', time: '', endTime: '', location: '',
+      maxMale: 4, maxFemale: 4,
       levelMinMale: 3.0,
-      levelMinFemale: 2.5
+      levelMinFemale: 2.5,
+      fee: 60,
+      type: 'doubles',
+      totalPlayers: 4
     },
+    formTypeIndex: 1,
+    activityTypes: ACTIVITY_TYPES,
     expandedIdx: -1,
     cancelTarget: -1,
     cancelNames: [],
@@ -63,7 +82,23 @@ Page({
     } catch (e) {}
   },
 
+  async _cleanupExpired() {
+    try {
+      const all = await ActivityStorage.getAll();
+      const now = Date.now();
+      const DAY_MS = 24 * 60 * 60 * 1000;
+      for (const a of all) {
+        if (!a.endTime) continue;
+        const endMs = new Date(a.date + 'T' + a.endTime + ':00').getTime();
+        if (now - endMs > DAY_MS) {
+          await ActivityStorage.remove(a.id);
+        }
+      }
+    } catch (e) {}
+  },
+
   async _loadActivities() {
+    await this._cleanupExpired();
     const list = await ActivityStorage.getAll();
     list.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
     list.forEach(a => {
@@ -74,6 +109,8 @@ Page({
       a.maleWaitCount = a.waitlist.filter(p => p.gender === 'male').length;
       a.femaleWaitCount = a.waitlist.filter(p => p.gender === 'female').length;
       a.weekday = WEEKDAYS[new Date(a.date + 'T00:00:00').getDay()];
+      const t = ACTIVITY_TYPES.find(x => x.value === a.type);
+      a.typeLabel = t ? t.label : '';
       a.levelMinMale = a.levelMinMale || 0;
       a.levelMinFemale = a.levelMinFemale || 0;
       a.levelStr = '男 ' + a.levelMinMale.toFixed(1) + '+ 女 ' + a.levelMinFemale.toFixed(1) + '+';
@@ -81,6 +118,8 @@ Page({
       a.femaleDisplay = a.participants.filter(p => p.gender === 'female').map(p => p.name + ' ' + (typeof p.level === 'number' ? p.level.toFixed(1) : p.level));
       a.maleWaitDisplay = a.waitlist.filter(p => p.gender === 'male').map(p => p.name + ' ' + (typeof p.level === 'number' ? p.level.toFixed(1) : p.level));
       a.femaleWaitDisplay = a.waitlist.filter(p => p.gender === 'female').map(p => p.name + ' ' + (typeof p.level === 'number' ? p.level.toFixed(1) : p.level));
+      a.totalPlayers = a.totalPlayers || 0;
+      a.totalCount = a.participants.length;
       a._joined = a.participants.some(p => p.openid === this.data.myOpenid);
     });
     this.setData({ activities: list });
@@ -97,7 +136,9 @@ Page({
   },
 
   openForm() {
-    this.setData({ showPwd: true, pwdMode: 'publish', pwdInput: '' });
+    const pwd = this._todayPwd();
+    this.setData({ showPwd: true, pwdMode: 'publish', pwdInput: pwd });
+    this.confirmPwd();
   },
 
   closeForm() {
@@ -116,7 +157,18 @@ Page({
   },
 
   formTimeChange(e) {
-    this.setData({ 'formData.time': e.detail.value });
+    const t = e.detail.value;
+    this.setData({ 'formData.time': t, 'formData.endTime': addHours(t, 3) });
+  },
+
+  formEndTimeChange(e) {
+    this.setData({ 'formData.endTime': e.detail.value });
+  },
+
+  formTypeChange(e) {
+    const idx = Number(e.detail.value);
+    const t = ACTIVITY_TYPES[idx];
+    if (t) this.setData({ 'formData.type': t.value, formTypeIndex: idx });
   },
 
   formLevelChange(e) {
@@ -131,22 +183,64 @@ Page({
     if (!fd.location) { wx.showToast({ title: '请输入地点', icon: 'none' }); return; }
     if (fd.maxMale < 0 || fd.maxFemale < 0) { wx.showToast({ title: '人数不能为负', icon: 'none' }); return; }
 
-    const record = {
-      date: fd.date,
-      time: fd.time,
-      location: fd.location,
-      maxMale: parseInt(fd.maxMale) || 0,
-      maxFemale: parseInt(fd.maxFemale) || 0,
-      levelMinMale: parseFloat(fd.levelMinMale) || 0,
-      levelMinFemale: parseFloat(fd.levelMinFemale) || 0,
-      participants: [],
-      waitlist: [],
-      creatorId: this.data.myOpenid,
-      creatorName: wx.getStorageSync('activity_user_name') || '匿名'
-    };
-    await ActivityStorage.save(record);
-    this.closeForm();
-    wx.showToast({ title: '活动已记录', icon: 'success' });
+    const maxMale = parseInt(fd.maxMale) || 0;
+    const maxFemale = parseInt(fd.maxFemale) || 0;
+
+    if (fd.id) {
+      const existing = await ActivityStorage.get(fd.id);
+      if (!existing) { wx.showToast({ title: '活动不存在', icon: 'none' }); return; }
+      const pl = existing.participants || [];
+      const wl = existing.waitlist || [];
+      const overflow = (p) => (p.gender === 'male' ? pl.filter(x => x.gender === 'male').length > maxMale : pl.filter(x => x.gender === 'female').length > maxFemale);
+      const moved = [];
+      pl.forEach(p => {
+        if (p.gender === 'male' && pl.filter(x => x.gender === 'male').indexOf(p) >= maxMale) moved.push(p);
+        if (p.gender === 'female' && pl.filter(x => x.gender === 'female').indexOf(p) >= maxFemale) moved.push(p);
+      });
+      moved.forEach(p => {
+        const pi = pl.indexOf(p);
+        if (pi > -1) { pl.splice(pi, 1); wl.unshift(p); }
+      });
+      const record = {
+        id: fd.id, date: fd.date, time: fd.time, endTime: fd.endTime,
+        location: fd.location, maxMale, maxFemale,
+        levelMinMale: parseFloat(fd.levelMinMale) || 0,
+        levelMinFemale: parseFloat(fd.levelMinFemale) || 0,
+        fee: parseInt(fd.fee) || 0, type: fd.type,
+        totalPlayers: parseInt(fd.totalPlayers) || 0,
+        participants: pl, waitlist: wl,
+        creatorId: existing.creatorId,
+        creatorName: existing.creatorName
+      };
+      await ActivityStorage.save(record);
+      this.closeForm();
+      wx.showToast({ title: '已更新', icon: 'success' });
+    } else {
+      const record = {
+        date: fd.date, time: fd.time, endTime: fd.endTime, location: fd.location,
+        maxMale, maxFemale,
+        levelMinMale: parseFloat(fd.levelMinMale) || 0,
+        levelMinFemale: parseFloat(fd.levelMinFemale) || 0,
+        fee: parseInt(fd.fee) || 0, type: fd.type,
+        totalPlayers: parseInt(fd.totalPlayers) || 0,
+        participants: [], waitlist: [],
+        creatorId: this.data.myOpenid,
+        creatorName: wx.getStorageSync('activity_user_name') || '匿名'
+      };
+      const saved = await ActivityStorage.save(record);
+      try {
+        const [sh, sm] = fd.time.split(':').map(Number);
+        const [eh, em] = fd.endTime.split(':').map(Number);
+        const duration = (eh * 60 + em) - (sh * 60 + sm);
+        await TrainingStorage.save({
+          date: fd.date, startTime: fd.time, endTime: fd.endTime,
+          duration, type: fd.type, level: parseFloat(fd.levelMinMale) || 0,
+          court: fd.location, notes: '已发布活动'
+        });
+      } catch (e) { console.warn('create training from activity failed:', e); }
+      this.closeForm();
+      wx.showToast({ title: '活动已记录', icon: 'success' });
+    }
     await this._loadActivities();
   },
 
@@ -263,7 +357,7 @@ Page({
     const date = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
     this.setData({
       showForm: true, formMode: 'add',
-      formData: { date, dateLabel: fmtWeekday(date), time: '19:00', location: '酷胜网球中心', maxMale: 8, maxFemale: 8, levelMinMale: 3.0, levelMinFemale: 2.5 }
+      formData: { date, dateLabel: fmtWeekday(date), time: '19:00', endTime: addHours('19:00', 3), location: '酷胜网球中心', maxMale: 4, maxFemale: 4, levelMinMale: 3.0, levelMinFemale: 2.5, fee: 60, type: 'doubles', totalPlayers: 4 }
     });
   },
 
@@ -271,7 +365,29 @@ Page({
     const idx = e.currentTarget.dataset.idx;
     const act = this.data.activities[idx];
     if (!act) return;
-    this.setData({ showPwd: true, pwdMode: 'delete', pwdInput: '', pwdTargetIdx: idx });
+    const pwd = this._datePwd(act.date);
+    this.setData({ showPwd: true, pwdMode: 'delete', pwdInput: pwd, pwdTargetIdx: idx });
+    this.confirmPwd();
+  },
+
+  editActivity(e) {
+    const idx = e.currentTarget.dataset.idx;
+    const act = this.data.activities[idx];
+    if (!act) return;
+    wx.hideTabBar({ animation: false });
+    this.setData({
+      showForm: true, formMode: 'edit',
+      formData: {
+        id: act.id,
+        date: act.date, dateLabel: fmtWeekday(act.date),
+        time: act.time, endTime: act.endTime || addHours(act.time, 3),
+        location: act.location,
+        maxMale: act.maxMale, maxFemale: act.maxFemale,
+        levelMinMale: act.levelMinMale, levelMinFemale: act.levelMinFemale,
+        fee: act.fee || 0,
+        totalPlayers: act.totalPlayers || 4
+      }
+    });
   },
 
   _confirmDelete() {
@@ -326,4 +442,7 @@ Page({
 
   noop() {},
 
+  onShareAppMessage() {
+    return { title: '网球训练助手', path: 'pages/activity/activity' };
+  }
 });

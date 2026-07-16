@@ -23,8 +23,8 @@ const TYPE_GROUPS = {
   practice: '陪练'
 };
 
-async function calcCareerStats() {
-  const trainings = await TrainingStorage.getAll();
+async function calcCareerStats(openid) {
+  const trainings = await TrainingStorage.getAll(openid);
 
   const totalTrainings = trainings.length;
   const totalDuration = trainings.reduce((s, r) => s + (r.duration || 0), 0);
@@ -64,9 +64,9 @@ async function calcCareerStats() {
   return { totalTrainings, totalDuration, groupStats, typeDist, monthlyTrend };
 }
 
-async function calcMonthlyStats(year, month) {
+async function calcMonthlyStats(year, month, openid) {
   const key = `${year}-${String(month).padStart(2, '0')}`;
-  const all = await TrainingStorage.getAll();
+  const all = await TrainingStorage.getAll(openid);
   const trainings = all.filter(t => t.date && t.date.slice(0, 7) === key);
 
   const totalTrainings = trainings.length;

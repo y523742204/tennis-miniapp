@@ -22,16 +22,20 @@ Page({
     showMigrate: false,
     searchKeyword: '',
     searchSuggestions: [],
-    showSuggestions: false
+    showSuggestions: false,
+    myOpenid: ''
   },
 
   async onShow() {
+    try {
+      const res = await wx.cloud.callFunction({ name: 'getOpenid' });
+      if (res.result && res.result.openid) this.setData({ myOpenid: res.result.openid });
+    } catch (e) {}
     const courts = await this._loadCourts();
     if (courts.length === 0) {
       await CourtStorage.save({
         name: '酷胜网球中心',
         address: '成都市双流区双华路三段898号',
-
         rating: 3
       });
       await this._loadCourts();
@@ -78,7 +82,7 @@ Page({
           callout: { content: p.name, color: '#fff', fontSize: 12, bgColor: '#4a90d9', borderRadius: 8, borderColor: '#357abd', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
         };
       }.bind(this));
-      var saved = (await CourtStorage.getAll()).filter(function(c) { return c.latitude; }).map(function(c) {
+      var saved = (await CourtStorage.getAll(this.data.myOpenid)).filter(function(c) { return c.latitude; }).map(function(c) {
         var mid = this._nextMid();
         _midMap[mid] = { type: 'court', id: c.id };
         return {
@@ -93,7 +97,20 @@ Page({
   },
 
   async _loadCourts() {
-    const courts = await CourtStorage.getAll();
+    let courts = await CourtStorage.getAll(this.data.myOpenid);
+    const seen = {};
+    const toRemove = [];
+    for (const c of courts) {
+      if (seen[c.name]) {
+        toRemove.push(c.id);
+      } else {
+        seen[c.name] = true;
+      }
+    }
+    for (const id of toRemove) {
+      await CourtStorage.remove(id);
+    }
+    if (toRemove.length > 0) courts = await CourtStorage.getAll(this.data.myOpenid);
     const markers = courts.filter(function(c) { return c.latitude; }).map(function(c) {
       var mid = this._nextMid();
       _midMap[mid] = { type: 'court', id: c.id };
@@ -297,7 +314,7 @@ Page({
                     callout: { content: p.name, color: '#fff', fontSize: 12, bgColor: '#4a90d9', borderRadius: 8, borderColor: '#357abd', borderWidth: 1, padding: 6, display: 'ALWAYS', textAlign: 'center' }
                   };
                 });
-                var saved = (await CourtStorage.getAll()).filter(function(c) { return c.latitude; }).map(function(c) {
+                var saved = (await CourtStorage.getAll(that.data.myOpenid)).filter(function(c) { return c.latitude; }).map(function(c) {
                   var mid = that._nextMid();
                   _midMap[mid] = { type: 'court', id: c.id };
                   return {
@@ -504,5 +521,9 @@ Page({
       wx.hideLoading();
       wx.showToast({ title: '迁移失败: ' + e.message, icon: 'none' });
     }
+  },
+
+  onShareAppMessage() {
+    return { title: '网球训练助手', path: 'pages/court/court' };
   }
 });

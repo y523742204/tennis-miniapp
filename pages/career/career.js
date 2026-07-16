@@ -39,7 +39,7 @@ Page({
     const mi = curMonth - 1;
     const label = curYear + '年' + curMonth + '月';
 
-    const raw = await calcCareerStats();
+    const raw = await calcCareerStats(cloudOpenid);
     const stats = {
       ...raw,
       totalText: fmt(raw.totalDuration),
@@ -51,7 +51,7 @@ Page({
   },
 
   async _loadMonthStats(year, month, label) {
-    const mRaw = await calcMonthlyStats(year, month);
+    const mRaw = await calcMonthlyStats(year, month, this.data.myOpenid);
     const monthStats = {
       ...mRaw,
       totalText: fmt(mRaw.totalDuration),
@@ -70,5 +70,9 @@ Page({
       this.setData({ calendarIndex: idx });
       this._loadMonthStats(year, month, year + '年' + month + '月');
     }
+  },
+
+  onShareAppMessage() {
+    return { title: '网球训练助手', path: 'pages/career/career' };
   }
 });
