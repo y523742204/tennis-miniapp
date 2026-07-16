@@ -70,6 +70,6 @@
   </view>
 
   <view class="debug-row">
-    <text class="debug-text">local: {{myOpenid}} | cloud: {{cloudOpenid}}</text>
+    <text class="debug-text">openid: {{cloudOpenid}}</text>
   </view>
 </view>

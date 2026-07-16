@@ -55,12 +55,12 @@ Page({
   },
 
   async _loadMyOpenid() {
-    let id = wx.getStorageSync('my_openid') || '';
-    if (!id) {
-      id = 'local_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      wx.setStorageSync('my_openid', id);
-    }
-    this.setData({ myOpenid: id });
+    try {
+      const res = await wx.cloud.callFunction({ name: 'getOpenid' });
+      if (res.result && res.result.openid) {
+        this.setData({ myOpenid: res.result.openid });
+      }
+    } catch (e) {}
   },
 
   async _loadActivities() {

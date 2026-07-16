@@ -15,25 +15,16 @@ Page({
     monthLabel: '',
     calendarRange: [],
     calendarIndex: [0, 0],
-    myOpenid: '',
     cloudOpenid: ''
   },
 
   async onShow() {
-    let id = wx.getStorageSync('my_openid') || '';
-    if (!id) {
-      id = 'local_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      wx.setStorageSync('my_openid', id);
-    }
-    let cloudOpenid = wx.getStorageSync('my_cloud_openid') || '';
+    let cloudOpenid = '';
     try {
       const res = await wx.cloud.callFunction({ name: 'getOpenid' });
-      if (res.result && res.result.openid) {
-        cloudOpenid = res.result.openid;
-        wx.setStorageSync('my_cloud_openid', cloudOpenid);
-      }
+      if (res.result && res.result.openid) cloudOpenid = res.result.openid;
     } catch (e) {}
-    this.setData({ myOpenid: id, cloudOpenid });
+    this.setData({ myOpenid: cloudOpenid, cloudOpenid });
 
     const now = new Date();
     const curYear = now.getFullYear();
