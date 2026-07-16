@@ -14,10 +14,27 @@ Page({
     monthStats: null,
     monthLabel: '',
     calendarRange: [],
-    calendarIndex: [0, 0]
+    calendarIndex: [0, 0],
+    myOpenid: '',
+    cloudOpenid: ''
   },
 
   async onShow() {
+    let id = wx.getStorageSync('my_openid') || '';
+    if (!id) {
+      id = 'local_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      wx.setStorageSync('my_openid', id);
+    }
+    let cloudOpenid = wx.getStorageSync('my_cloud_openid') || '';
+    try {
+      const res = await wx.cloud.callFunction({ name: 'getOpenid' });
+      if (res.result && res.result.openid) {
+        cloudOpenid = res.result.openid;
+        wx.setStorageSync('my_cloud_openid', cloudOpenid);
+      }
+    } catch (e) {}
+    this.setData({ myOpenid: id, cloudOpenid });
+
     const now = new Date();
     const curYear = now.getFullYear();
     const curMonth = now.getMonth() + 1;

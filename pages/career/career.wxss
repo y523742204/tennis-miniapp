@@ -136,3 +136,10 @@
 .total-card.mini .total-num {
   font-size: 40rpx;
 }
+
+.debug-row {
+  text-align: center; padding: 20rpx; border-top: 2rpx solid #eee; margin: 20rpx;
+}
+.debug-text {
+  font-size: 22rpx; color: #bbb; word-break: break-all;
+}

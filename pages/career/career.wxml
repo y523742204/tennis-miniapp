@@ -68,4 +68,8 @@
       </view>
     </view>
   </view>
+
+  <view class="debug-row">
+    <text class="debug-text">local: {{myOpenid}} | cloud: {{cloudOpenid}}</text>
+  </view>
 </view>
