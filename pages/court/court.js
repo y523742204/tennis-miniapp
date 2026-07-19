@@ -443,6 +443,36 @@ Page({
     this.setData({ 'weatherPopup.visible': false });
   },
 
+  onWeatherBarTap() {
+    wx.showLoading({ title: '查询天气中...' });
+    var lat = this.data.mapLatitude;
+    var lng = this.data.mapLongitude;
+    Promise.all([
+      getLiveWeather(lat, lng),
+      getWeatherForecast(lat, lng)
+    ]).then(function(r) {
+      wx.hideLoading();
+      var live = r[0], forecast = r[1];
+      var WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+      var EMOJI = { '晴': '☀️', '多云': '⛅', '阴': '☁️', '小雨': '🌦', '中雨': '🌧', '大雨': '🌧', '雷阵雨': '⛈', '雪': '🌨', '雾': '🌫' };
+      function we(w) { for (var k in EMOJI) { if (w.indexOf(k) >= 0) return EMOJI[k]; } return '🌤'; }
+      forecast.casts = forecast.casts.map(function(c) {
+        c.dayLabel = WEEK[parseInt(c.week) % 7];
+        c.emoji = we(c.dayweather);
+        return c;
+      });
+      this.setData({
+        'weatherPopup.visible': true,
+        'weatherPopup.courtName': live.city,
+        'weatherPopup.live': live,
+        'weatherPopup.forecast': forecast
+      });
+    }.bind(this)).catch(function() {
+      wx.hideLoading();
+      wx.showToast({ title: '天气查询失败', icon: 'none' });
+    });
+  },
+
   closeForm() {
     this.setData({ showForm: false });
     wx.showTabBar({ animation: false });
