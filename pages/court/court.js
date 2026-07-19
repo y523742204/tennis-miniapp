@@ -1,6 +1,6 @@
 const { CourtStorage, migrateLocalToCloud } = require('../../utils/storage');
 const { searchNearbyPOI, geocodeAddress, searchByKeyword, AMAP_KEY } = require('../../utils/map');
-const { getLiveWeather } = require('../../utils/weather');
+const { getLiveWeather, getWeatherForecast } = require('../../utils/weather');
 
 var _mid = 1000;
 var _midMap = {};
@@ -25,7 +25,8 @@ Page({
     searchSuggestions: [],
     showSuggestions: false,
     myOpenid: '',
-    weather: null
+    weather: null,
+    weatherPopup: { visible: false, courtName: '', live: null, forecast: null }
   },
 
   async onShow() {
@@ -368,7 +369,7 @@ Page({
 
   _showNearbyActions(court) {
     wx.showActionSheet({
-      itemList: ['地图导航', '保存到本地球场', '复制地址'],
+      itemList: ['地图导航', '查询天气', '保存到本地球场', '复制地址'],
       success: async (res) => {
         if (res.tapIndex === 0) {
           wx.openLocation({
@@ -378,6 +379,8 @@ Page({
             address: court.address
           });
         } else if (res.tapIndex === 1) {
+          this._queryCourtWeather(court);
+        } else if (res.tapIndex === 2) {
           await CourtStorage.save({
             name: court.name,
             address: court.address || '',
@@ -387,7 +390,7 @@ Page({
           });
           wx.showToast({ title: '已保存', icon: 'success' });
           await this._loadCourts();
-        } else if (res.tapIndex === 2) {
+        } else if (res.tapIndex === 3) {
           wx.setClipboardData({ data: court.address || court.name });
         }
       }
@@ -402,6 +405,42 @@ Page({
       name,
       address
     });
+  },
+
+  async _queryCourtWeather(court) {
+    if (!court.latitude || !court.longitude) {
+      wx.showToast({ title: '该球场暂无位置信息', icon: 'none' });
+      return;
+    }
+    wx.showLoading({ title: '查询天气中...' });
+    try {
+      const [live, forecast] = await Promise.all([
+        getLiveWeather(court.latitude, court.longitude),
+        getWeatherForecast(court.latitude, court.longitude)
+      ]);
+      wx.hideLoading();
+      var WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+      var EMOJI = { '晴': '☀️', '多云': '⛅', '阴': '☁️', '小雨': '🌦', '中雨': '🌧', '大雨': '🌧', '雷阵雨': '⛈', '雪': '🌨', '雾': '🌫' };
+      function we(w) { for (var k in EMOJI) { if (w.indexOf(k) >= 0) return EMOJI[k]; } return '🌤'; }
+      forecast.casts = forecast.casts.map(function(c) {
+        c.dayLabel = WEEK[parseInt(c.week) % 7];
+        c.emoji = we(c.dayweather);
+        return c;
+      });
+      this.setData({
+        'weatherPopup.visible': true,
+        'weatherPopup.courtName': court.name,
+        'weatherPopup.live': live,
+        'weatherPopup.forecast': forecast
+      });
+    } catch (e) {
+      wx.hideLoading();
+      wx.showToast({ title: '天气查询失败', icon: 'none' });
+    }
+  },
+
+  closeWeatherPopup() {
+    this.setData({ 'weatherPopup.visible': false });
   },
 
   closeForm() {
@@ -450,7 +489,7 @@ Page({
 
   _showCourtActions(court) {
     wx.showActionSheet({
-      itemList: ['编辑', '地图导航', '删除'],
+      itemList: ['编辑', '查询天气', '地图导航', '删除'],
       success: (res) => {
         if (res.tapIndex === 0) {
           wx.hideTabBar({ animation: false });
@@ -460,8 +499,10 @@ Page({
             formData: { ...court }
           });
         } else if (res.tapIndex === 1) {
-          this._navigateToCourt(court);
+          this._queryCourtWeather(court);
         } else if (res.tapIndex === 2) {
+          this._navigateToCourt(court);
+        } else if (res.tapIndex === 3) {
           wx.showModal({
             title: '确认删除',
             content: `删除「${court.name}」？`,

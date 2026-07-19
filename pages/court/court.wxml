@@ -95,4 +95,23 @@
     <text class="w-humid">湿度{{weather.humidity}}% </text>
     <text>{{weather.weather}}</text>
   </view>
+
+  <view wx:if="{{weatherPopup.visible}}" class="wp-overlay" catchtap="closeWeatherPopup">
+    <view class="wp-sheet" catchtap="noop">
+      <view class="wp-title">{{weatherPopup.courtName}} 天气</view>
+      <view wx:if="{{weatherPopup.live}}" class="wp-live">
+        <text class="wp-live-temp">{{weatherPopup.live.temperature}}°C</text>
+        <text class="wp-live-desc">{{weatherPopup.live.weather}} · 湿度{{weatherPopup.live.humidity}}%</text>
+      </view>
+      <view wx:if="{{weatherPopup.forecast && weatherPopup.forecast.casts}}" class="wp-forecast">
+        <view wx:for="{{weatherPopup.forecast.casts}}" wx:key="date" class="wp-f-row">
+          <text class="wp-f-day">{{item.dayLabel}}</text>
+          <text class="wp-f-emoji">{{item.emoji}}</text>
+          <text class="wp-f-temp">{{item.daytemp}}° / {{item.nighttemp}}°</text>
+          <text class="wp-f-wea">{{item.dayweather}}</text>
+        </view>
+      </view>
+      <view class="wp-close" bindtap="closeWeatherPopup">关闭</view>
+    </view>
+  </view>
 </view>
