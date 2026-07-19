@@ -6,7 +6,7 @@
       <view class="sch-edit-btn {{editMode ? 'active' : ''}}" bindtap="toggleEdit">{{editMode ? '完成' : '编辑'}}</view>
     </view>
     <view class="sch-meta">
-      <text>{{currentSchedule.mode === 'doubles' ? '双打' : '单打'}}</text>
+      <text>{{currentSchedule.mode === 'singles' ? '单打' : '双打'}}</text>
       <text>{{currentSchedule.playerNames.length}}人</text>
       <text>{{currentSchedule.rounds}}轮</text>
       <text>{{currentSchedule.courts}}场地</text>
@@ -30,7 +30,7 @@
     </view>
 
     <view wx:for="{{currentSchedule.schedule}}" wx:for-index="ri" wx:key="round" class="round-card">
-      <view class="round-title">第{{item.round}}轮<text wx:if="{{currentSchedule.roundTypes}}" class="round-type">（{{currentSchedule.roundTypes[ri] === 'normal' ? '男双/女双' : '混双'}}）</text> <text wx:if="{{item.byes.length}}" class="round-bye">轮空：{{item.byes.join('、')}}</text></view>
+      <view class="round-title">第{{item.round}}轮<text wx:if="{{currentSchedule.roundTypes && currentSchedule.mode !== 'singles'}}" class="round-type">（{{currentSchedule.roundTypes[ri] === 'normal' ? '男双/女双' : '混双'}}）</text> <text wx:if="{{item.byes.length}}" class="round-bye">轮空：{{item.byes.join('、')}}</text></view>
       <view wx:for="{{item.matches}}" wx:for-index="mi" wx:key="court" class="match-row">
         <text class="match-court">{{currentSchedule.courtLabels ? currentSchedule.courtLabels[item.court-1] : '场地'+item.court}}</text>
         <view class="match-teams-edit">
@@ -88,7 +88,13 @@
           <view class="sch-picker">{{scheduleForm.mode === 'singles' ? '单打' : '双打'}}</view>
         </picker>
       </view>
-      <view class="sch-row">
+      <view wx:if="{{scheduleForm.mode === 'singles'}}" class="sch-field">
+        <text class="sch-label">人数</text>
+        <picker mode="selector" range="{{[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]}}" value="{{scheduleForm.playerCount - 2}}" data-field="playerCount" bindchange="scheduleFormChange">
+          <view class="sch-picker">{{scheduleForm.playerCount}}人</view>
+        </picker>
+      </view>
+      <view wx:else class="sch-row">
         <view class="sch-field sch-half">
           <text class="sch-label">男生</text>
           <picker mode="selector" range="{{[0,1,2,3,4,5,6,7,8,9,10]}}" value="{{scheduleForm.maleCount}}" data-field="maleCount" bindchange="scheduleFormChange">
@@ -105,7 +111,12 @@
 
       <view wx:if="{{scheduleForm.playerNames.length}}" class="sch-name-section">
         <view class="sch-name-title">选手姓名</view>
-        <view class="sch-name-two-col">
+        <view wx:if="{{scheduleForm.mode === 'singles'}}" class="sch-name-col">
+          <view wx:for="{{scheduleForm.playerNames}}" wx:for-index="ni" wx:key="ni" class="sch-name-row">
+            <input class="sch-name-input" value="{{item}}" data-idx="{{ni}}" bindinput="playerNameInput" placeholder="选手{{ni+1}}"/>
+          </view>
+        </view>
+        <view wx:else class="sch-name-two-col">
           <view class="sch-name-col">
             <view wx:for="{{scheduleForm.maleNames}}" wx:for-index="ni" wx:key="ni" class="sch-name-row">
               <text class="sch-name-tag">♂</text>
@@ -137,7 +148,7 @@
           <view wx:for="{{savedRosters}}" wx:key="id" class="sch-roster-item">
             <view class="sch-roster-info" data-id="{{item.id}}" bindtap="applyRoster">
               <text class="sch-roster-name">{{item.name}}</text>
-              <text class="sch-roster-meta">{{item.maleCount}}♂ {{item.femaleCount}}♀ · {{item.playerNames.join('、')}}</text>
+              <text class="sch-roster-meta">{{item.femaleCount ? item.maleCount + '♂ ' + item.femaleCount + '♀' : item.maleCount + '人'}} · {{item.playerNames.join('、')}}</text>
             </view>
             <text class="sch-roster-del" data-id="{{item.id}}" bindtap="deleteRoster">×</text>
           </view>
@@ -162,7 +173,7 @@
         </view>
       </view>
 
-      <view class="sch-name-section">
+      <view wx:if="{{scheduleForm.mode === 'doubles'}}" class="sch-name-section">
         <view class="sch-name-title">固定搭档</view>
         <view wx:for="{{scheduleForm.fixedPairs}}" wx:for-index="pi" wx:key="pi" class="sch-fixed-pair-row">
           <text class="sch-fixed-pair-text">{{item.p1}} + {{item.p2}}（{{item.rounds}}轮）</text>

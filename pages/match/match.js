@@ -7,6 +7,9 @@ function defaultNames(maleCount, femaleCount) {
   for (let i = 1; i <= femaleCount; i++) names.push('女' + i);
   return names;
 }
+function defaultNamesSingles(count) {
+  return Array.from({ length: count }, (_, i) => '选手' + (i + 1));
+}
 function defaultCourts(mode, maleCount, femaleCount, firstRoundType) {
   const n = maleCount + femaleCount;
   if (mode === 'singles' || firstRoundType === 'single') return Math.floor(n / 2) || 1;
@@ -24,6 +27,7 @@ Page({
       mode: 'doubles',
       maleCount: 4,
       femaleCount: 4,
+      playerCount: 8,
       playerNames: defaultNames(4, 4),
       maleNames: defaultNames(4, 4).slice(0, 4),
       femaleNames: defaultNames(4, 4).slice(4),
@@ -66,6 +70,17 @@ Page({
     const { field } = e.currentTarget.dataset;
     const val = Number(e.detail.value) + (field === 'rounds' || field === 'courts' ? 1 : 0);
     const patch = { ['scheduleForm.' + field]: val };
+    if (field === 'playerCount') {
+      const names = defaultNamesSingles(val);
+      patch['scheduleForm.playerNames'] = names;
+      patch['scheduleForm.maleCount'] = val;
+      patch['scheduleForm.femaleCount'] = 0;
+      patch['scheduleForm.maleNames'] = names.slice();
+      patch['scheduleForm.femaleNames'] = [];
+      const c = defaultCourts('singles', val, 0, 'normal');
+      patch['scheduleForm.courts'] = c;
+      patch['scheduleForm.courtLabels'] = defaultCourtLabels(c);
+    }
     if (field === 'maleCount' || field === 'femaleCount') {
       const mc = field === 'maleCount' ? val : this.data.scheduleForm.maleCount;
       const fc = field === 'femaleCount' ? val : this.data.scheduleForm.femaleCount;
@@ -73,6 +88,7 @@ Page({
       patch['scheduleForm.playerNames'] = names;
       patch['scheduleForm.maleNames'] = names.slice(0, mc);
       patch['scheduleForm.femaleNames'] = names.slice(mc);
+      patch['scheduleForm.playerCount'] = mc + fc;
       const c = defaultCourts(this.data.scheduleForm.mode, mc, fc, this.data.scheduleForm.roundTypes[0]);
       patch['scheduleForm.courts'] = c;
       patch['scheduleForm.courtLabels'] = defaultCourtLabels(c);
@@ -94,13 +110,44 @@ Page({
 
   scheduleModeChange(e) {
     const mode = e.detail.value === 0 ? 'singles' : 'doubles';
-    const { maleCount, femaleCount, roundTypes } = this.data.scheduleForm;
-    const c = defaultCourts(mode, maleCount, femaleCount, roundTypes[0]);
-    this.setData({
-      'scheduleForm.mode': mode,
-      'scheduleForm.courts': c,
-      'scheduleForm.courtLabels': defaultCourtLabels(c)
-    });
+    const prev = this.data.scheduleForm;
+    if (mode === 'singles') {
+      const total = prev.playerNames.length;
+      const names = defaultNamesSingles(total);
+      const c = defaultCourts('singles', total, 0, 'normal');
+      this.setData({
+        'scheduleForm.mode': mode,
+        'scheduleForm.playerCount': total,
+        'scheduleForm.playerNames': names,
+        'scheduleForm.maleNames': names.slice(),
+        'scheduleForm.femaleNames': [],
+        'scheduleForm.maleCount': total,
+        'scheduleForm.femaleCount': 0,
+        'scheduleForm.courts': c,
+        'scheduleForm.courtLabels': defaultCourtLabels(c),
+        'scheduleForm.fixedPairs': [],
+        'scheduleForm.roundTypes': prev.roundTypes.map(() => 'normal')
+      });
+    } else {
+      const mc = Math.ceil(prev.playerNames.length / 2);
+      const fc = Math.floor(prev.playerNames.length / 2);
+      const names = defaultNames(mc, fc);
+      const c = defaultCourts('doubles', mc, fc, 'normal');
+      const types = prev.roundTypes.map(() => 'normal');
+      this.setData({
+        'scheduleForm.mode': mode,
+        'scheduleForm.playerCount': mc + fc,
+        'scheduleForm.playerNames': names,
+        'scheduleForm.maleNames': names.slice(0, mc),
+        'scheduleForm.femaleNames': names.slice(mc),
+        'scheduleForm.maleCount': mc,
+        'scheduleForm.femaleCount': fc,
+        'scheduleForm.courts': c,
+        'scheduleForm.courtLabels': defaultCourtLabels(c),
+        'scheduleForm.fixedPairs': [],
+        'scheduleForm.roundTypes': types
+      });
+    }
   },
 
   roundTypeChange(e) {
@@ -121,16 +168,25 @@ Page({
     const idx = Number(e.currentTarget.dataset.idx);
     const names = [...this.data.scheduleForm.playerNames];
     names[idx] = e.detail.value;
-    const mc = this.data.scheduleForm.maleCount;
-    this.setData({
-      'scheduleForm.playerNames': names,
-      'scheduleForm.maleNames': names.slice(0, mc),
-      'scheduleForm.femaleNames': names.slice(mc)
-    });
+    if (this.data.scheduleForm.mode === 'singles') {
+      this.setData({
+        'scheduleForm.playerNames': names,
+        'scheduleForm.maleNames': names.slice()
+      });
+    } else {
+      const mc = this.data.scheduleForm.maleCount;
+      this.setData({
+        'scheduleForm.playerNames': names,
+        'scheduleForm.maleNames': names.slice(0, mc),
+        'scheduleForm.femaleNames': names.slice(mc)
+      });
+    }
   },
 
   showSaveRoster() {
-    this.setData({ showSaveRosterPanel: true, rosterName: this.data.scheduleForm.maleCount + '男' + this.data.scheduleForm.femaleCount + '女' });
+    const f = this.data.scheduleForm;
+    const name = f.mode === 'singles' ? f.playerCount + '人' : f.maleCount + '男' + f.femaleCount + '女';
+    this.setData({ showSaveRosterPanel: true, rosterName: name });
   },
   rosterNameInput(e) {
     this.setData({ rosterName: e.detail.value });
@@ -160,14 +216,39 @@ Page({
     const roster = rosters.find(r => r.id === id);
     if (!roster) return;
     const { maleCount, femaleCount, playerNames } = roster;
-    this.setData({
-      'scheduleForm.maleCount': maleCount,
-      'scheduleForm.femaleCount': femaleCount,
-      'scheduleForm.playerNames': [...playerNames],
-      'scheduleForm.maleNames': playerNames.slice(0, maleCount),
-      'scheduleForm.femaleNames': playerNames.slice(maleCount),
-      showLoadRosterPanel: false
-    });
+    const singles = femaleCount === 0;
+    const total = playerNames.length;
+    if (singles) {
+      const c = defaultCourts('singles', total, 0, 'normal');
+      this.setData({
+        'scheduleForm.mode': 'singles',
+        'scheduleForm.playerCount': total,
+        'scheduleForm.maleCount': total,
+        'scheduleForm.femaleCount': 0,
+        'scheduleForm.playerNames': [...playerNames],
+        'scheduleForm.maleNames': [...playerNames],
+        'scheduleForm.femaleNames': [],
+        'scheduleForm.courts': c,
+        'scheduleForm.courtLabels': defaultCourtLabels(c),
+        'scheduleForm.fixedPairs': [],
+        'scheduleForm.roundTypes': this.data.scheduleForm.roundTypes.map(() => 'normal'),
+        showLoadRosterPanel: false
+      });
+    } else {
+      const c = defaultCourts('doubles', maleCount, femaleCount, 'normal');
+      this.setData({
+        'scheduleForm.mode': 'doubles',
+        'scheduleForm.playerCount': total,
+        'scheduleForm.maleCount': maleCount,
+        'scheduleForm.femaleCount': femaleCount,
+        'scheduleForm.playerNames': [...playerNames],
+        'scheduleForm.maleNames': playerNames.slice(0, maleCount),
+        'scheduleForm.femaleNames': playerNames.slice(maleCount),
+        'scheduleForm.courts': c,
+        'scheduleForm.courtLabels': defaultCourtLabels(c),
+        showLoadRosterPanel: false
+      });
+    }
   },
   deleteRoster(e) {
     const id = e.currentTarget.dataset.id;
@@ -259,10 +340,12 @@ Page({
       return;
     }
     const names = f.playerNames.map(n => n.trim() || '选手' + (f.playerNames.indexOf(n) + 1));
-    const players = names.map((n, i) => ({ label: n, gender: i < f.maleCount ? 'male' : 'female' }));
+    const players = f.mode === 'singles'
+      ? names.map(n => ({ label: n, gender: 'male' }))
+      : names.map((n, i) => ({ label: n, gender: i < f.maleCount ? 'male' : 'female' }));
     const result = generateSchedule(f.mode, players, f.rounds, f.courts, f.roundTypes, f.fixedPairs);
-    result.maleCount = f.maleCount;
-    result.femaleCount = f.femaleCount;
+    result.maleCount = f.mode === 'singles' ? total : f.maleCount;
+    result.femaleCount = 0;
     result.courtLabels = [...f.courtLabels];
     this.setData({ currentSchedule: result });
   },
@@ -363,7 +446,7 @@ Page({
         ctx.fillStyle = ri % 2 === 0 ? '#f0f8f0' : '#f8fdf8';
         ctx.fillRect(0, topY + rowH, cw, rowH);
         // First column: round info (centered between 2 rows, like rowspan)
-        const typeLabel = s.roundTypes && s.roundTypes[r.round - 1] === 'normal' ? '男双' : '混双';
+        const typeLabel = s.mode === 'singles' ? '单打' : (s.roundTypes && s.roundTypes[r.round - 1] === 'normal' ? '男双' : '混双');
         const byeText = r.byes.length ? '轮空：' + r.byes.join('、') : '';
         ctx.font = 'bold 13px sans-serif';
         ctx.fillStyle = '#333';
@@ -442,7 +525,7 @@ Page({
     html += '</tr>';
     // Rows - each round = 2 rows (top=partner, bottom=opponent)
     for (const rd of s.schedule) {
-      const typeLabel = s.roundTypes && s.roundTypes[rd.round - 1] === 'normal' ? '男双' : '混双';
+      const typeLabel = s.mode === 'singles' ? '单打' : (s.roundTypes && s.roundTypes[rd.round - 1] === 'normal' ? '男双' : '混双');
       const top = new Array(nc).fill('');
       const bottom = new Array(nc).fill('');
       for (const m of rd.matches) {
