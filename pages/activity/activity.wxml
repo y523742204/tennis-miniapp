@@ -8,10 +8,11 @@
     <text style="font-size: 26rpx; color: #bbb; margin-top: 12rpx;">点击上方按钮记录活动</text>
   </view>
 
-  <scroll-view scroll-y class="list-scroll" wx:else>
-    <view wx:for="{{activities}}" wx:for-index="idx" wx:key="id" class="activity-card" bindtap="toggleExpand" data-idx="{{idx}}">
+  <scroll-view scroll-y class="list-scroll" wx:else scroll-into-view="{{scrollToId}}" scroll-with-animation>
+    <view wx:for="{{activities}}" wx:for-index="idx" wx:key="id" class="activity-card" id="act-{{item.id}}" bindtap="toggleExpand" data-idx="{{idx}}">
       <view class="ac-top-row">
         <view class="ac-time">{{item.date}} {{item.weekday}} {{item.time}}-{{item.endTime || item.time}}</view>
+        <button class="ac-share-btn" open-type="share" data-idx="{{idx}}"><image class="ac-share-icon" src="../../images/share.png"/></button>
         <view class="ac-del" catchtap="deleteActivity" data-idx="{{idx}}">✕</view>
       </view>
       <view class="ac-location">{{item.location}}</view>
@@ -41,12 +42,8 @@
             </view>
             <view class="ac-detail-col">
               <view wx:for="{{item.femaleWaitDisplay}}" wx:key="*this" class="ac-detail-name wait">{{item}}</view>
-        </view>
-        <view class="form-group">
-          <text class="form-label">费用（元/人）</text>
-          <input class="form-input" type="number" value="{{formData.fee}}" data-field="fee" bindinput="formInput"/>
-        </view>
-      </view>
+            </view>
+          </view>
         </view>
       </view>
       <view class="ac-actions" catchtap="noop">
@@ -176,4 +173,5 @@
       </view>
     </view>
   </view>
+  <canvas type="2d" id="shareCanvas" style="width:400px;height:400px;position:fixed;left:-9999px;top:0;"></canvas>
 </view>

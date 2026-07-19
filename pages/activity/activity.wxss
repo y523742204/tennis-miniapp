@@ -21,6 +21,14 @@
   font-size: 24rpx; color: #ff4757; border-radius: 50%; flex-shrink: 0; margin-left: 8rpx;
 }
 .ac-del:active { background: #fce4ec; }
+button.ac-share-btn {
+  width: 36rpx; height: 36rpx; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-left: 8rpx;
+  background: none; border: none; line-height: normal; padding: 0; overflow: visible;
+}
+button.ac-share-btn::after { border: none; }
+button.ac-share-btn:active { opacity: 0.6; }
+.ac-share-icon { width: 36rpx; height: 36rpx; display: block; }
 .ac-top-row { display: flex; align-items: center; margin-bottom: 6rpx; }
 .ac-time { font-size: 30rpx; font-weight: 600; color: #222; flex: 1; }
 .ac-del {
@@ -46,7 +54,7 @@
 .ac-detail-col:first-child .ac-detail-name { background: #e3f2fd; color: #1565c0; }
 .ac-detail-col:last-child .ac-detail-name { background: #fce4ec; color: #c62828; }
 .ac-detail-name.wait { opacity: 0.5; }
-.ac-detail-wait { margin-top: 16rpx; border-top: 2rpx dashed #eee; padding-top: 12rpx; }
+.ac-detail-wait { margin: 12rpx 0; border-top: 2rpx dashed #eee; padding-top: 12rpx; }
 
 .ac-actions { display: flex; gap: 12rpx; margin-top: 12rpx; }
 .ac-btn {
@@ -62,6 +70,7 @@
 .ac-btn.danger { background: #ff4757; color: #fff; }
 .ac-btn.danger:active { opacity: 0.8; }
 .ac-btn.disabled { background: #f0f0f0; color: #ccc; }
+
 
 .overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100;

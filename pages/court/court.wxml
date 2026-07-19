@@ -88,4 +88,11 @@
       </view>
     </view>
   </view>
+
+  <view wx:if="{{weather}}" class="weather-bar">
+    <text class="w-city">{{weather.city}} </text>
+    <text class="w-temp">{{weather.temperature}}°C </text>
+    <text class="w-humid">湿度{{weather.humidity}}% </text>
+    <text>{{weather.weather}}</text>
+  </view>
 </view>

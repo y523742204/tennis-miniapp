@@ -37,6 +37,8 @@ Page({
   data: {
     activities: [],
     myOpenid: '',
+    _targetActivityId: '',
+    scrollToId: '',
     showForm: false,
     formMode: 'add',
     formData: {
@@ -66,11 +68,24 @@ Page({
     joinLevelIdx: 0
   },
 
+  onLoad(options) {
+    if (options && options.activityId) {
+      this._targetActivityId = options.activityId;
+    }
+  },
+
   async onShow() {
     await this._loadMyOpenid();
     await this._loadActivities();
     const uname = wx.getStorageSync('activity_user_name') || '';
     this.setData({ joinName: uname });
+    if (this._targetActivityId) {
+      const idx = this.data.activities.findIndex(a => a.id === this._targetActivityId);
+      if (idx > -1) {
+        this.setData({ expandedIdx: idx, scrollToId: 'act-' + this._targetActivityId });
+      }
+      this._targetActivityId = '';
+    }
   },
 
   async _loadMyOpenid() {
@@ -440,7 +455,100 @@ Page({
 
   noop() {},
 
-  onShareAppMessage() {
+  onShareAppMessage(e) {
+    if (e && e.target && e.target.dataset.idx !== undefined) {
+      const act = this.data.activities[e.target.dataset.idx];
+      if (act) {
+        const m = act.date.slice(5);
+        const title = m + ' ' + act.time + '-' + (act.endTime || act.time) + '\n' + act.location;
+        const p = this.data.myOpenid ? this._genShareImage(act).then(img => {
+          return { title, imageUrl: img, path: 'pages/activity/activity?activityId=' + act.id };
+        }) : { title, path: 'pages/activity/activity?activityId=' + act.id };
+        return p;
+      }
+    }
     return { title: '网球训练助手', path: 'pages/activity/activity' };
-  }
+  },
+
+  _genShareImage(act) {
+    return new Promise((resolve) => {
+      const W = 400, H = 400;
+      wx.createSelectorQuery().select('#shareCanvas').node((res) => {
+        const canvas = res.node;
+        const ctx = canvas.getContext('2d');
+        const dpr = wx.getSystemInfoSync().pixelRatio;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        ctx.scale(dpr, dpr);
+
+        const typeMap = { singles: '单打', doubles: '双打', practice: '练习' };
+        const t = typeMap[act.type] || '';
+
+        // White background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+
+        // Green header bar
+        const hh = 56;
+        const pad = 28;
+        ctx.fillStyle = '#2ecc71';
+        ctx.fillRect(0, 0, W, hh);
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillStyle = '#fff';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        const weekday = ['日', '一', '二', '三', '四', '五', '六'][new Date(act.date + 'T00:00:00').getDay()];
+        const headerText = act.date.slice(5) + ' 周' + weekday + '  ' + act.time + '-' + (act.endTime || act.time);
+        ctx.fillText(headerText, W / 2, hh / 2);
+
+        // Calculate vertical center for content
+        const contentH = 280;
+        let y = hh + (H - hh - contentH) / 2;
+
+        // Location
+        ctx.font = 'bold 32px sans-serif';
+        ctx.fillStyle = '#222';
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'center';
+        ctx.fillText(act.location, W / 2, y);
+        y += 46;
+
+        // Type
+        ctx.font = 'bold 28px sans-serif';
+        ctx.fillStyle = '#555';
+        ctx.fillText(t, W / 2, y);
+        y += 40;
+
+        // Level limit
+        const ll = '男 ' + (act.levelMinMale || 0).toFixed(1) + '+  女 ' + (act.levelMinFemale || 0).toFixed(1) + '+';
+        ctx.font = '22px sans-serif';
+        ctx.fillStyle = '#888';
+        ctx.fillText('水平限制：' + ll, W / 2, y);
+        y += 36;
+
+        // Count row
+        const mc = (act.participants || []).filter(p => p.gender === 'male').length;
+        const fc = (act.participants || []).filter(p => p.gender === 'female').length;
+        ctx.font = 'bold 26px sans-serif';
+        ctx.fillStyle = '#333';
+        ctx.fillText('男[' + mc + '/' + act.maxMale + ']  女[' + fc + '/' + act.maxFemale + ']  总[' + (mc + fc) + '/' + (act.totalPlayers || 0) + ']', W / 2, y);
+        y += 38;
+
+        // Fee
+        if (act.fee) {
+          ctx.font = '24px sans-serif';
+          ctx.fillStyle = '#e67e22';
+          ctx.textAlign = 'center';
+          ctx.fillText(act.fee + '元/人', W / 2, y);
+        }
+
+        wx.canvasToTempFilePath({
+          canvas, x: 0, y: 0, width: W, height: H,
+          destWidth: W, destHeight: H,
+          success: (res2) => resolve(res2.tempFilePath),
+          fail: () => resolve('')
+        });
+      }).exec();
+    });
+  },
 });

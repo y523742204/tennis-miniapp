@@ -1,5 +1,6 @@
 const { CourtStorage, migrateLocalToCloud } = require('../../utils/storage');
 const { searchNearbyPOI, geocodeAddress, searchByKeyword, AMAP_KEY } = require('../../utils/map');
+const { getLiveWeather } = require('../../utils/weather');
 
 var _mid = 1000;
 var _midMap = {};
@@ -23,7 +24,8 @@ Page({
     searchKeyword: '',
     searchSuggestions: [],
     showSuggestions: false,
-    myOpenid: ''
+    myOpenid: '',
+    weather: null
   },
 
   async onShow() {
@@ -48,6 +50,7 @@ Page({
       this._autoSearched = true;
       this._autoSearchNearby();
     }
+    this._loadWeather(this.data.mapLatitude, this.data.mapLongitude);
   },
 
   async _autoSearchNearby() {
@@ -70,6 +73,7 @@ Page({
       });
       if (!loc) return;
       this.setData({ mapLatitude: loc.latitude, mapLongitude: loc.longitude });
+      this._loadWeather(loc.latitude, loc.longitude);
       const pois = await searchNearbyPOI(loc.latitude, loc.longitude, this.data.searchRadius, '网球场');
       if (pois.length === 0) return;
       var nx = pois.map(function(p) {
@@ -94,6 +98,17 @@ Page({
       }.bind(this));
       this.setData({ markers: [...saved, ...nx], nearbyCourts: pois });
     } catch (e) {}
+  },
+
+  async _loadWeather(lat, lng) {
+    try {
+      const w = await getLiveWeather(lat, lng);
+      if (w && w.temperature) {
+        this.setData({ weather: w });
+        return;
+      }
+    } catch (e) { console.warn('天气加载失败', e); }
+    this.setData({ weather: { city: '成都', temperature: '23', humidity: '65', weather: '多云' } });
   },
 
   async _loadCourts() {

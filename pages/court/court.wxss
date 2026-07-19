@@ -28,7 +28,7 @@
 }
 .mode-tab:active { opacity: 0.8; }
 
-.list-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.list-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 80rpx; }
 .court-card {
   background: #fff;
   margin: 16rpx 20rpx;
@@ -147,6 +147,16 @@
   flex: 1; height: 80rpx; display: flex; align-items: center; justify-content: center;
   border-radius: 40rpx; font-size: 30rpx; font-weight: 500;
 }
+.weather-bar {
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; gap: 12rpx;
+  padding: 12rpx 20rpx;
+  background: rgba(240,249,240,0.95); border-top: 2rpx solid #d4edda;
+  font-size: 24rpx; color: #555;
+}
+.weather-bar .w-temp { font-size: 28rpx; font-weight: 600; color: #2e7d32; }
+.weather-bar .w-humid { color: #5a9; }
+.weather-bar .w-city { font-weight: 500; color: #333; }
 .f-cancel { background: #f5f5f5; color: #666; }
 .f-submit { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff; }
 .f-cancel:active, .f-submit:active { opacity: 0.8; }
