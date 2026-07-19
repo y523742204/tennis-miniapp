@@ -22,6 +22,9 @@ function singlesRoundsHint(n, m) {
   for (let y = 2; y < n; y++) {
     if ((n * y) % denom === 0) parts.push((n * y / denom) + '轮 (' + y + '场/人)');
   }
+  const full = Math.ceil(n * (n - 1) / (2 * maxM));
+  const fullText = full + '轮 (' + (n - 1) + '场/人)';
+  if (parts.indexOf(fullText) === -1) parts.push('完整循环：' + fullText);
   return parts.length ? '推荐轮数：' + parts.join(' ') : '';
 }
 function defaultCourts(mode, maleCount, femaleCount, firstRoundType) {
