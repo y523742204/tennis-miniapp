@@ -17,11 +17,12 @@ function singlesDefaultRounds(n, m) {
 function singlesRoundsHint(n, m) {
   const maxM = Math.min(m, Math.floor(n / 2));
   if (maxM < 1) return '';
+  const denom = 2 * maxM;
   const parts = [];
   for (let y = 2; y < n; y++) {
-    parts.push(Math.ceil(n * y / (2 * maxM)) + '轮 (' + y + '场/人)');
+    if ((n * y) % denom === 0) parts.push((n * y / denom) + '轮 (' + y + '场/人)');
   }
-  return '推荐轮数：' + parts.join(' ');
+  return parts.length ? '推荐轮数：' + parts.join(' ') : '';
 }
 function defaultCourts(mode, maleCount, femaleCount, firstRoundType) {
   const n = maleCount + femaleCount;
