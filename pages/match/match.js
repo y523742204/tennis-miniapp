@@ -10,6 +10,9 @@ function defaultNames(maleCount, femaleCount) {
 function defaultNamesSingles(count) {
   return Array.from({ length: count }, (_, i) => '选手' + (i + 1));
 }
+function singlesDefaultRounds(n, m) {
+  return Math.ceil(n * (n - 1) / (2 * m)) || 1;
+}
 function defaultCourts(mode, maleCount, femaleCount, firstRoundType) {
   const n = maleCount + femaleCount;
   if (mode === 'singles' || firstRoundType === 'single') return Math.floor(n / 2) || 1;
@@ -82,6 +85,11 @@ Page({
       const c = defaultCourts('singles', count, 0, 'normal');
       patch['scheduleForm.courts'] = c;
       patch['scheduleForm.courtLabels'] = defaultCourtLabels(c);
+      if (this.data.scheduleForm.mode === 'singles') {
+        const x = singlesDefaultRounds(count, c);
+        patch['scheduleForm.rounds'] = x;
+        patch['scheduleForm.roundTypes'] = Array(x).fill('normal');
+      }
     }
     if (field === 'maleCount' || field === 'femaleCount') {
       const mc = field === 'maleCount' ? val : this.data.scheduleForm.maleCount;
@@ -100,6 +108,12 @@ Page({
       patch['scheduleForm.courtLabels'] = val > cur.length
         ? [...cur, ...Array(val - cur.length).fill('').map((_, i) => (cur.length + i + 1) + '号场')]
         : cur.slice(0, val);
+      if (this.data.scheduleForm.mode === 'singles') {
+        const n = this.data.scheduleForm.playerCount;
+        const x = singlesDefaultRounds(n, val);
+        patch['scheduleForm.rounds'] = x;
+        patch['scheduleForm.roundTypes'] = Array(x).fill('normal');
+      }
     }
     if (field === 'rounds') {
       const cur = this.data.scheduleForm.roundTypes;
@@ -115,8 +129,9 @@ Page({
     const prev = this.data.scheduleForm;
     if (mode === 'singles') {
       const total = 6;
-      const names = defaultNamesSingles(total);
       const c = 2;
+      const x = singlesDefaultRounds(total, c);
+      const names = defaultNamesSingles(total);
       this.setData({
         'scheduleForm.mode': mode,
         'scheduleForm.playerCount': total,
@@ -125,10 +140,10 @@ Page({
         'scheduleForm.femaleNames': [],
         'scheduleForm.maleCount': total,
         'scheduleForm.femaleCount': 0,
-        'scheduleForm.rounds': 5,
+        'scheduleForm.rounds': x,
         'scheduleForm.courts': c,
         'scheduleForm.courtLabels': defaultCourtLabels(c),
-        'scheduleForm.roundTypes': ['normal', 'normal', 'normal', 'normal', 'normal'],
+        'scheduleForm.roundTypes': Array(x).fill('normal'),
         'scheduleForm.fixedPairs': []
       });
     } else {
