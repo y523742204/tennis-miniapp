@@ -25,7 +25,7 @@ Page({
     searchSuggestions: [],
     showSuggestions: false,
     myOpenid: '',
-    weather: null,
+    weather: { city: '定位中...', temperature: '--', humidity: '--', weather: '' },
     weatherPopup: { visible: false, courtName: '', live: null, forecast: null }
   },
 
@@ -160,6 +160,7 @@ Page({
               mapLatitude: res.latitude,
               mapLongitude: res.longitude
             });
+            this._loadWeather(res.latitude, res.longitude);
           },
           fail: () => {
             wx.showToast({ title: '获取位置失败，使用默认位置', icon: 'none' });
