@@ -9,9 +9,7 @@ function assignCourts(matches, numCourts) {
 function generateSinglesRound(players, round, numCourts) {
   const n = players.length;
   if (n < 2) return { matches: [], byes: players.map(p => p.label) };
-  // Rotate anchor each round so every player gets fair bye distribution
-  const shift = round % n;
-  const shifted = [...players.slice(shift), ...players.slice(0, shift)];
+  // Standard circle method – fixed anchor (index 0) never sits out
   const indices = [0];
   for (let i = 1; i < n; i++) {
     indices.push(1 + (i - 1 + round) % (n - 1));
@@ -21,13 +19,12 @@ function generateSinglesRound(players, round, numCourts) {
   const paired = new Set();
   for (let i = 0; i < max; i++) {
     const j = n - 1 - i;
-    const p1 = shifted[indices[i]];
-    const p2 = shifted[indices[j]];
+    const p1 = players[indices[i]];
+    const p2 = players[indices[j]];
     matches.push({ teams: [[p1.label], [p2.label]] });
-    paired.add(p1.label);
-    paired.add(p2.label);
+    paired.add(p1.label); paired.add(p2.label);
   }
-  const byes = shifted.filter(p => !paired.has(p.label)).map(p => p.label);
+  const byes = players.filter(p => !paired.has(p.label)).map(p => p.label);
   return { matches, byes };
 }
 
@@ -151,26 +148,48 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
     }
     femaleBase = allFemales;
   }
+  const usedMatchups = new Set();
   for (let r = 0; r < rounds; r++) {
     const isMixed = roundTypes[r] === 'mixed';
     const result = mode === 'doubles'
       ? generateDoublesRound(players, r, roundTypes[r], fixedPairs, isMixed ? mixedRoundCount++ : -1, femaleBase)
       : generateSinglesRound(players, r, numCourts);
-    if (schedule.length > 0) {
-      let prevMatches = schedule[schedule.length - 1].matches;
+    if (mode === 'singles') {
+      // Drop any individual matchup that was already played; those players rest this round
       let retry = 0;
-      while (retry < 50) {
-        const currentKey = result.matches.map(m =>
-          JSON.stringify(m.teams)
-        ).sort().join('|');
-        const prevKey = prevMatches.map(m =>
-          JSON.stringify(m.teams)
-        ).sort().join('|');
-        if (currentKey !== prevKey) break;
-        const last = result.matches.pop();
-        result.matches.unshift(last);
+      while (retry < 50 && result.matches.length > 0) {
+        const dup = result.matches.findIndex(m => {
+          const key = [m.teams[0].join('+'), m.teams[1].join('+')].sort().join('|');
+          return usedMatchups.has(key);
+        });
+        if (dup < 0) break;
+        const m = result.matches.splice(dup, 1)[0];
+        result.byes.push(...m.teams[0], ...m.teams[1]);
         retry++;
       }
+    } else {
+      // Doubles: check vs previous round only
+      if (schedule.length > 0) {
+        let prevMatches = schedule[schedule.length - 1].matches;
+        let retry = 0;
+        while (retry < 50) {
+          const currentKey = result.matches.map(m =>
+            JSON.stringify(m.teams)
+          ).sort().join('|');
+          const prevKey = prevMatches.map(m =>
+            JSON.stringify(m.teams)
+          ).sort().join('|');
+          if (currentKey !== prevKey) break;
+          const last = result.matches.pop();
+          result.matches.unshift(last);
+          retry++;
+        }
+      }
+    }
+    // Record used matchups (only the ones that fit on courts)
+    for (const m of result.matches) {
+      const key = [m.teams[0].join('+'), m.teams[1].join('+')].sort().join('|');
+      usedMatchups.add(key);
     }
     schedule.push({
       round: r + 1,
