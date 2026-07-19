@@ -41,17 +41,17 @@ function generateBalancedSingles(players, numCourts, targetRounds) {
   for (let r = 0; r < targetRounds; r++) {
     const usedInRound = new Set();
     const matches = [];
-    // Find available matchups where neither player is used this round
-    const candidates = allMatchups.filter(m => !m.used && !usedInRound.has(m.p1) && !usedInRound.has(m.p2));
-    // Sort by play count (players with fewer matches get priority)
-    candidates.sort((a, b) => {
+    // Sort all unused matchups by play count; select one at a time to avoid double-booking
+    const pool = allMatchups.filter(m => !m.used);
+    pool.sort((a, b) => {
       const aMax = Math.max(playCount[a.p1], playCount[a.p2]);
       const bMax = Math.max(playCount[b.p1], playCount[b.p2]);
       if (aMax !== bMax) return aMax - bMax;
       return Math.min(playCount[a.p1], playCount[a.p2]) - Math.min(playCount[b.p1], playCount[b.p2]);
     });
-    const selected = candidates.slice(0, numCourts);
-    for (const m of selected) {
+    for (const m of pool) {
+      if (matches.length >= numCourts) break;
+      if (usedInRound.has(m.p1) || usedInRound.has(m.p2)) continue;
       m.used = true;
       matches.push({ teams: [[m.p1], [m.p2]] });
       usedInRound.add(m.p1);
