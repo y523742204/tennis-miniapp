@@ -109,7 +109,7 @@ Page({
   },
 
   scheduleModeChange(e) {
-    const mode = e.detail.value === 0 ? 'singles' : 'doubles';
+    const mode = e.detail.value == 0 ? 'singles' : 'doubles';
     const prev = this.data.scheduleForm;
     if (mode === 'singles') {
       const total = prev.playerNames.length;
