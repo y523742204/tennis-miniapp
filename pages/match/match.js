@@ -11,6 +11,11 @@ function defaultNamesSingles(count) {
   return Array.from({ length: count }, (_, i) => '选手' + (i + 1));
 }
 function singlesDefaultRounds(n, m) {
+  let x = Math.ceil(n / (2 * m)) || 1;
+  while (x <= n * (n - 1)) {
+    if ((2 * m * x) % n === 0) return x;
+    x++;
+  }
   return Math.ceil(n * (n - 1) / (2 * m)) || 1;
 }
 function defaultCourts(mode, maleCount, femaleCount, firstRoundType) {
