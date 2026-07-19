@@ -6,24 +6,28 @@ function assignCourts(matches, numCourts) {
   }));
 }
 
-function generateSinglesRound(players, round) {
+function generateSinglesRound(players, round, numCourts) {
   const n = players.length;
   if (n < 2) return { matches: [], byes: players.map(p => p.label) };
+  // Rotate anchor each round so every player gets fair bye distribution
+  const shift = round % n;
+  const shifted = [...players.slice(shift), ...players.slice(0, shift)];
   const indices = [0];
   for (let i = 1; i < n; i++) {
     indices.push(1 + (i - 1 + round) % (n - 1));
   }
+  const max = Math.min(Math.floor(n / 2), numCourts);
   const matches = [];
-  const byes = [];
-  for (let i = 0; i < Math.floor(n / 2); i++) {
+  const paired = new Set();
+  for (let i = 0; i < max; i++) {
     const j = n - 1 - i;
-    matches.push({
-      teams: [[players[indices[i]].label], [players[indices[j]].label]]
-    });
+    const p1 = shifted[indices[i]];
+    const p2 = shifted[indices[j]];
+    matches.push({ teams: [[p1.label], [p2.label]] });
+    paired.add(p1.label);
+    paired.add(p2.label);
   }
-  if (n % 2 === 1) {
-    byes.push(players[indices[Math.floor(n / 2)]].label);
-  }
+  const byes = shifted.filter(p => !paired.has(p.label)).map(p => p.label);
   return { matches, byes };
 }
 
@@ -151,7 +155,7 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
     const isMixed = roundTypes[r] === 'mixed';
     const result = mode === 'doubles'
       ? generateDoublesRound(players, r, roundTypes[r], fixedPairs, isMixed ? mixedRoundCount++ : -1, femaleBase)
-      : generateSinglesRound(players, r);
+      : generateSinglesRound(players, r, numCourts);
     if (schedule.length > 0) {
       let prevMatches = schedule[schedule.length - 1].matches;
       let retry = 0;
