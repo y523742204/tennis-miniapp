@@ -54,9 +54,27 @@ function generateSinglesSchedule(players, numCourts, targetRounds, targetPerPlay
       return Math.min(remaining[a.p1], remaining[a.p2]) - Math.min(remaining[b.p1], remaining[b.p2]);
     });
 
-    for (const m of pool) {
-      if (matches.length >= numCourts) break;
-      if (usedInRound.has(m.p1) || usedInRound.has(m.p2)) continue;
+    // DFS: find max non-conflicting match subset from pool
+    const maxSize = Math.min(numCourts, pool.length);
+    function dfsSearch(idx, selected, used) {
+      let best = selected.slice();
+      if (selected.length >= maxSize || idx >= pool.length) return best;
+      // skip current
+      best = dfsSearch(idx + 1, selected, used);
+      // take current if both free
+      const m = pool[idx];
+      if (!used.has(m.p1) && !used.has(m.p2)) {
+        used.add(m.p1); used.add(m.p2);
+        selected.push(m);
+        const cand = dfsSearch(idx + 1, selected, used);
+        if (cand.length > best.length) best = cand;
+        selected.pop();
+        used.delete(m.p1); used.delete(m.p2);
+      }
+      return best;
+    }
+    const selected = dfsSearch(0, [], new Set());
+    for (const m of selected) {
       m.used = true;
       matches.push({ teams: [[m.p1], [m.p2]] });
       usedInRound.add(m.p1);
