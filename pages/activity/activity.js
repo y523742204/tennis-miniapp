@@ -294,33 +294,30 @@ Page({
     if (!name) { wx.showToast({ title: '请输入姓名', icon: 'none' }); return; }
     wx.setStorageSync('activity_user_name', name);
 
-    const gender = this.data.joinGender;
-    const isFull = gender === 'male'
-      ? act.participants.filter(p => p.gender === 'male').length >= act.maxMale
-      : act.participants.filter(p => p.gender === 'female').length >= act.maxFemale;
-    const obj = { name, gender, level: this.data.joinLevel, openid: this.data.myOpenid };
-    if (isFull) {
-      act.waitlist.push(obj);
-      wx.showToast({ title: '名额已满，已加入候补', icon: 'none' });
-    } else {
-      act.participants.push(obj);
-      wx.showToast({ title: '已报名', icon: 'success' });
+    wx.showLoading({ title: '报名中...' });
+    try {
+      const res = await wx.cloud.callFunction({
+        name: 'joinActivity',
+        data: {
+          action: 'join',
+          activityId: act.id,
+          name: name,
+          gender: this.data.joinGender,
+          level: this.data.joinLevel
+        }
+      });
+      wx.hideLoading();
+      if (res.result && res.result.success) {
+        wx.showToast({ title: res.result.waitlisted ? '已加入候补' : '已报名', icon: 'success' });
+      } else {
+        wx.showToast({ title: '报名失败', icon: 'none' });
+      }
+    } catch (e) {
+      wx.hideLoading();
+      wx.showToast({ title: '报名失败', icon: 'none' });
     }
-    await ActivityStorage.save(act);
     this.hideJoinDialog();
     await this._loadActivities();
-  },
-
-  _removePerson(act, p) {
-    const pi = act.participants.indexOf(p);
-    if (pi > -1) {
-      act.participants.splice(pi, 1);
-      const wi = act.waitlist.findIndex(w => w.gender === p.gender);
-      if (wi > -1) act.participants.push(act.waitlist.splice(wi, 1)[0]);
-      return;
-    }
-    const wi = act.waitlist.indexOf(p);
-    if (wi > -1) act.waitlist.splice(wi, 1);
   },
 
   async cancelJoin(e) {
@@ -331,9 +328,18 @@ Page({
     const me = all.filter(p => p.openid === this.data.myOpenid);
     if (me.length === 0) return;
     if (me.length === 1) {
-      this._removePerson(act, me[0]);
-      await ActivityStorage.save(act);
-      wx.showToast({ title: '已取消', icon: 'success' });
+      wx.showLoading({ title: '取消中...' });
+      try {
+        await wx.cloud.callFunction({
+          name: 'joinActivity',
+          data: { action: 'leave', activityId: act.id, name: me[0].name }
+        });
+        wx.hideLoading();
+        wx.showToast({ title: '已取消', icon: 'success' });
+      } catch (e) {
+        wx.hideLoading();
+        wx.showToast({ title: '取消失败', icon: 'none' });
+      }
       await this._loadActivities();
     } else {
       this.setData({ cancelTarget: idx, cancelNames: me.map(p => p.name) });
@@ -434,19 +440,24 @@ Page({
     this.setData({ showPwd: false, pwdInput: '' });
   },
 
-  selectCancelName(e) {
+  async selectCancelName(e) {
     const name = e.currentTarget.dataset.name;
     const act = this.data.activities[this.data.cancelTarget];
     if (!act) return;
-    const all = (act.participants || []).concat(act.waitlist || []);
-    const p = all.find(p => p.name === name && p.openid === this.data.myOpenid);
-    if (!p) return;
-    this._removePerson(act, p);
-    ActivityStorage.save(act).then(() => {
+    wx.showLoading({ title: '取消中...' });
+    try {
+      await wx.cloud.callFunction({
+        name: 'joinActivity',
+        data: { action: 'leave', activityId: act.id, name: name }
+      });
+      wx.hideLoading();
       this.setData({ cancelTarget: -1, cancelNames: [] });
       wx.showToast({ title: '已取消', icon: 'success' });
-      this._loadActivities();
-    });
+    } catch (e) {
+      wx.hideLoading();
+      wx.showToast({ title: '取消失败', icon: 'none' });
+    }
+    await this._loadActivities();
   },
 
   hideCancelPicker() {
