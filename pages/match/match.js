@@ -114,9 +114,9 @@ Page({
     const mode = e.detail.value == 0 ? 'singles' : 'doubles';
     const prev = this.data.scheduleForm;
     if (mode === 'singles') {
-      const total = prev.playerNames.length;
+      const total = 6;
       const names = defaultNamesSingles(total);
-      const c = defaultCourts('singles', total, 0, 'normal');
+      const c = 2;
       this.setData({
         'scheduleForm.mode': mode,
         'scheduleForm.playerCount': total,
@@ -125,10 +125,11 @@ Page({
         'scheduleForm.femaleNames': [],
         'scheduleForm.maleCount': total,
         'scheduleForm.femaleCount': 0,
+        'scheduleForm.rounds': 5,
         'scheduleForm.courts': c,
         'scheduleForm.courtLabels': defaultCourtLabels(c),
-        'scheduleForm.fixedPairs': [],
-        'scheduleForm.roundTypes': prev.roundTypes.map(() => 'normal')
+        'scheduleForm.roundTypes': ['normal', 'normal', 'normal', 'normal', 'normal'],
+        'scheduleForm.fixedPairs': []
       });
     } else {
       const mc = Math.ceil(prev.playerNames.length / 2);
