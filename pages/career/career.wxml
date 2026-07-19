@@ -69,7 +69,4 @@
     </view>
   </view>
 
-  <view class="debug-row">
-    <text class="debug-text">openid: {{cloudOpenid}}</text>
-  </view>
 </view>

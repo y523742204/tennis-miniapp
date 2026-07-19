@@ -381,7 +381,7 @@ Page({
       : names.map((n, i) => ({ label: n, gender: i < f.maleCount ? 'male' : 'female' }));
     const result = generateSchedule(f.mode, players, f.rounds, f.courts, f.roundTypes, f.fixedPairs);
     result.maleCount = f.mode === 'singles' ? total : f.maleCount;
-    result.femaleCount = 0;
+    result.femaleCount = f.mode === 'singles' ? 0 : (total - f.maleCount);
     result.courtLabels = [...f.courtLabels];
     this.setData({ currentSchedule: result });
   },

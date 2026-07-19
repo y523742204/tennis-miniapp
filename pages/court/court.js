@@ -17,8 +17,8 @@ Page({
     radiusIndex: 2,
     searching: false,
     nearbyCourts: [],
-    mapLongitude: 116.4,
-    mapLatitude: 39.9,
+    mapLongitude: null,
+    mapLatitude: null,
     hasKey: !!AMAP_KEY,
     showMigrate: false,
     searchKeyword: '',
@@ -51,7 +51,9 @@ Page({
       this._autoSearched = true;
       this._autoSearchNearby();
     }
-    this._loadWeather(this.data.mapLatitude, this.data.mapLongitude);
+    if (this.data.mapLatitude && this.data.mapLongitude) {
+      this._loadWeather(this.data.mapLatitude, this.data.mapLongitude);
+    }
   },
 
   async _autoSearchNearby() {
@@ -72,7 +74,7 @@ Page({
           fail: () => reject()
         });
       });
-      if (!loc) return;
+      if (!loc) throw new Error('no location');
       this.setData({ mapLatitude: loc.latitude, mapLongitude: loc.longitude });
       this._loadWeather(loc.latitude, loc.longitude);
       const pois = await searchNearbyPOI(loc.latitude, loc.longitude, this.data.searchRadius, '网球场');
@@ -98,7 +100,12 @@ Page({
         };
       }.bind(this));
       this.setData({ markers: [...saved, ...nx], nearbyCourts: pois });
-    } catch (e) {}
+    } catch (e) {
+      if (!this.data.mapLatitude) {
+        this.setData({ mapLatitude: 30.57, mapLongitude: 104.07 });
+        this._loadWeather(30.57, 104.07);
+      }
+    }
   },
 
   async _loadWeather(lat, lng) {
@@ -150,6 +157,10 @@ Page({
   },
 
   _loadMap() {
+    const setFallback = () => {
+      this.setData({ mapLatitude: 30.57, mapLongitude: 104.07 });
+      this._loadWeather(30.57, 104.07);
+    };
     wx.authorize({
       scope: 'scope.userLocation',
       success: () => {
@@ -164,11 +175,13 @@ Page({
           },
           fail: () => {
             wx.showToast({ title: '获取位置失败，使用默认位置', icon: 'none' });
+            setFallback();
           }
         });
       },
       fail: () => {
         wx.showToast({ title: '需授权位置信息才能使用地图', icon: 'none' });
+        setFallback();
       }
     });
   },

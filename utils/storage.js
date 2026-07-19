@@ -26,6 +26,7 @@ function createStorage(type) {
     async getAll(openid) {
       try {
         const db = getDB();
+        if (openid === '') return [];
         const cond = openid ? { _openid: openid } : {};
         const res = await db.collection(colName)
           .where(cond)
@@ -176,6 +177,7 @@ const ActivityStorage = {
       const db = getDB();
       const res = await db.collection('activity').get();
       const data = (res.data || []).map(r => ({ ...r, id: r._id }));
+      data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       setLocal('tennis_activity', data);
       return data;
     } catch (e) {

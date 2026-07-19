@@ -51,12 +51,14 @@
       </picker>
       <view class="map-search-btn {{searching ? 'loading' : ''}}" bindtap="searchNearby">{{searching ? '搜索中...' : '搜附近网球场'}}</view>
     </view>
-    <map class="map" longitude="{{mapLongitude}}" latitude="{{mapLatitude}}" scale="14"
+    <map wx:if="{{mapLongitude && mapLatitude}}" class="map"
+         longitude="{{mapLongitude}}" latitude="{{mapLatitude}}" scale="14"
          markers="{{markers}}"
          show-location
          bindcallouttap="onCalloutTap">
     </map>
-    <view wx:if="{{!hasKey}}" class="map-hint">需在 utils/map.js 配置高德地图 Key</view>
+    <view wx:elif="{{!hasKey}}" class="map-hint">需在 utils/map.js 配置高德地图 Key</view>
+    <view wx:else class="map-loading">正在获取位置…</view>
   </view>
 
   <view wx:if="{{showForm}}" class="overlay" bindtap="closeForm">

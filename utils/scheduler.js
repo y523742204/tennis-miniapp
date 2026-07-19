@@ -196,21 +196,23 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
     for (let r = 0; r < rounds; r++) {
       const isMixed = roundTypes[r] === 'mixed';
       const result = generateDoublesRound(players, r, roundTypes[r], fixedPairs, isMixed ? mixedRoundCount++ : -1, femaleBase);
-      // Doubles: check vs previous round only
+      // Reduce duplicate matchups vs previous round by swapping players between teams
       if (schedule.length > 0) {
-        let prevMatches = schedule[schedule.length - 1].matches;
-        let retry = 0;
-        while (retry < 50) {
-          const currentKey = result.matches.map(m =>
-            JSON.stringify(m.teams)
-          ).sort().join('|');
-          const prevKey = prevMatches.map(m =>
-            JSON.stringify(m.teams)
-          ).sort().join('|');
-          if (currentKey !== prevKey) break;
-          const last = result.matches.pop();
-          result.matches.unshift(last);
-          retry++;
+        const dupKey = () => result.matches.map(m =>
+          JSON.stringify(m.teams)
+        ).sort().join('|');
+        const prevKey = schedule[schedule.length - 1].matches.map(m =>
+          JSON.stringify(m.teams)
+        ).sort().join('|');
+        if (dupKey() === prevKey) {
+          for (const match of result.matches) {
+            if (match.teams.length === 2 && match.teams[0].length > 0 && match.teams[1].length > 0) {
+              const last = match.teams[0].pop();
+              const first = match.teams[1].shift();
+              match.teams[0].push(first);
+              match.teams[1].unshift(last);
+            }
+          }
         }
       }
       schedule.push({
