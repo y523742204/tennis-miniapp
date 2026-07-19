@@ -14,6 +14,15 @@ function singlesDefaultRounds(n, m) {
   const maxM = Math.min(m, Math.floor(n / 2));
   return Math.ceil(n * (n - 1) / (2 * maxM)) || 1;
 }
+function singlesRoundsHint(n, m) {
+  const maxM = Math.min(m, Math.floor(n / 2));
+  if (maxM < 1) return '';
+  const parts = [];
+  for (let y = 1; y < n; y++) {
+    parts.push(Math.ceil(n * y / (2 * maxM)) + '(' + y + ')');
+  }
+  return '推荐轮数：' + parts.join(' / ');
+}
 function defaultCourts(mode, maleCount, femaleCount, firstRoundType) {
   const n = maleCount + femaleCount;
   if (mode === 'singles' || firstRoundType === 'single') return Math.floor(n / 2) || 1;
@@ -39,7 +48,8 @@ Page({
       courts: defaultCourts('doubles', 4, 4, 'normal'),
       roundTypes: ['normal', 'mixed', 'mixed', 'mixed', 'mixed'],
       courtLabels: defaultCourtLabels(defaultCourts('doubles', 4, 4, 'normal')),
-      fixedPairs: []
+      fixedPairs: [],
+      roundsHint: ''
     },
     showFixedPairPanel: false,
     fixedPairSel1: null,
@@ -90,6 +100,7 @@ Page({
         const x = singlesDefaultRounds(count, c);
         patch['scheduleForm.rounds'] = x;
         patch['scheduleForm.roundTypes'] = Array(x).fill('normal');
+        patch['scheduleForm.roundsHint'] = singlesRoundsHint(count, c);
       }
     }
     if (field === 'maleCount' || field === 'femaleCount') {
@@ -114,6 +125,7 @@ Page({
         const x = singlesDefaultRounds(n, val);
         patch['scheduleForm.rounds'] = x;
         patch['scheduleForm.roundTypes'] = Array(x).fill('normal');
+        patch['scheduleForm.roundsHint'] = singlesRoundsHint(n, val);
       }
     }
     if (field === 'rounds') {
@@ -145,7 +157,8 @@ Page({
         'scheduleForm.courts': c,
         'scheduleForm.courtLabels': defaultCourtLabels(c),
         'scheduleForm.roundTypes': Array(x).fill('normal'),
-        'scheduleForm.fixedPairs': []
+        'scheduleForm.fixedPairs': [],
+        'scheduleForm.roundsHint': singlesRoundsHint(total, c)
       });
     } else {
       const mc = Math.ceil(prev.playerNames.length / 2);

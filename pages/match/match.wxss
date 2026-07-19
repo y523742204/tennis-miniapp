@@ -32,6 +32,12 @@
   border: 2rpx solid #e5e7eb;
   border-radius: 10rpx;
 }
+.sch-hint {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 6rpx;
+  line-height: 1.4;
+}
 
 .sch-row {
   display: flex;
