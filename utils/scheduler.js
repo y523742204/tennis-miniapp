@@ -6,83 +6,58 @@ function assignCourts(matches, numCourts) {
   }));
 }
 
-function generateSinglesRound(players, round, numCourts) {
+function generateSinglesSchedule(players, numCourts, targetRounds) {
   const n = players.length;
-  if (n < 2) return { matches: [], byes: players.map(p => p.label) };
-  const indices = [0];
-  for (let i = 1; i < n; i++) {
-    indices.push(1 + (i - 1 + round) % (n - 1));
-  }
-  const max = Math.min(Math.floor(n / 2), numCourts);
-  const matches = [];
-  const paired = new Set();
-  for (let i = 0; i < max; i++) {
-    const j = n - 1 - i;
-    const p1 = players[indices[i]];
-    const p2 = players[indices[j]];
-    matches.push({ teams: [[p1.label], [p2.label]] });
-    paired.add(p1.label); paired.add(p2.label);
-  }
-  const byes = players.filter(p => !paired.has(p.label)).map(p => p.label);
-  return { matches, byes };
-}
+  if (n < 2) return [];
+  const m = Math.min(numCourts, Math.floor(n / 2));
+  const k = Math.min(2 * m, n);
+  if (k < 2) return [];
 
-function generateSinglesSchedule(players, numCourts, targetRounds, targetPerPlayer) {
-  const n = players.length;
-  // All possible unique matchups
-  const allMatchups = [];
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      allMatchups.push({ p1: players[i].label, p2: players[j].label, used: false });
-    }
-  }
-  // Remaining matches each player still needs
-  const remaining = {};
-  players.forEach(p => { remaining[p.label] = targetPerPlayer; });
-
+  const usedKey = new Set();
+  const toKey = (a, b) => a < b ? `${a}-${b}` : `${b}-${a}`;
+  const queue = players.map(p => p.label);
   const schedule = [];
+
   for (let r = 0; r < targetRounds; r++) {
-    const usedInRound = new Set();
-    const matches = [];
+    const playing = queue.slice(0, k);
+    const byes = queue.slice(k);
 
-    const pool = allMatchups.filter(m => !m.used && remaining[m.p1] > 0 && remaining[m.p2] > 0);
-    // Sort: players with more remaining matches get priority
-    pool.sort((a, b) => {
-      const aSum = remaining[a.p1] + remaining[a.p2];
-      const bSum = remaining[b.p1] + remaining[b.p2];
-      if (aSum !== bSum) return bSum - aSum;
-      return Math.min(remaining[a.p1], remaining[a.p2]) - Math.min(remaining[b.p1], remaining[b.p2]);
-    });
+    const pool = [];
+    for (let i = 0; i < playing.length; i++) {
+      for (let j = i + 1; j < playing.length; j++) {
+        const key = toKey(playing[i], playing[j]);
+        if (!usedKey.has(key)) pool.push({ p1: playing[i], p2: playing[j], key });
+      }
+    }
 
-    // DFS: find max non-conflicting match subset from pool
-    const maxSize = Math.min(numCourts, pool.length);
+    const maxSize = Math.min(m, pool.length);
     function dfsSearch(idx, selected, used) {
       let best = selected.slice();
       if (selected.length >= maxSize || idx >= pool.length) return best;
-      // skip current
       best = dfsSearch(idx + 1, selected, used);
-      // take current if both free
-      const m = pool[idx];
-      if (!used.has(m.p1) && !used.has(m.p2)) {
-        used.add(m.p1); used.add(m.p2);
-        selected.push(m);
+      const match = pool[idx];
+      if (!used.has(match.p1) && !used.has(match.p2)) {
+        used.add(match.p1); used.add(match.p2);
+        selected.push(match);
         const cand = dfsSearch(idx + 1, selected, used);
         if (cand.length > best.length) best = cand;
         selected.pop();
-        used.delete(m.p1); used.delete(m.p2);
+        used.delete(match.p1); used.delete(match.p2);
       }
       return best;
     }
+
     const selected = dfsSearch(0, [], new Set());
-    for (const m of selected) {
-      m.used = true;
-      matches.push({ teams: [[m.p1], [m.p2]] });
-      usedInRound.add(m.p1);
-      usedInRound.add(m.p2);
-      remaining[m.p1]--;
-      remaining[m.p2]--;
+    const matches = [];
+    const usedInRound = new Set();
+    for (const match of selected) {
+      usedKey.add(match.key);
+      matches.push({ teams: [[match.p1], [match.p2]] });
+      usedInRound.add(match.p1);
+      usedInRound.add(match.p2);
     }
-    const byes = players.filter(p => !usedInRound.has(p.label)).map(p => p.label);
+
+    queue.push(...queue.splice(0, k));
     schedule.push({ round: r + 1, matches, byes });
   }
   return schedule;
@@ -209,8 +184,7 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
     femaleBase = allFemales;
   }
   if (mode === 'singles') {
-    const y = Math.min(Math.floor(2 * numCourts * rounds / players.length), players.length - 1) || 1;
-    const singlesSchedule = generateSinglesSchedule(players, numCourts, rounds, y);
+    const singlesSchedule = generateSinglesSchedule(players, numCourts, rounds);
     for (const rd of singlesSchedule) {
       schedule.push({
         round: rd.round,
