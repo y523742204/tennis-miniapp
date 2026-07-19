@@ -9,7 +9,6 @@ function assignCourts(matches, numCourts) {
 function generateSinglesRound(players, round, numCourts) {
   const n = players.length;
   if (n < 2) return { matches: [], byes: players.map(p => p.label) };
-  // Standard circle method – fixed anchor (index 0) never sits out
   const indices = [0];
   for (let i = 1; i < n; i++) {
     indices.push(1 + (i - 1 + round) % (n - 1));
@@ -26,6 +25,44 @@ function generateSinglesRound(players, round, numCourts) {
   }
   const byes = players.filter(p => !paired.has(p.label)).map(p => p.label);
   return { matches, byes };
+}
+
+function generateBalancedSingles(players, numCourts, targetRounds) {
+  const n = players.length;
+  const allMatchups = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      allMatchups.push({ p1: players[i].label, p2: players[j].label, used: false });
+    }
+  }
+  const playCount = {};
+  players.forEach(p => { playCount[p.label] = 0; });
+  const schedule = [];
+  for (let r = 0; r < targetRounds; r++) {
+    const usedInRound = new Set();
+    const matches = [];
+    // Find available matchups where neither player is used this round
+    const candidates = allMatchups.filter(m => !m.used && !usedInRound.has(m.p1) && !usedInRound.has(m.p2));
+    // Sort by play count (players with fewer matches get priority)
+    candidates.sort((a, b) => {
+      const aMax = Math.max(playCount[a.p1], playCount[a.p2]);
+      const bMax = Math.max(playCount[b.p1], playCount[b.p2]);
+      if (aMax !== bMax) return aMax - bMax;
+      return Math.min(playCount[a.p1], playCount[a.p2]) - Math.min(playCount[b.p1], playCount[b.p2]);
+    });
+    const selected = candidates.slice(0, numCourts);
+    for (const m of selected) {
+      m.used = true;
+      matches.push({ teams: [[m.p1], [m.p2]] });
+      usedInRound.add(m.p1);
+      usedInRound.add(m.p2);
+      playCount[m.p1]++;
+      playCount[m.p2]++;
+    }
+    const byes = players.filter(p => !usedInRound.has(p.label)).map(p => p.label);
+    schedule.push({ round: r + 1, matches, byes });
+  }
+  return schedule;
 }
 
 function pairTeams(teamList, round) {
@@ -148,26 +185,19 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
     }
     femaleBase = allFemales;
   }
-  const usedMatchups = new Set();
-  for (let r = 0; r < rounds; r++) {
-    const isMixed = roundTypes[r] === 'mixed';
-    const result = mode === 'doubles'
-      ? generateDoublesRound(players, r, roundTypes[r], fixedPairs, isMixed ? mixedRoundCount++ : -1, femaleBase)
-      : generateSinglesRound(players, r, numCourts);
-    if (mode === 'singles') {
-      // Drop any individual matchup that was already played; those players rest this round
-      let retry = 0;
-      while (retry < 50 && result.matches.length > 0) {
-        const dup = result.matches.findIndex(m => {
-          const key = [m.teams[0].join('+'), m.teams[1].join('+')].sort().join('|');
-          return usedMatchups.has(key);
-        });
-        if (dup < 0) break;
-        const m = result.matches.splice(dup, 1)[0];
-        result.byes.push(...m.teams[0], ...m.teams[1]);
-        retry++;
-      }
-    } else {
+  if (mode === 'singles') {
+    const singlesSchedule = generateBalancedSingles(players, numCourts, rounds);
+    for (const rd of singlesSchedule) {
+      schedule.push({
+        round: rd.round,
+        matches: assignCourts(rd.matches, numCourts),
+        byes: rd.byes
+      });
+    }
+  } else {
+    for (let r = 0; r < rounds; r++) {
+      const isMixed = roundTypes[r] === 'mixed';
+      const result = generateDoublesRound(players, r, roundTypes[r], fixedPairs, isMixed ? mixedRoundCount++ : -1, femaleBase);
       // Doubles: check vs previous round only
       if (schedule.length > 0) {
         let prevMatches = schedule[schedule.length - 1].matches;
@@ -185,17 +215,12 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
           retry++;
         }
       }
+      schedule.push({
+        round: r + 1,
+        matches: assignCourts(result.matches, numCourts),
+        byes: result.byes
+      });
     }
-    // Record used matchups (only the ones that fit on courts)
-    for (const m of result.matches) {
-      const key = [m.teams[0].join('+'), m.teams[1].join('+')].sort().join('|');
-      usedMatchups.add(key);
-    }
-    schedule.push({
-      round: r + 1,
-      matches: assignCourts(result.matches, numCourts),
-      byes: result.byes
-    });
   }
   return {
     mode, playerNames, rounds: schedule.length, roundTypes,
