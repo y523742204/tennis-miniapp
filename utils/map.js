@@ -85,4 +85,4 @@ function searchByKeyword(keywords, location, radius) {
   });
 }
 
-module.exports = { searchNearbyPOI, geocodeAddress, searchByKeyword, AMAP_KEY };
+module.exports = { getAMap, searchNearbyPOI, geocodeAddress, searchByKeyword, AMAP_KEY };
