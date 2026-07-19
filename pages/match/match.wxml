@@ -111,7 +111,7 @@
 
       <view wx:if="{{scheduleForm.playerNames.length}}" class="sch-name-section">
         <view class="sch-name-title">选手姓名</view>
-        <view wx:if="{{scheduleForm.mode === 'singles'}}" class="sch-name-col">
+        <view wx:if="{{scheduleForm.mode === 'singles'}}" class="sch-name-singles">
           <view wx:for="{{scheduleForm.playerNames}}" wx:for-index="ni" wx:key="ni" class="sch-name-row">
             <input class="sch-name-input" value="{{item}}" data-idx="{{ni}}" bindinput="playerNameInput" placeholder="选手{{ni+1}}"/>
           </view>
