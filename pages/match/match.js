@@ -71,13 +71,15 @@ Page({
     const val = Number(e.detail.value) + (field === 'rounds' || field === 'courts' ? 1 : 0);
     const patch = { ['scheduleForm.' + field]: val };
     if (field === 'playerCount') {
-      const names = defaultNamesSingles(val);
+      const count = val + 2;
+      const names = defaultNamesSingles(count);
+      patch['scheduleForm.playerCount'] = count;
       patch['scheduleForm.playerNames'] = names;
-      patch['scheduleForm.maleCount'] = val;
+      patch['scheduleForm.maleCount'] = count;
       patch['scheduleForm.femaleCount'] = 0;
       patch['scheduleForm.maleNames'] = names.slice();
       patch['scheduleForm.femaleNames'] = [];
-      const c = defaultCourts('singles', val, 0, 'normal');
+      const c = defaultCourts('singles', count, 0, 'normal');
       patch['scheduleForm.courts'] = c;
       patch['scheduleForm.courtLabels'] = defaultCourtLabels(c);
     }
