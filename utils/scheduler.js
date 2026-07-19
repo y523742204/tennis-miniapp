@@ -27,28 +27,33 @@ function generateSinglesRound(players, round, numCourts) {
   return { matches, byes };
 }
 
-function generateBalancedSingles(players, numCourts, targetRounds) {
+function generateSinglesSchedule(players, numCourts, targetRounds, targetPerPlayer) {
   const n = players.length;
+  // All possible unique matchups
   const allMatchups = [];
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
       allMatchups.push({ p1: players[i].label, p2: players[j].label, used: false });
     }
   }
-  const playCount = {};
-  players.forEach(p => { playCount[p.label] = 0; });
+  // Remaining matches each player still needs
+  const remaining = {};
+  players.forEach(p => { remaining[p.label] = targetPerPlayer; });
+
   const schedule = [];
   for (let r = 0; r < targetRounds; r++) {
     const usedInRound = new Set();
     const matches = [];
-    // Sort all unused matchups by play count; select one at a time to avoid double-booking
-    const pool = allMatchups.filter(m => !m.used);
+
+    const pool = allMatchups.filter(m => !m.used && remaining[m.p1] > 0 && remaining[m.p2] > 0);
+    // Sort: players with more remaining matches get priority
     pool.sort((a, b) => {
-      const aMax = Math.max(playCount[a.p1], playCount[a.p2]);
-      const bMax = Math.max(playCount[b.p1], playCount[b.p2]);
-      if (aMax !== bMax) return aMax - bMax;
-      return Math.min(playCount[a.p1], playCount[a.p2]) - Math.min(playCount[b.p1], playCount[b.p2]);
+      const aSum = remaining[a.p1] + remaining[a.p2];
+      const bSum = remaining[b.p1] + remaining[b.p2];
+      if (aSum !== bSum) return bSum - aSum;
+      return Math.min(remaining[a.p1], remaining[a.p2]) - Math.min(remaining[b.p1], remaining[b.p2]);
     });
+
     for (const m of pool) {
       if (matches.length >= numCourts) break;
       if (usedInRound.has(m.p1) || usedInRound.has(m.p2)) continue;
@@ -56,8 +61,8 @@ function generateBalancedSingles(players, numCourts, targetRounds) {
       matches.push({ teams: [[m.p1], [m.p2]] });
       usedInRound.add(m.p1);
       usedInRound.add(m.p2);
-      playCount[m.p1]++;
-      playCount[m.p2]++;
+      remaining[m.p1]--;
+      remaining[m.p2]--;
     }
     const byes = players.filter(p => !usedInRound.has(p.label)).map(p => p.label);
     schedule.push({ round: r + 1, matches, byes });
@@ -186,7 +191,8 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
     femaleBase = allFemales;
   }
   if (mode === 'singles') {
-    const singlesSchedule = generateBalancedSingles(players, numCourts, rounds);
+    const y = Math.min(Math.floor(2 * numCourts * rounds / players.length), players.length - 1) || 1;
+    const singlesSchedule = generateSinglesSchedule(players, numCourts, rounds, y);
     for (const rd of singlesSchedule) {
       schedule.push({
         round: rd.round,
