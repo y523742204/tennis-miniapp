@@ -22,6 +22,7 @@
     <view class="player-row">
       <view class="player-name">{{item.name}}</view>
       <view class="player-counts">
+        <text class="tag rounds">轮次 {{item.totalRounds}}/{{summary.rounds}}</text>
         <text class="tag partner">搭档 {{item.partnerCount}}/{{item.totalOthers}}</text>
         <text class="tag opponent">对手 {{item.opponentCount}}/{{item.totalOthers}}</text>
       </view>

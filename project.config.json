@@ -38,11 +38,17 @@
       "disablePlugins": [],
       "outputPath": ""
     },
-    "condition": false
+    "condition": false,
+    "compileWorklet": false,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "swc": false,
+    "disableSWC": true
   },
   "compileType": "miniprogram",
   "cloudfunctionRoot": "cloudfunctions/",
-  "libVersion": "3.7.0",
+  "libVersion": "3.16.2",
   "appid": "wxa659fe08cd6ee391",
   "projectname": "网球训练助手",
   "condition": {},
@@ -50,5 +56,6 @@
     "tabIndent": "insertSpaces",
     "tabSize": 2
   },
-  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
+  "simulatorPluginLibVersion": {}
 }

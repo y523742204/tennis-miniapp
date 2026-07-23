@@ -12,6 +12,7 @@
 .tag { font-size: 22rpx; padding: 4rpx 14rpx; border-radius: 20rpx; }
 .tag.partner { background: #e8f8ee; color: #07c160; }
 .tag.opponent { background: #fdecea; color: #e74c3c; }
+.tag.rounds { background: #eef6ff; color: #4a90d9; }
 .player-detail { margin-top: 16rpx; padding-top: 16rpx; border-top: 2rpx solid #f0f0f0; overflow-x: auto; }
 .rel-label { font-size: 26rpx; font-weight: 600; margin: 8rpx 0 6rpx; }
 

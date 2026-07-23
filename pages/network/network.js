@@ -23,7 +23,9 @@ Page({
       nodeMap[p] = { name: p, partnerSet: {}, opponentSet: {} };
     }
     let matchCount = 0;
-    for (const round of (s.schedule || [])) {
+    const roundsAppeared = {};
+    for (let ri = 0; ri < (s.schedule || []).length; ri++) {
+      const round = s.schedule[ri];
       for (const m of (round.matches || [])) {
         const t0 = (m.teams && m.teams[0]) || [];
         const t1 = (m.teams && m.teams[1]) || [];
@@ -31,6 +33,10 @@ Page({
         const v1 = t1.filter(p => p && p !== '___' && p !== null);
         if (v0.length === 0 && v1.length === 0) continue;
         matchCount++;
+        for (const p of [...v0, ...v1]) {
+          if (!roundsAppeared[p]) roundsAppeared[p] = new Set();
+          roundsAppeared[p].add(ri);
+        }
         for (let a = 0; a < v0.length; a++) {
           for (let b = a + 1; b < v0.length; b++) {
             if (nodeMap[v0[a]] && nodeMap[v0[b]]) {
@@ -82,6 +88,7 @@ Page({
       const femaleRels = chunk(rels.filter(r => femaleNames.includes(r.name)), 8);
       return {
         name, maleRels, femaleRels,
+        totalRounds: roundsAppeared[name] ? roundsAppeared[name].size : 0,
         totalOthers: rels.length,
         partnerCount: rels.filter(r => r.partnerCount > 0).length,
         opponentCount: rels.filter(r => r.opponentCount > 0).length
