@@ -65,7 +65,7 @@ function generateSinglesSchedule(players, numCourts, targetRounds) {
 
 function pairTeams(teamList, round) {
   const n = teamList.length;
-  if (n < 2) return { matches: [], byes: teamList.map(t => t.join('+')) };
+  if (n < 2) return { matches: [], byes: teamList.map(t => t.join('+')).filter(Boolean) };
   const indices = [0];
   for (let i = 1; i < n; i++) indices.push(1 + (i - 1 + round) % (n - 1));
   const matches = [];
@@ -74,7 +74,10 @@ function pairTeams(teamList, round) {
     const j = n - 1 - i;
     matches.push({ teams: [teamList[indices[i]], teamList[indices[j]]] });
   }
-  if (n % 2 === 1) byes.push(teamList[indices[Math.floor(n / 2)]].join('+'));
+  if (n % 2 === 1) {
+    const bye = teamList[indices[Math.floor(n / 2)]];
+    if (bye && bye.length) byes.push(bye.join('+'));
+  }
   return { matches, byes };
 }
 
@@ -218,7 +221,7 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
       schedule.push({
         round: r + 1,
         matches: assignCourts(result.matches, numCourts),
-        byes: result.byes
+        byes: (result.byes || []).filter(Boolean)
       });
     }
   }
