@@ -106,21 +106,35 @@ function applyFixedPairsNormal(arr, fixedPairs, round) {
   }
 }
 
-function generateDoublesRound(players, globalRound, type, fixedPairs, mixedRoundIdx, femaleBase) {
+function generateDoublesRound(players, globalRound, type, fixedPairs, mixedRoundIdx, femaleBase, numCourts) {
   let males = players.filter(p => p.gender === 'male');
   let females = players.filter(p => p.gender === 'female');
 
   if (type === 'mixed') {
-    const allMales = players.filter(p => p.gender === 'male');
-    const allFemales = femaleBase ? [...femaleBase] : players.filter(p => p.gender === 'female');
-    for (let r = 0; r < mixedRoundIdx; r++) { if (allFemales.length >= 2) { allFemales.push(allFemales.shift()); } }
+    let allMales = players.filter(p => p.gender === 'male');
+    let allFemales = femaleBase ? [...femaleBase] : players.filter(p => p.gender === 'female');
+    const maxTeams = (numCourts || 99) * 2;
+    const rawMc = Math.min(allMales.length, allFemales.length, maxTeams);
+    const maleExtras = allMales.length - rawMc;
+    const femaleExtras = allFemales.length - rawMc;
+    // Rotate male & female lists with a stride that distributes extras evenly
+    if (maleExtras > 0) {
+      const stride = Math.max(2, Math.floor(allMales.length / (maleExtras + 0.5)));
+      const mShift = (mixedRoundIdx * stride) % allMales.length;
+      if (mShift > 0) allMales = [...allMales.slice(mShift), ...allMales.slice(0, mShift)];
+    }
+    if (femaleExtras > 0) {
+      const stride = Math.max(2, Math.floor(allFemales.length / (femaleExtras + 0.5)));
+      const fShift = (mixedRoundIdx * stride) % allFemales.length;
+      if (fShift > 0) allFemales = [...allFemales.slice(fShift), ...allFemales.slice(0, fShift)];
+    }
     if (fixedPairs) applyFixedPairsMixed(allMales, allFemales, fixedPairs, globalRound);
-    const mc = Math.min(allMales.length, allFemales.length);
+    const mc = Math.min(allMales.length, allFemales.length, maxTeams);
     const teams = [];
     for (let i = 0; i < mc; i++) teams.push([allMales[i].label, allFemales[i].label]);
     const extra = [];
-    if (allMales.length > mc) extra.push(allMales[mc].label);
-    if (allFemales.length > mc) extra.push(allFemales[mc].label);
+    for (let i = mc; i < allMales.length; i++) extra.push(allMales[i].label);
+    for (let i = mc; i < allFemales.length; i++) extra.push(allFemales[i].label);
     const result = pairTeams(teams, mixedRoundIdx);
     result.byes.push(...extra);
     return result;
@@ -163,6 +177,19 @@ function generateDoublesRound(players, globalRound, type, fixedPairs, mixedRound
     matches.push(...r.matches);
     byes.push(...r.byes);
   }
+  // Fill empty courts by pairing male+female bye teams as a mixed match
+  if (numCourts && matches.length < numCourts) {
+    const teamByes = byes.filter(b => b.includes('+'));
+    const mByes = teamByes.filter(b => b.indexOf('男') === 0 || players.some(p => p.gender === 'male' && p.label === b.split('+')[0]));
+    const fByes = teamByes.filter(b => !mByes.includes(b));
+    if (mByes.length > 0 && fByes.length > 0) {
+      const mt = mByes[0].split('+');
+      const ft = fByes[0].split('+');
+      matches.push({ teams: [mt, ft] });
+      byes.splice(byes.indexOf(mByes[0]), 1);
+      byes.splice(byes.indexOf(fByes[0]), 1);
+    }
+  }
   return { matches, byes };
 }
 
@@ -198,7 +225,7 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
   } else {
     for (let r = 0; r < rounds; r++) {
       const isMixed = roundTypes[r] === 'mixed';
-      const result = generateDoublesRound(players, r, roundTypes[r], fixedPairs, isMixed ? mixedRoundCount++ : -1, femaleBase);
+      const result = generateDoublesRound(players, r, roundTypes[r], fixedPairs, isMixed ? mixedRoundCount++ : -1, femaleBase, numCourts);
       // Reduce duplicate matchups vs previous round by swapping players between teams
       if (schedule.length > 0) {
         const dupKey = () => result.matches.map(m =>
@@ -223,6 +250,24 @@ function generateSchedule(mode, players, rounds, numCourts, roundTypes, fixedPai
         matches: assignCourts(result.matches, numCourts),
         byes: (result.byes || []).filter(Boolean)
       });
+    }
+  }
+  // Trim excess matches for any round type (normal rounds can also overflow)
+  if (mode === 'doubles') {
+    for (const rd of schedule) {
+      while (rd.matches.length > numCourts) {
+        const excess = rd.matches.pop();
+        const seen = new Set();
+        for (const b of rd.byes) { if (!b.includes('+')) seen.add(b); }
+        for (const team of (excess.teams || [])) {
+          for (const player of (team || [])) {
+            if (player && player !== '___' && player !== null && !seen.has(player)) {
+              rd.byes.push(player);
+              seen.add(player);
+            }
+          }
+        }
+      }
     }
   }
   return {

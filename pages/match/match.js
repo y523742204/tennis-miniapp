@@ -383,6 +383,19 @@ Page({
     result.maleCount = f.mode === 'singles' ? total : f.maleCount;
     result.femaleCount = f.mode === 'singles' ? 0 : (total - f.maleCount);
     result.courtLabels = [...f.courtLabels];
+    // Flatten byes into individual player cards for per-round display
+    for (const rd of result.schedule) {
+      if (rd.byes && rd.byes.length) {
+        const cards = [];
+        for (const b of rd.byes) {
+          const parts = b.split('+');
+          for (const p of parts) { if (p && !cards.includes(p)) cards.push(p); }
+        }
+        rd.byeCards = cards;
+      } else {
+        rd.byeCards = [];
+      }
+    }
     this.setData({ currentSchedule: result });
   },
 
@@ -697,6 +710,24 @@ Page({
       return;
     }
     if (sel.source === 'waiting' && sel.wi === d.wi) {
+      this.setData({ 'editData.selected': null, 'editData.selKey': null });
+      return;
+    }
+    this._doSwap(sel, cur);
+  },
+
+  tapByePlayer(e) {
+    const d = e.currentTarget.dataset;
+    const sel = this.data.editData.selected;
+    const cur = { player: d.p, source: 'waiting', wi: -1 };
+    // Find this player in the waiting list
+    const wp = this.data.editData.waitingPlayers;
+    cur.wi = wp.indexOf(d.p);
+    if (!sel) {
+      this.setData({ 'editData.selected': cur, 'editData.selKey': 'b_' + d.ri + '_' + d.bi });
+      return;
+    }
+    if (sel.player === d.p) {
       this.setData({ 'editData.selected': null, 'editData.selKey': null });
       return;
     }

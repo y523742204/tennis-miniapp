@@ -367,12 +367,6 @@
   border-bottom: 1rpx solid #f0f0f0;
 }
 
-.round-bye {
-  font-size: 24rpx;
-  font-weight: 400;
-  color: #bbb;
-}
-
 .match-row {
   padding: 10rpx 0;
   display: flex;
@@ -436,6 +430,10 @@
 .sch-excel-btn { background: #e8a838; }
 
 .hidden-canvas { position: fixed; left: -9999px; top: 0; }
+
+.bye-label { color: #bbb !important; }
+.bye-players { display: flex; align-items: center; flex-wrap: wrap; gap: 8rpx; min-height: 72rpx; padding: 4rpx 0; }
+.bye-players .player-card { background: #f0f0f0; border-color: #e0e0e0; color: #999; }
 
 /* ─── 编辑按钮 ─── */
 .sch-edit-btn {

@@ -30,7 +30,7 @@
     </view>
 
     <view wx:for="{{currentSchedule.schedule}}" wx:for-index="ri" wx:key="round" class="round-card">
-      <view class="round-title">第{{item.round}}轮<text wx:if="{{currentSchedule.roundTypes && currentSchedule.mode !== 'singles'}}" class="round-type">（{{currentSchedule.roundTypes[ri] === 'normal' ? '男双/女双' : '混双'}}）</text> <text wx:if="{{item.byes.length}}" class="round-bye">轮空：{{item.byes.join('、')}}</text></view>
+      <view class="round-title">第{{item.round}}轮<text wx:if="{{currentSchedule.roundTypes && currentSchedule.mode !== 'singles'}}" class="round-type">（{{currentSchedule.roundTypes[ri] === 'normal' ? '男双/女双' : '混双'}}）</text></view>
       <view wx:for="{{item.matches}}" wx:for-index="mi" wx:key="court" class="match-row">
         <text class="match-court">{{currentSchedule.courtLabels ? currentSchedule.courtLabels[item.court-1] : '场地'+item.court}}</text>
         <view class="match-teams-edit">
@@ -63,6 +63,17 @@
           </view>
         </view>
       </view>
+      <block wx:if="{{item.byeCards && item.byeCards.length}}">
+      <view class="match-row">
+        <text class="match-court bye-label">轮空</text>
+        <view class="bye-players">
+          <view wx:for="{{item.byeCards}}" wx:for-index="bi" wx:key="*this"
+                class="player-card {{editMode && editData.selKey == 'b_'+ri+'_'+bi ? 'sel' : ''}}"
+                data-p="{{item}}" data-ri="{{ri}}" data-bi="{{bi}}"
+                bindtap="{{editMode ? 'tapByePlayer' : ''}}">{{item}}</view>
+        </view>
+      </view>
+      </block>
     </view>
 
     <view wx:if="{{!editMode}}">
