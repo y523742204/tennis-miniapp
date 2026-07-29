@@ -30,6 +30,7 @@ function createStorage(type) {
         const cond = openid ? { _openid: openid } : {};
         const res = await db.collection(colName)
           .where(cond)
+          .limit(999)
           .get();
         const data = (res.data || []).map(r => ({ ...r, id: r._id }));
         data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
