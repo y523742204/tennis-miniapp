@@ -28,11 +28,19 @@ function createStorage(type) {
         const db = getDB();
         if (openid === '') return [];
         const cond = openid ? { _openid: openid } : {};
-        const res = await db.collection(colName)
-          .where(cond)
-          .limit(999)
-          .get();
-        const data = (res.data || []).map(r => ({ ...r, id: r._id }));
+        const collection = db.collection(colName);
+        // 先取总数，再分页取全部（前端 get() 单次最多 20 条）
+        const countResult = await collection.where(cond).count();
+        const total = countResult.total;
+        const MAX_LIMIT = 20;
+        const batchTimes = Math.ceil(total / MAX_LIMIT);
+        const tasks = [];
+        for (let i = 0; i < batchTimes; i++) {
+          tasks.push(collection.where(cond).skip(i * MAX_LIMIT).limit(MAX_LIMIT).get());
+        }
+        const results = await Promise.all(tasks);
+        const allData = results.reduce((acc, cur) => acc.concat(cur.data || []), []);
+        const data = allData.map(r => ({ ...r, id: r._id }));
         data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         setLocal(localKey, data);
         return data;
@@ -176,8 +184,18 @@ const ActivityStorage = {
   async getAll() {
     try {
       const db = getDB();
-      const res = await db.collection('activity').get();
-      const data = (res.data || []).map(r => ({ ...r, id: r._id }));
+      const collection = db.collection('activity');
+      const countResult = await collection.count();
+      const total = countResult.total;
+      const MAX_LIMIT = 20;
+      const batchTimes = Math.ceil(total / MAX_LIMIT);
+      const tasks = [];
+      for (let i = 0; i < batchTimes; i++) {
+        tasks.push(collection.skip(i * MAX_LIMIT).limit(MAX_LIMIT).get());
+      }
+      const results = await Promise.all(tasks);
+      const allData = results.reduce((acc, cur) => acc.concat(cur.data || []), []);
+      const data = allData.map(r => ({ ...r, id: r._id }));
       data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       setLocal('tennis_activity', data);
       return data;
