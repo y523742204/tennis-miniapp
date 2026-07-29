@@ -26,15 +26,15 @@ function createStorage(type) {
     async getAll(openid) {
       try {
         const db = getDB();
-        if (openid === '') return [];
+        if (openid === '') return getLocal(localKey);
         const cond = openid ? { _openid: openid } : {};
         const res = await db.collection(colName)
           .where(cond)
           .get();
         const data = (res.data || []).map(r => ({ ...r, id: r._id }));
         data.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-        setLocal(localKey, data);
-        return data;
+        if (data.length > 0) setLocal(localKey, data);
+        return data.length > 0 ? data : getLocal(localKey);
       } catch (e) {
         console.warn('[' + colName + '] cloud getAll failed, fallback to local:', e);
         return getLocal(localKey);

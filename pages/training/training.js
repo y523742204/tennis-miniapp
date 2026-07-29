@@ -42,7 +42,9 @@ Page({
     try {
       const res = await wx.cloud.callFunction({ name: 'getOpenid' });
       if (res.result && res.result.openid) this.setData({ myOpenid: res.result.openid });
-    } catch (e) {}
+    } catch (e) {
+      console.error('[training] getOpenid failed:', e);
+    }
     const slotList = [];
     const items = [];
     for (let h = START_HOUR; h < END_HOUR; h++) {
